@@ -14,7 +14,7 @@ var ctx = canvas.getContext("2d")
 
 var requestAnimation = true
 
-var minVoiceFrequency = 69 // C2
+var minVoiceFrequency = 55 // A1
 var maxVoiceFrequency = 880 // A5
 var threshold = 80 // percentage of the threshold
 
@@ -30,21 +30,35 @@ for(i=0; i<numTones; i++){
 }
 
 
-var freqNotes = []  //array with the notation note as index and the relative frequency as value
+var noteFreq = []  //array with the notation note as index and the relative frequency as value
+var noteTuples = []
 octave = 1
 letters = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
+
+//notes = {440: "A", 550:"B" hash map
 for(i=0; i<tones.length; i++){
   if(i%12 == 3)
     octave++
   noteLetter = letters[i%12] + octave
-  freqNotes[noteLetter] = tones[i]
+  noteTuples[i] = [noteLetter, tones[i]] // -> array di tuple [nota, frequenza] per mantenere l'ordine
+  noteFreq[noteLetter] = tones[i]
 }
+
 
 //------------------------------------------------
 // Audio Node
 var c = new AudioContext();
 var analyser = c.createAnalyser();
 console.log("SampleRate: " + c.sampleRate)
+
+//----------------------
+o= c.createOscillator()
+g=c.createGain()
+o.connect(g)
+g.connect(analyser)
+g.connect(c.destination)
+o.start()
+g.gain.value=0.2
 
 
 //------------------------------------------------
@@ -106,8 +120,8 @@ function drawSamples()
   logLabel.textContent = "Array length = " + dataArray.length
   noteLabel.textContent = "Note = " + note
   
-  if(peaksArray.length > 0)
-    console.log(peaksArray)
+  //if(peaksArray.length > 0)
+    //console.log(peaksArray)
   
   if(requestAnimation)
     requestAnimationFrame(drawSamples);
@@ -155,15 +169,28 @@ function pitch(peaksIndex, frequencies){
   
   //now peaksIndex has the indexes order from minFreq to maxFreq
   
-  console.log("Index")
-  console.log(peaksIndex)
+  //console.log("Index")
+  //console.log(peaksIndex)
 }
 
 // searchs the correspondent note from a specific bandwidth
-// idea: simil dicotomic search in the noteFreq array through the bandwidth
+// idea: scan the array and 
 function getNote(fromFreq, toFreq){
-
-  return "0"
+  //console.log(fromFreq)
+  //console.log(toFreq)
+  note=""
+  found = false
+  for(i=0; i<noteTuples.length && !found; i++){
+    if(fromFreq<noteTuples[i][1] && toFreq>noteTuples[i][1]){
+        //console.log(noteTuples[i][1])
+        //console.log(noteTuples[i+1][1])
+        note=noteTuples[i][0]
+        found = true
+      }
+      else
+        note = "Error: double notes"
+  }
+  return note
 }
 
 
