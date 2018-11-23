@@ -1,9 +1,12 @@
+//Constants
+MAXGAMEVELOCITY = 20;
+
 
 //Settings
 var resolution = [800, 600]
 var gravity = 850;
 var playerGravity = 400;
-var gameVelocity = 3;
+var gameVelocity = 1;
 var levelsNumber = 8;
 
 //Game Configuration
@@ -32,6 +35,7 @@ var game = new Phaser.Game(config);
 var score = 0;
 var scoreText;
 var gameOver = false;
+var restartScene = false;
 var cursors = 0;
 var card;
 var startedGame = false;
@@ -44,6 +48,11 @@ var playerWidth = 32;
 var playerHeight = 48;
 var playerLeftOffset = 200;
 var playerInitialY = playerHeight/2;
+var nextNote = 0;
+var currentNote = 0;
+var collider;
+var goAhead = true;
+var keysPressed = false;
 
 function preload ()
 {
@@ -52,6 +61,7 @@ function preload ()
 	this.load.image('platform', 'assets/platform.png');
 	this.load.image('star', 'assets/star.png');
 	this.load.image('bomb', 'assets/bomb.png');
+	this.load.image('gameover', 'assets/gameover.png');
 	this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: playerWidth, frameHeight: playerHeight });
 }
 
@@ -86,7 +96,8 @@ function create ()
 		newRandomLevel = generateRandomLevel();
 		levelValue = newRandomLevel[0];
 		levelHeight = newRandomLevel[1];
-		platforms.create(350, levelHeight, 'platform').note = levelValue;
+		randomLevel = platforms.create(350, levelHeight, 'platform');
+		randomLevel.note = levelValue;
 		
 		
 		newRandomLevel = generateRandomLevel();
@@ -101,21 +112,21 @@ function create ()
 	
 	//Player Animations Creation
 	this.anims.create({
-		key: 'right',
+		key: 'run',
 		frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
 		frameRate: 15,
 		repeat: -1 //loop=true
 	});
 
 	this.anims.create({
-		key: 'turn',
+		key: 'stop',
 		frames: [ { key: 'dude', frame: 4 } ],
 		frameRate: 5
 	});
 		
 	
 	//Creation of colliders btw player and game field
-	this.physics.add.collider(player, platforms, platformsColliderCallback);
+	collider = this.physics.add.collider(player, platforms, platformsColliderCallback);
 		
 	
 	//Adding score
@@ -134,20 +145,29 @@ function update ()
 			p.x = p.x - platformVelocity;
 			p.body.x = p.body.x - platformVelocity;
 			if(p.x < -p.width-1000) p.destroy();
+			if((p.x-p.width/2) >= (playerLeftOffset-player.width/2)-gameVelocity && (p.x-p.width/2) < (playerLeftOffset-player.width/2)) {
+				currentNote = p.note;
+			}
+			if((p.x-p.width/2)-p.width >= (playerLeftOffset-player.width/2)-gameVelocity && (p.x-p.width/2)-p.width < (playerLeftOffset-player.width/2)) {
+				nextNote = p.note;
+				keysPressed = false;
+				console.log("Current Note: ", currentNote);
+				console.log("Next Note: ", nextNote);
+			}
+			if(!keysPressed && ((p.x+p.width/2) >= (playerLeftOffset-player.width/2)-gameVelocity && (p.x+p.width/2) < (playerLeftOffset-player.width/2))) {
+				goAhead = false;
+				console.log(p.x+p.width/2);
+				console.log(playerLeftOffset+player.width);
+			}
 		}
 	})
 	
-	if (cursors.up.isDown && player.body.touching.down)
-	{
-		player.setVelocityY(-680);
-	}
-	
 	if(player.body.touching.down) {
-		player.anims.play('right', true);
+		player.anims.play('run', true);
 		platformVelocity = gameVelocity;
 	}	
 	else {
-		player.anims.play('turn', true);
+		player.anims.play('stop', true);
 		platformTouched = false;
 	}
 	
@@ -162,16 +182,56 @@ function update ()
 	}
 	
 	if(player.y > resolution[1]+player.height/2) {
-		score = 0;
-		startedGame = false;
+		platformVelocity = 0;
+		if(!gameOver){
+			this.add.image(resolution[0]/2, resolution[1]/2, 'gameover');
+			gameOver = true;
+			console.log("GameOver: ",gameOver);
+			scoreText.setText('score: ' + score + '    click to restart');
+		}
+	}
+	
+	if(restartScene) {
 		this.scene.restart();
+		restartScene = false;
+		console.log("restartScene: ",restartScene);
+	}
+	
+	if(!goAhead) {
+		this.physics.world.colliders.destroy();
+	}
+}
+
+document.onclick = function canvasClick() {
+	if(!startedGame){
+		player.body.setGravityY(playerGravity);
+		scoreText.setText('score: ' + score);
+		startedGame = true;
+		console.log("startedGame: ",startedGame);
+	}	
+		
+	if(gameOver) {
+		player.y = -100; //Move the player and hide it
+		score = 0;
+		restartScene = true;
+		goAhead = true;
+		console.log("restartScene: ",restartScene);
+		gameOver = false;
+		console.log("gameOver: ",gameOver);
+		startedGame = false;
+		console.log("startedGame: ",startedGame);
+	}
+	
+	if(player.body.touching.down){
+		player.setVelocityY(-680);
+		platformTouched = false;
 	}
 }
 
 var generateRandomLevel = function() {
 	randomLevelValue = Math.floor(Math.random()*(levels.length))+1;
 	currentLevelHeight = (((levelsNumber+1)-randomLevelValue)*(levelsFieldHeight/levelsNumber))+((levelsFieldHeight/levelsNumber)/2)+(player.height-(levelsFieldHeight/levelsNumber));
-		
+
 	return [randomLevelValue, currentLevelHeight];
 }
 
@@ -184,15 +244,44 @@ function platformsColliderCallback () {
 	platformTouched = true;
 }
 
-document.onclick = function canvasClick() {
-	if(!startedGame){
-		player.body.setGravityY(playerGravity);
-		scoreText.setText('score: ' + score);
-		startedGame = true;
-	}
-	
-	if(player.body.touching.down){
-		player.setVelocityY(-680);
-		platformTouched = false;
+document.onkeydown = function(event) {
+	if((!event.repeat) && player.body.touching.down) {
+		if(event.key == nextNote-currentNote+1) { //Salita
+			goAhead = true;
+			keysPressed = true;
+			switch(event.key) {
+				case "1":
+					player.setVelocityY(-250); //OK
+					break;
+				case "2":
+					player.setVelocityY(-450); //OK
+					break;
+				case "3":
+					player.setVelocityY(-600); //OK
+					break;
+				case "4":
+					player.setVelocityY(-750); //OK
+					break;
+				case "5":
+					player.setVelocityY(-830); //OK
+					break;
+				case "6":
+					player.setVelocityY(-950); //OK
+					break;
+				case "7":
+					player.setVelocityY(-1000); //OK
+					break;
+				case "8":
+					player.setVelocityY(-1090); //OK
+					break;
+				default:
+					break;
+			}
+		} else if (event.key == currentNote-nextNote+1) { //Discesa
+					player.setVelocityY(-300); //OK
+					keysPressed = true;
+					goAhead = true;
+				} 
+				else goAhead = false;
 	}
 }
