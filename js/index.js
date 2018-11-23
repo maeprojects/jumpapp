@@ -9,6 +9,7 @@ var maxLabel = document.querySelector("#max");
 var indexLabel = document.querySelector("#index");
 var freqLabel = document.querySelector("#freq");
 var logLabel = document.querySelector("#log");
+var noteLabel = document.querySelector("#note");
 var ctx = canvas.getContext("2d")
 
 var requestAnimation = true
@@ -18,13 +19,32 @@ var maxVoiceFrequency = 880 // A5
 var threshold = 80 // percentage of the threshold
 
 //------------------------------------------------
+// set of NOTES
+
+// calulate tones from C2 to A5
+numTones = 49
+var tones = []
+for(i=0; i<numTones; i++){
+  freq = 55*Math.pow(2,1/12)**i
+  tones[i] = Number(Math.round(freq+'e2')+'e-2'); // round at second decimals
+}
+
+
+var freqNotes = []  //array with the notation note as index and the relative frequency as value
+octave = 1
+letters = ["A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#"]
+for(i=0; i<tones.length; i++){
+  if(i%12 == 3)
+    octave++
+  noteLetter = letters[i%12] + octave
+  freqNotes[noteLetter] = tones[i]
+}
+
+//------------------------------------------------
 // Audio Node
 var c = new AudioContext();
 var analyser = c.createAnalyser();
 console.log("SampleRate: " + c.sampleRate)
-
-
-
 
 
 //------------------------------------------------
@@ -78,12 +98,13 @@ function drawSamples()
   var index = dataArray.indexOf(max)
   var fromFreq = index*bandwidth
   var toFreq = fromFreq+bandwidth
+  note = getNote(fromFreq, toFreq)
   
   maxLabel.textContent =  "Max = " + max 
   indexLabel.textContent = "Index = " + index
   freqLabel.textContent = "Freq = " + fromFreq + " - " + toFreq
-  // how can i found the correct frequency from the index array with the maximum value ? (remind array has size of half fftSize)
   logLabel.textContent = "Array length = " + dataArray.length
+  noteLabel.textContent = "Note = " + note
   
   if(peaksArray.length > 0)
     console.log(peaksArray)
@@ -137,6 +158,14 @@ function pitch(peaksIndex, frequencies){
   console.log("Index")
   console.log(peaksIndex)
 }
+
+// searchs the correspondent note from a specific bandwidth
+// idea: simil dicotomic search in the noteFreq array through the bandwidth
+function getNote(fromFreq, toFreq){
+
+  return "0"
+}
+
 
 // function called by the button to stop the image
 function pause(){
