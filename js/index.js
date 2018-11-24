@@ -14,15 +14,13 @@ var ctx = canvas.getContext("2d")
 
 var requestAnimation = true
 
-var minVoiceFrequency = 55 // A1
-var maxVoiceFrequency = 880 // A5
-var threshold = 80 // percentage of the threshold
+var threshold = 90 // percentage of the threshold
 
 //------------------------------------------------
 // set of NOTES
 
-// calulate tones from C2 to A5
-numTones = 49
+// calulate tones from A1 to A6
+numTones = 61
 var tones = []
 for(i=0; i<numTones; i++){
   freq = 55*Math.pow(2,1/12)**i
@@ -63,7 +61,7 @@ g.gain.value=0.2
 
 //------------------------------------------------
 // analyser node settings
-var fftSize = 2048 * 4
+var fftSize = 2048 * 8
 analyser.fftSize = fftSize; // window size in sample
 var bufferLength = analyser.frequencyBinCount;
 //console.log(bufferLength)
@@ -91,6 +89,7 @@ function drawSamples()
 {
   analyser.getByteFrequencyData(dataArray); // fill the Uint8Array with data returned from getByteFrequencyData()
   //analyser.getByteTimeDomainData(dataArray)
+
   dataArray = windowing(dataArray)
   var peaksArray = searchPeaks(dataArray)
   pitch(peaksArray, dataArray)
@@ -101,7 +100,7 @@ function drawSamples()
   for(var i=0; i<canvas.width;i++) {
     //ctx.lineTo(i,canvas.height - dataArray[i]);
     //ctx.fillRect(i*6,canvas.height - dataArray[i],5, canvas.height);
-    ctx.fillRect(i*3,canvas.height - dataArray[i],2, canvas.height);
+    ctx.fillRect(i*2,canvas.height - dataArray[i],1, canvas.height);
     ctx.fillStyle="rgba(200,0,0," + dataArray[i]/300 +")"
     
     
@@ -130,9 +129,9 @@ drawSamples();
 
 // this function performs a windowing in the spectrum based on the min and max voice frequency
 function windowing(array){
-  for(i=0; i<minVoiceFrequency/bandwidth; i++)
+  for(i=0; i<tones[0]/bandwidth; i++)
     array[i] = 0
-  for(i=Math.floor(maxVoiceFrequency/bandwidth); i<array.length; i++)
+  for(i=Math.floor(tones[tones.length-1]/bandwidth); i<array.length; i++)
     array[i] = 0
   return array
 }
@@ -143,7 +142,7 @@ function searchPeaks(array){
   var peaks = []
   //it searches peaks into the previous windowing, it stores the peaks indexes
   j = 0
-  for(i=Math.floor(minVoiceFrequency/bandwidth); i<maxVoiceFrequency/bandwidth; i++){
+  for(i=Math.floor(tones[0]/bandwidth); i<tones[tones.length-1]/bandwidth; i++){
     if(array[i] > (256 * (threshold / 100)) ){
       peaks[j] = i
       j++
@@ -176,8 +175,8 @@ function pitch(peaksIndex, frequencies){
 // searchs the correspondent note from a specific bandwidth
 // idea: scan the array and 
 function getNote(fromFreq, toFreq){
-  //console.log(fromFreq)
-  //console.log(toFreq)
+  console.log(fromFreq)
+  console.log(toFreq)
   note=""
   found = false
   for(i=0; i<noteTuples.length && !found; i++){
@@ -191,6 +190,17 @@ function getNote(fromFreq, toFreq){
         note = "Error: double notes"
   }
   return note
+}
+
+
+function smallestDifferenceBtwNotes(){
+  var difference = noteTuples[1][1]-noteTuples[0][1];
+  for(i=1; i<noteTuples.length-2; i++){
+    d = noteTuples[i+1][1]-noteTuples[i][1] // difference from two adiacent note
+    if(d < difference)
+      difference = d
+  }
+  return difference
 }
 
 
