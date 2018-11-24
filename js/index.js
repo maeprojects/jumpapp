@@ -1,7 +1,3 @@
-//Constants
-MAXGAMEVELOCITY = 20;
-
-
 //Settings
 var resolution = [800, 600]
 var gravity = 850;
@@ -39,6 +35,7 @@ var restartScene = false;
 var cursors = 0;
 var card;
 var startedGame = false;
+var pausedGame = false;
 var platformTouched;
 var player;
 var levelsFieldHeight;
@@ -55,7 +52,7 @@ var goAhead = true;
 var keysPressed = false;
 
 function preload ()
-{
+{	
 	this.load.image('background', 'assets/background.png');
 	this.load.image('ground', 'assets/ground.png');
 	this.load.image('platform', 'assets/platform.png');
@@ -66,7 +63,7 @@ function preload ()
 }
 
 function create ()
-{
+{	
 	this.add.image(resolution[0]/2, resolution[1]/2, 'background').setAlpha(0.2);
 	
 	
@@ -140,65 +137,70 @@ function create ()
 
 function update ()
 {
-	platforms.getChildren().forEach(function(p){		
-		if(p.note != undefined){
-			p.x = p.x - platformVelocity;
-			p.body.x = p.body.x - platformVelocity;
-			if(p.x < -p.width-1000) p.destroy();
-			if((p.x-p.width/2) >= (playerLeftOffset-player.width/2)-gameVelocity && (p.x-p.width/2) < (playerLeftOffset-player.width/2)) {
-				currentNote = p.note;
+	if(!pausedGame) {
+		platforms.getChildren().forEach(function(p){		
+			if(p.note != undefined){
+				p.x = p.x - platformVelocity;
+				p.body.x = p.body.x - platformVelocity;
+				if(p.x < -p.width-1000) p.destroy();
+				if((p.x-p.width/2) >= (playerLeftOffset-player.width/2)-gameVelocity && (p.x-p.width/2) < (playerLeftOffset-player.width/2)) {
+					currentNote = p.note;
+				}
+				if((p.x-p.width/2)-p.width >= (playerLeftOffset-player.width/2)-gameVelocity && (p.x-p.width/2)-p.width < (playerLeftOffset-player.width/2)) {
+					nextNote = p.note;
+					keysPressed = false;
+					console.log("Current Note: ", currentNote);
+					console.log("Next Note: ", nextNote);
+				}
+				if(!keysPressed && ((p.x+p.width/2) >= (playerLeftOffset-player.width/2)-gameVelocity && (p.x+p.width/2) < (playerLeftOffset-player.width/2))) {
+					goAhead = false;
+					console.log(p.x+p.width/2);
+					console.log(playerLeftOffset+player.width);
+				}
 			}
-			if((p.x-p.width/2)-p.width >= (playerLeftOffset-player.width/2)-gameVelocity && (p.x-p.width/2)-p.width < (playerLeftOffset-player.width/2)) {
-				nextNote = p.note;
-				keysPressed = false;
-				console.log("Current Note: ", currentNote);
-				console.log("Next Note: ", nextNote);
-			}
-			if(!keysPressed && ((p.x+p.width/2) >= (playerLeftOffset-player.width/2)-gameVelocity && (p.x+p.width/2) < (playerLeftOffset-player.width/2))) {
-				goAhead = false;
-				console.log(p.x+p.width/2);
-				console.log(playerLeftOffset+player.width);
-			}
-		}
-	})
-	
-	if(player.body.touching.down) {
-		player.anims.play('run', true);
-		platformVelocity = gameVelocity;
-	}	
-	else {
-		player.anims.play('stop', true);
-		platformTouched = false;
-	}
-	
-	if(randomLevel.x < resolution[0]-randomLevel.width/2){
+		})
 		
-		newRandomLevel = generateRandomLevel();
-		levelValue = newRandomLevel[0];
-		levelHeight = newRandomLevel[1];
-		console.log("New level\nLevel Value: ",levelValue, "\nLevel Height: ",levelHeight)
-		randomLevel = platforms.create(resolution[0]+randomLevel.width/2, levelHeight, 'platform');
-		randomLevel.note = levelValue;
-	}
-	
-	if(player.y > resolution[1]+player.height/2) {
-		platformVelocity = 0;
-		if(!gameOver){
-			this.add.image(resolution[0]/2, resolution[1]/2, 'gameover');
-			gameOver = true;
-			console.log("GameOver: ",gameOver);
-			scoreText.setText('score: ' + score + '    click to restart');
+		if(player.body.touching.down) {
+			player.anims.play('run', true);
+			platformVelocity = gameVelocity;
+		}	
+		else {
+			player.anims.play('stop', true);
+			platformTouched = false;
 		}
-	}
-	
-	if(restartScene) {
-		this.scene.restart();
-		restartScene = false;
-		console.log("restartScene: ",restartScene);
-	}
-	
-	if(!goAhead) {
-		this.physics.world.colliders.destroy();
+		
+		if(randomLevel.x < resolution[0]-randomLevel.width/2){
+			
+			newRandomLevel = generateRandomLevel();
+			levelValue = newRandomLevel[0];
+			levelHeight = newRandomLevel[1];
+			console.log("New level\nLevel Value: ",levelValue, "\nLevel Height: ",levelHeight)
+			randomLevel = platforms.create(resolution[0]+randomLevel.width/2, levelHeight, 'platform');
+			randomLevel.note = levelValue;
+		}
+		
+		if(player.y > resolution[1]+player.height/2) {
+			platformVelocity = 0;
+			if(!gameOver){
+				this.add.image(resolution[0]/2, resolution[1]/2, 'gameover');
+				gameOver = true;
+				console.log("GameOver: ",gameOver);
+				scoreText.setText('score: ' + score + '    click to restart');
+			}
+		}
+		
+		if(restartScene) {
+			this.scene.restart();
+			restartScene = false;
+			console.log("restartScene: ",restartScene);
+		}
+		
+		if(!goAhead) {
+			this.physics.world.colliders.destroy();
+		}
+	} else {
+		player.anims.play('stop', true);
+		scoreText.setText('score: ' + score + ' Game Paused, click to resume...');
 	}
 }
 
@@ -208,7 +210,11 @@ document.onclick = function canvasClick() {
 		scoreText.setText('score: ' + score);
 		startedGame = true;
 		console.log("startedGame: ",startedGame);
-	}	
+	} else if(!gameOver){
+		pausedGame = !pausedGame;
+		scoreText.setText('score: ' + score);
+		console.log("PausedGame: ",pausedGame);
+	}
 		
 	if(gameOver) {
 		player.y = -100; //Move the player and hide it
@@ -220,11 +226,6 @@ document.onclick = function canvasClick() {
 		console.log("gameOver: ",gameOver);
 		startedGame = false;
 		console.log("startedGame: ",startedGame);
-	}
-	
-	if(player.body.touching.down){
-		player.setVelocityY(-680);
-		platformTouched = false;
 	}
 }
 
@@ -245,8 +246,8 @@ function platformsColliderCallback () {
 }
 
 document.onkeydown = function(event) {
-	if((!event.repeat) && player.body.touching.down) {
-		if(event.key == nextNote-currentNote+1) { //Salita
+	if((!event.repeat) && player.body.touching.down && !pausedGame) {
+		if(event.key == nextNote-currentNote+1) { //Go up
 			goAhead = true;
 			keysPressed = true;
 			switch(event.key) {
@@ -277,7 +278,7 @@ document.onkeydown = function(event) {
 				default:
 					break;
 			}
-		} else if (event.key == currentNote-nextNote+1) { //Discesa
+		} else if (event.key == currentNote-nextNote+1) { //Go down
 					player.setVelocityY(-300); //OK
 					keysPressed = true;
 					goAhead = true;
