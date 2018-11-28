@@ -9,12 +9,28 @@ Application.prototype.start = function() {
 
   this.tuner.onNoteDetected = function(note) {
     if (self.notes.isAutoMode) {
-      if (self.lastNote === note.name) {
+      /*if (self.lastNote === note.name) {
         self.update(note)
 
       } else {
         self.lastNote = note.name
-        console.log(self.lastNote)
+        
+        musicalNote = note.name
+
+        console.log(musicalNote)
+        //WHERE CHANGE THE OCTAVE ? 
+      }
+      */
+      if (self.lastNote === note.name && self.lastOctave === note.octave) {
+        self.update(note)
+
+      } else {
+        self.lastNote = note.name
+        self.lastOctave = note.octave
+        
+        musicalNote = note.name + note.octave
+
+        console.log(musicalNote)
         //WHERE CHANGE THE OCTAVE ? 
       }
     }
