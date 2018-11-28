@@ -54,6 +54,11 @@ Tuner.prototype.initGetUserMedia = function() {
   }
 }
 
+var c
+var o
+
+
+
 Tuner.prototype.startRecord = function () {
   const self = this
   navigator.mediaDevices
@@ -61,6 +66,9 @@ Tuner.prototype.startRecord = function () {
     .then(function(stream) {
       self.audioContext.createMediaStreamSource(stream).connect(self.analyser)
       self.analyser.connect(self.scriptProcessor)
+
+      g.connect(self.analyser)
+
       self.scriptProcessor.connect(self.audioContext.destination)
       self.scriptProcessor.addEventListener('audioprocess', function(event) {
         const frequency = self.pitchDetector.do(
@@ -83,9 +91,16 @@ Tuner.prototype.startRecord = function () {
     })
 }
 
+
 Tuner.prototype.init = function() {
   this.audioContext = new window.AudioContext()
   this.analyser = this.audioContext.createAnalyser()
+
+  o = this.audioContext.createOscillator()
+  g = this.audioContext.createGain()
+  o.connect(g)
+  g.gain.value = 0.2
+
   this.scriptProcessor = this.audioContext.createScriptProcessor(
     this.bufferSize,
     1,
