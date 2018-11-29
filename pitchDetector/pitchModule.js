@@ -1,7 +1,7 @@
 const PitchDetector = function() {
   this.tuner = new Tuner()
   this.notes = new Notes('.notes', this.tuner)
-  this.update({ name: 'A', frequency: 440, octave: 4, value: 69, cents: 0 })
+  //this.update({ name: 'A', frequency: 440, octave: 4, value: 69, cents: 0 })
 }
 
 PitchDetector.prototype.start = function() {
@@ -10,7 +10,7 @@ PitchDetector.prototype.start = function() {
   this.tuner.onNoteDetected = function(note) {
     if (self.notes.isAutoMode) {
       if (self.lastNote === note.name && self.lastOctave === note.octave) {
-        self.update(note)
+        //self.update(note)
 
       } else {
         self.lastNote = note.name
@@ -20,6 +20,7 @@ PitchDetector.prototype.start = function() {
 
         console.log(musicalNote)
         // CALL ScaleCorrelation Module
+        //newNote(musicalNote)
       }
     }
   }
@@ -28,11 +29,11 @@ PitchDetector.prototype.start = function() {
   self.frequencyData = new Uint8Array(self.tuner.analyser.frequencyBinCount)
 }
 
-
+/*
 PitchDetector.prototype.update = function(note) {
-  this.notes.update(note)
+  //this.notes.update(note)
   //this.meter.update((note.cents / 50) * 45)
-}
+}*/
 
 // noinspection JSUnusedGlobalSymbols
 PitchDetector.prototype.toggleAutoMode = function() {
