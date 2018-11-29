@@ -1,26 +1,14 @@
-const Application = function() {
+const PitchDetector = function() {
   this.tuner = new Tuner()
   this.notes = new Notes('.notes', this.tuner)
   this.update({ name: 'A', frequency: 440, octave: 4, value: 69, cents: 0 })
 }
 
-Application.prototype.start = function() {
+PitchDetector.prototype.start = function() {
   const self = this
 
   this.tuner.onNoteDetected = function(note) {
     if (self.notes.isAutoMode) {
-      /*if (self.lastNote === note.name) {
-        self.update(note)
-
-      } else {
-        self.lastNote = note.name
-        
-        musicalNote = note.name
-
-        console.log(musicalNote)
-        //WHERE CHANGE THE OCTAVE ? 
-      }
-      */
       if (self.lastNote === note.name && self.lastOctave === note.octave) {
         self.update(note)
 
@@ -31,7 +19,7 @@ Application.prototype.start = function() {
         musicalNote = note.name + note.octave
 
         console.log(musicalNote)
-        //WHERE CHANGE THE OCTAVE ? 
+        // CALL ScaleCorrelation Module
       }
     }
   }
@@ -41,17 +29,17 @@ Application.prototype.start = function() {
 }
 
 
-Application.prototype.update = function(note) {
+PitchDetector.prototype.update = function(note) {
   this.notes.update(note)
   //this.meter.update((note.cents / 50) * 45)
 }
 
 // noinspection JSUnusedGlobalSymbols
-Application.prototype.toggleAutoMode = function() {
+PitchDetector.prototype.toggleAutoMode = function() {
   this.notes.toggleAutoMode()
 }
 
 //-----------------------------------------------------------------
 // INIZIALIZE ALL PITCH DETECTOR
-const app = new Application()
-app.start()
+const pitchDetector = new PitchDetector()
+pitchDetector.start()
