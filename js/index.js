@@ -359,6 +359,53 @@ document.onkeydown = function(event) {
 								correctKeyPressed = true;
 								goAhead = true;
 							}
-		}
+				}
+	}
+}
+
+function jumpLevel(level) {
+	if(level==0) {
+		gameOver = true;
+	}
+	
+	if(player.body.touching.down && !pausedGame && jumpArea) {
+		jumpRatio = nextNote-currentNote+1;
+		jumpKey = String(jumpRatio);
+		if(level == nextNote && currentNote<=nextNote) { //Go up
+			goAhead = true;
+			correctKeyPressed = true;
+			switch(jumpKey) {
+				case "1":
+					player.setVelocityY(-250*Math.pow(gameVelocity, 1/3)); //OK
+					break;
+				case "2":
+					player.setVelocityY(-450*Math.pow(gameVelocity, 1/3)); //OK
+					break; 
+				case "3":
+					player.setVelocityY(-600*Math.pow(gameVelocity, 1/6)); //OK
+					break;
+				case "4":
+					player.setVelocityY(-750*Math.pow(gameVelocity, 1/15)); //OK
+					break;
+				case "5":
+					player.setVelocityY(-830*Math.pow(gameVelocity, 1/17)); //OK
+					break;
+				case "6":
+					player.setVelocityY(-950*Math.pow(gameVelocity, 1/18)); //OK
+					break;
+				case "7":
+					player.setVelocityY(-1000*Math.pow(gameVelocity, 1/19)); //OK
+					break;
+				case "8":
+					player.setVelocityY(-1090*Math.pow(gameVelocity, 1/20)); //OK
+					break;
+				default:
+					break;
+			}
+		} else if (level == nextNote) { //Go down
+					player.setVelocityY(-300); //OK
+					correctKeyPressed = true;
+					goAhead = true;
+				}
 	}
 }
