@@ -1,14 +1,14 @@
 function newNote(musicalNote){
   level = 0
   switch(musicalNote){
-    case "C2": level = 1; break;
-    case "D2": level = 2; break;
-    case "E2": level = 3; break;
-    case "F2": level = 4; break;
-    case "G2": level = 5; break;
-    case "A2": level = 6; break;
-    case "B2": level = 7; break;
-    case "C3": level = 8; break;
+    case "C3": level = 1; break;
+    case "D3": level = 2; break;
+    case "E3": level = 3; break;
+    case "F3": level = 4; break;
+    case "G3": level = 5; break;
+    case "A3": level = 6; break;
+    case "B3": level = 7; break;
+    case "C4": level = 8; break;
   }
 
   //CALL graphicsModule
