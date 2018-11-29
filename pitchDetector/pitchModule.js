@@ -20,7 +20,7 @@ PitchDetector.prototype.start = function() {
 
         console.log(musicalNote)
         // CALL ScaleCorrelation Module
-        //newNote(musicalNote)
+        newNote(musicalNote)
       }
     }
   }
