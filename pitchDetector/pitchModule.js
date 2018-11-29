@@ -18,7 +18,7 @@ PitchDetector.prototype.start = function() {
         
         musicalNote = note.name + note.octave
 
-        console.log(musicalNote)
+        //console.log(musicalNote)
         // CALL ScaleCorrelation Module
         newNote(musicalNote)
       }

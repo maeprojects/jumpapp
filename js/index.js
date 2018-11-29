@@ -364,6 +364,7 @@ document.onkeydown = function(event) {
 }
 
 function jumpLevel(level) {
+	console.log("Called: ", level)
 	if(level==0) {
 		gameOver = true;
 	}
