@@ -60,6 +60,9 @@ var jumpAreaWidth;
 
 function preload ()
 {	
+	playerWidth = 32;
+	playerHeight = 48;
+	
 	this.load.image('background', 'assets/background.png');
 	this.load.image('platform', 'assets/platform.png');
 	this.load.image('gameover', 'assets/gameover.png');
@@ -68,7 +71,25 @@ function preload ()
 
 function create ()
 {	
-	initVariables();
+	cursors = 0;
+	
+	score = 0;
+	gameOver = false;
+	restartScene = false;
+	startedGame = false;
+	pausedGame = false;
+	goAhead = true;
+	jumpArea = false;
+	levels = [];
+	platformVelocity = 0;
+	playerFixedX = 200;
+	playerInitialY = playerHeight/2;
+	nextNote = 0;
+	currentNote = 0;
+	
+	correctKeyPressed = true;
+	
+	jumpAreaWidth = playerWidth+30*gameVelocity;
 	
 	this.add.image(resolution[0]/2, resolution[1]/2, 'background').setAlpha(0.2);
 	
@@ -139,30 +160,6 @@ function create ()
 	
 	//Create cursors to move the player with arrows
 	cursors = this.input.keyboard.createCursorKeys();
-}
-
-function initVariables() {
-	cursors = 0;
-	
-	score = 0;
-	gameOver = false;
-	restartScene = false;
-	startedGame = false;
-	pausedGame = false;
-	goAhead = true;
-	jumpArea = false;
-	levels = [];
-	platformVelocity = 0;
-	playerWidth = 32;
-	playerHeight = 48;
-	playerFixedX = 200;
-	playerInitialY = playerHeight/2;
-	nextNote = 0;
-	currentNote = 0;
-	
-	correctKeyPressed = true;
-	
-	jumpAreaWidth = playerWidth+30*gameVelocity;
 }
 
 function update ()
