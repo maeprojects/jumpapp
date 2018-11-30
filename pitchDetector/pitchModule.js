@@ -35,9 +35,13 @@ PitchDetector.prototype.update = function(note) {
   //this.meter.update((note.cents / 50) * 45)
 }*/
 
-// noinspection JSUnusedGlobalSymbols
-PitchDetector.prototype.toggleAutoMode = function() {
+// enable or disable the detection
+PitchDetector.prototype.toggleEnable = function() {
   this.notes.toggleAutoMode()
+}
+
+PitchDetector.prototype.isEnable = function() {
+  return this.notes.isAutoMode
 }
 
 //-----------------------------------------------------------------

@@ -1,6 +1,6 @@
 const Notes = function(selector, tuner) {
   this.tuner = tuner
-  this.isAutoMode = true
+  this.isAutoMode = false
   this.$root = document.querySelector(selector)
   //this.$notesList = this.$root.querySelector('.notes-list')
   //this.$frequency = this.$root.querySelector('.frequency')
@@ -82,7 +82,7 @@ Notes.prototype.update = function(note) {
 
 Notes.prototype.toggleAutoMode = function() {
   if (this.isAutoMode) {
-    this.clearActive()
+    //this.clearActive()
   }
   this.isAutoMode = !this.isAutoMode
 }
