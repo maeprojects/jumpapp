@@ -4,6 +4,9 @@ var gravity = 850;
 var playerGravity = 400;
 var gameVelocity = 1;
 var numberOfLevels = 8;
+var backgroundGridColor = 0x000000;
+var platformColor = 0x000000;
+
 
 //Game Configuration
 var config = {
@@ -83,7 +86,7 @@ function preload ()
 
 var graphicRect;
 
-function createGraphicRect(context, key, width, height, color= 0x000000) {
+function createGraphicRect(context, key, width, height, color= platformColor) {
 	graphics=context.add.graphics();
 	graphics.fillStyle(color,1);
 	graphics.fillRect(0,0,width-1,height);
@@ -91,7 +94,7 @@ function createGraphicRect(context, key, width, height, color= 0x000000) {
 	graphics.destroy();
 }
 
-function createBackground(context, color= 0x000000) {
+function createBackground(context, color= backgroundGridColor) {
 	graphics=context.add.graphics();
 	
 	graphics.fillStyle(color,1);
@@ -137,7 +140,7 @@ function create ()
 	
 	
 	//Platforms group creation
-	createGraphicRect(this, 'platform', platformWidth, 30, 0x000000);
+	createGraphicRect(this, 'platform', platformWidth, platformHeight);
 	platforms = this.physics.add.staticGroup();
 	
 	//First Platform creation
