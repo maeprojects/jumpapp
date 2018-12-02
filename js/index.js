@@ -125,7 +125,6 @@ function preload ()
 	this.load.spritesheet('player', 'assets/player.png', { frameWidth: playerWidth, frameHeight: playerHeight });
 }
 
-
 function createPlatformTexture(context, width, height, color= platformColor) {
 	graphics=context.add.graphics();
 	graphics.fillStyle(color,1);
@@ -176,6 +175,7 @@ function create ()
 	player = this.physics.add.sprite(playerFixedX, playerInitialY, 'player');
 	player.setCollideWorldBounds(false); //So the player can exceed the world boundaries
 	player.body.setGravityY(-gravity); //For the player to have an y acceleration
+	//player.setTint(0xFF0000); //Set a color mask for the player
 
 	//Player Animations Creation
 	this.anims.create({
@@ -214,98 +214,96 @@ function create ()
 	scoreText = this.add.text(16, 16, 'score:       Enter/Space to start', { fontSize: fontSize, fill: fontColor });
 	
 	sceneCreated = true;
+	this.scene.pause("default");
 }
 
 function update ()
 {
-	if(startedGame){
-		if(!pausedGame) {
-			platforms.getChildren().forEach(function(p){		
-				if(p.note != undefined){
-					p.x = p.x - platformVelocity;
-					p.body.x = p.body.x - platformVelocity;
-					if(p.x < -p.width-1000) p.destroy();
-					
-					playerLeftBorder = (playerFixedX-player.width/2);
-					platformLeftBorder = (p.x-p.width/2);
-					platformWidth = p.width;
-					
-					changedCurrentPlatform = platformLeftBorder >= playerLeftBorder-gameVelocity && platformLeftBorder < playerLeftBorder;
-					changedNextPlatform = platformLeftBorder-platformWidth >= playerLeftBorder-gameVelocity && platformLeftBorder-platformWidth < playerLeftBorder;
-					
-					//Change Platform event to set nextNote
-					if(changedNextPlatform) {
-						nextNote = p.note;
-						//console.log("Current Note: ", currentNote);
-						//console.log("Next Note: ", nextNote);
-					}
-					
-					
-					
-					//Current Platform Changed Event
-					if(changedCurrentPlatform && !correctAnswer) { //decide if the player has to die or not, depending on correctAnswer
-						goAhead = false;
-					} else if(changedCurrentPlatform) { //Set currentNote
-								currentNote = p.note;
-								jumpArea = false;
-								correctAnswer = false;
-							}
-					
-					//jumpArea Setter when the player enter the jumpArea
-					if(platformLeftBorder+platformWidth-jumpAreaWidth >= playerLeftBorder-gameVelocity && platformLeftBorder+platformWidth-jumpAreaWidth < playerLeftBorder) {
-						jumpArea = true;
-					}
-				}
-			})
-			
-			if(player.body.touching.down) {
-				player.anims.play('playerRun', true);
-				platformVelocity = gameVelocity;
-				
-			}	
-			else {
-				player.anims.play('playerStop', true);
-				platformTouched = false;
-			}
-			
-			if(randomLevel.x < resolution[0]-randomLevel.width/2){
-				
-				newLevel = generateLevel();
-				levelValue = newLevel[0];
-				levelHeight = newLevel[1];
-				//console.log("New level\nLevel Value: ",levelValue, "\nLevel Height: ",levelHeight)
-				randomLevel = platforms.create(resolution[0]+randomLevel.width/2, levelHeight, 'platform');
-				randomLevel.note = levelValue;
-			}
-			
-			if(player.y > resolution[1]+player.height/2) {
-				platformVelocity = 0;
-				if(!gameOver){
-					this.add.image(resolution[0]/2, resolution[1]/2, 'gameover');
-					player.destroy();
-					sceneCreated = false;
-					console.log("sceneCreated: ",sceneCreated);
-					gameOver = true;
-					startedGame = false;
-					//console.log("GameOver: ",gameOver);
-					scoreText.setText('score: ' + score + '    Enter/Space to restart');
-					if(pitchDetector.isEnable()) pitchDetector.toggleEnable();
-				}
-			}
-			
-			if(!goAhead) {
-				this.physics.world.colliders.destroy();
-			}
-		} else {
-			//player.setTint(0xFF0000);
-			player.anims.play('playerStop', true);
-		}
-	}
+	console.log("UPDATE");
 	
 	if(restartScene) {
 		this.scene.restart();
+		game.scene.pause("default");
 		restartScene = false;
-		console.log("restartScene: ",restartScene);
+	} 
+	else {
+		platforms.getChildren().forEach(function(p){		
+			if(p.note != undefined){
+				p.x = p.x - platformVelocity;
+				p.body.x = p.body.x - platformVelocity;
+				if(p.x < -p.width-1000) p.destroy();
+				
+				playerLeftBorder = (playerFixedX-player.width/2);
+				platformLeftBorder = (p.x-p.width/2);
+				platformWidth = p.width;
+				
+				changedCurrentPlatform = platformLeftBorder >= playerLeftBorder-gameVelocity && platformLeftBorder < playerLeftBorder;
+				changedNextPlatform = platformLeftBorder-platformWidth >= playerLeftBorder-gameVelocity && platformLeftBorder-platformWidth < playerLeftBorder;
+				
+				//Change Platform event to set nextNote
+				if(changedNextPlatform) {
+					nextNote = p.note;
+					//console.log("Current Note: ", currentNote);
+					//console.log("Next Note: ", nextNote);
+				}
+				
+				
+				
+				//Current Platform Changed Event
+				if(changedCurrentPlatform && !correctAnswer) { //decide if the player has to die or not, depending on correctAnswer
+					goAhead = false;
+				} else if(changedCurrentPlatform) { //Set currentNote
+							currentNote = p.note;
+							jumpArea = false;
+							correctAnswer = false;
+						}
+				
+				//jumpArea Setter when the player enter the jumpArea
+				if(platformLeftBorder+platformWidth-jumpAreaWidth >= playerLeftBorder-gameVelocity && platformLeftBorder+platformWidth-jumpAreaWidth < playerLeftBorder) {
+					jumpArea = true;
+				}
+			}
+		})
+		
+		if(player.body.touching.down) {
+			player.anims.play('playerRun', true);
+			platformVelocity = gameVelocity;
+			
+		}	
+		else {
+			player.anims.play('playerStop', true);
+			platformTouched = false;
+		}
+		
+		if(randomLevel.x < resolution[0]-randomLevel.width/2){
+			
+			newLevel = generateLevel();
+			levelValue = newLevel[0];
+			levelHeight = newLevel[1];
+			//console.log("New level\nLevel Value: ",levelValue, "\nLevel Height: ",levelHeight)
+			randomLevel = platforms.create(resolution[0]+randomLevel.width/2, levelHeight, 'platform');
+			randomLevel.note = levelValue;
+		}
+		
+		if(player.y > resolution[1]+player.height/2) {
+			platformVelocity = 0;
+			if(!gameOver){
+				this.add.image(resolution[0]/2, resolution[1]/2, 'gameover');
+				player.destroy();
+				sceneCreated = false;
+				console.log("sceneCreated: ",sceneCreated);
+				gameOver = true;
+				startedGame = false;
+				//console.log("GameOver: ",gameOver);
+				scoreText.setText('score: ' + score + '    Enter/Space to restart');
+				if(pitchDetector.isEnable()) pitchDetector.toggleEnable();
+				this.scene.pause("default");
+			}
+		}
+		
+		if(!goAhead) {
+			this.physics.world.colliders.destroy();
+		}
 	}
 }
 
@@ -332,16 +330,18 @@ document.onclick = function () {
 			player.body.setGravityY(playerGravity);
 			scoreText.setText('score: ' + score);
 			startedGame = true;
-			//console.log("startedGame: ",startedGame);
-			pitchDetector.toggleEnable();
+			if(!pitchDetector.isEnable()) pitchDetector.toggleEnable();
 		}
-		
 	} else if(!gameOver){
 		pausedGame = !pausedGame;
 		if(pausedGame) scoreText.setText('score: ' + score + ' Game Paused, Enter/Space to resume...');
 		else scoreText.setText('score: ' + score);
 		console.log("PausedGame: ",pausedGame);
 		pitchDetector.toggleEnable();
+		if(pausedGame) {
+			game.scene.pause("default");
+		}
+		else game.scene.resume("default");
 	}
 		
 	if(gameOver) {
@@ -355,6 +355,7 @@ document.onclick = function () {
 		//console.log("startedGame: ",startedGame);
 		correctAnswer = true;
 		//console.log("correctAnswer: ",correctAnswer);
+		game.scene.resume("default");
 	}
 }
 
@@ -368,7 +369,8 @@ document.onkeydown = function(event) {
 					scoreText.setText('score: ' + score);
 					startedGame = true;
 					//console.log("startedGame: ",startedGame);
-					pitchDetector.toggleEnable();
+					if(!pitchDetector.isEnable()) pitchDetector.toggleEnable();
+					game.scene.resume("default");
 				}
 				
 			} else if(!gameOver){
@@ -377,6 +379,8 @@ document.onkeydown = function(event) {
 				else scoreText.setText('score: ' + score);
 				console.log("PausedGame: ",pausedGame);
 				pitchDetector.toggleEnable();
+				if(pausedGame) game.scene.pause("default");
+				else game.scene.resume("default");
 			}
 				
 			if(gameOver) {
@@ -390,6 +394,7 @@ document.onkeydown = function(event) {
 				//console.log("startedGame: ",startedGame);
 				correctAnswer = true;
 				//console.log("correctAnswer: ",correctAnswer);
+				game.scene.resume("default");
 			}
 		
 		}
