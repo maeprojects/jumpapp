@@ -432,6 +432,61 @@ document.onkeydown = function(event) {
 								correctAnswer = true;
 								goAhead = true;
 							}
+							
+//*************************************************************************************************************************
+					/*
+					Ti ho messo 2 approcci, scegli tu quale ti pare più comodo
+					N.B: In questa sezione siamo dentro a un if in cui si entra solo se:
+						- il gioco è partito
+						- il gioco non è in pausa
+						- il player sta toccando una piattaforma
+						- il player è nell'area di salto
+					*/
+					
+					noteKeys = "asdfghjk" //Tasti da usare
+					
+					//Questo è il metodo che avevamo usato per la tastierina
+						/*
+						noteFreq = []
+						for(var i=0;i<12;i++){
+							//Qui inizializzi il vettore delle frequenze da passare alla tua funzione playNote()
+						}
+						playNote(noteFreq(noteKeys.indexOf(event.key)))
+						*/
+					
+					//Metodo con un semplice switch
+						/*
+						switch(event.key){
+							case "a":
+								playNote(frequenzaDO);
+								break;
+							case "s":
+								playNote(frequenzaRE);
+								break;
+							case "d":
+								playNote(frequenzaMI);
+								break;
+							case "f":
+								playNote(frequenzaFA);
+								break;
+							case "g":
+								playNote(frequenzaSOL);
+								break;
+							case "h":
+								playNote(frequenzaLA);
+								break;
+							case "j":
+								playNote(frequenzaSI);
+								break;
+							case "k":
+								playNote(frequenzaDO+ottava);
+								break;
+							default:
+								break;
+						}
+						*/
+
+//*************************************************************************************************************************					
 				}
 	}
 }
