@@ -46,5 +46,5 @@ PitchDetector.prototype.isEnable = function() {
 
 //-----------------------------------------------------------------
 // INIZIALIZE ALL PITCH DETECTOR
-const pitchDetector = new PitchDetector()
-pitchDetector.start()
+//const pitchDetector = new PitchDetector()
+//pitchDetector.start()

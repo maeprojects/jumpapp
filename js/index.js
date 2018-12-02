@@ -4,8 +4,12 @@ var gravity = 850;
 var playerGravity = 400;
 var gameVelocity = 1;
 var numberOfLevels = 8;
-var backgroundGridColor = 0x000000;
-var platformColor = 0x000000;
+var backgroundGridColor = 0xffe8e8;
+var backgroundColor = 0xFFFFFF;
+var platformColor = 0xed4747;
+var fontSize = '20px';
+var fontColor = '#F00';
+
 
 
 //Game Configuration
@@ -13,7 +17,7 @@ var config = {
 	type: Phaser.AUTO,
 	width: resolution[0],
 	height: resolution[1],
-	backgroundColor: '#FFFFFF',
+	backgroundColor: backgroundColor,
 	physics: {
 		default: 'arcade',
 		arcade: {
@@ -60,7 +64,7 @@ var playerInitialY;
 
 //Platforms (levels)
 var levelsFieldHeight;
-var levels;
+var stepHeight;
 var platformVelocity;
 var platformTouched;
 var platformWidth;
@@ -71,6 +75,43 @@ var currentNote;
 
 //Graphic drawings object manager
 var graphics;
+	
+//Pitch detector initialization (here to create only one object even if the game is restarted)
+const pitchDetector = new PitchDetector();
+pitchDetector.start();
+
+
+function initVariables() {
+	//Game score
+	score = 0;
+	
+	//Game state managing
+	gameOver = false;
+	restartScene = false;
+	startedGame = false;
+	pausedGame = false;
+	sceneCreated = false;
+	
+	//Jump event managing
+	goAhead = true;
+	correctAnswer = true;
+	jumpArea = false;
+	jumpAreaWidth = playerWidth+30*gameVelocity;
+	
+	//Player position
+	playerFixedX = 200;
+	playerInitialY = playerHeight/2;
+	
+	//Platforms (levels)
+	levelsFieldHeight = resolution[1]-playerHeight*2; //Calculation of levels Field (Height of the scene in which levels can appear)
+	stepHeight = levelsFieldHeight/numberOfLevels;
+	platformVelocity = 0;
+	platformWidth = 300;
+	platformHeight = stepHeight-((stepHeight*40)/100);
+	platformInitialX = (playerFixedX-playerWidth/2)+platformWidth/2;
+	nextNote = 0;
+	currentNote = 0;
+}
 
 
 function preload ()
@@ -81,40 +122,39 @@ function preload ()
 	
 	//Loading of game resources
 	this.load.image('gameover', 'assets/gameover.png');
-	this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: playerWidth, frameHeight: playerHeight });
+	this.load.spritesheet('player', 'assets/player.png', { frameWidth: playerWidth, frameHeight: playerHeight });
 }
 
-var graphicRect;
 
-function createGraphicRect(context, key, width, height, color= platformColor) {
+function createPlatformTexture(context, width, height, color= platformColor) {
 	graphics=context.add.graphics();
 	graphics.fillStyle(color,1);
-	graphics.fillRect(0,0,width-1,height);
-	graphics.generateTexture(key,width,height);
+	graphics.fillRect(0,0,width-1,height); //width-1 to see the division between two platforms at the same level
+	graphics.generateTexture('platform',width,height);
 	graphics.destroy();
 }
+
 
 function createBackground(context, color= backgroundGridColor) {
 	graphics=context.add.graphics();
 	
 	graphics.fillStyle(color,1);
+	graphics.lineStyle(3, color, 1);
 	
-	stepHeight = levelsFieldHeight/8;
-	
-	blackSteps = [true,false,true,false,true,false,false,true]; //From the bottom to the top
+	blackSteps = [true,false,true,false,true,false,false,true]; //From the bottom (position 0) to the top (position 7) of the screen
+																//Dimension must agree with numberOfLevels
 	yPointer = playerHeight; //Starts from the top to draw
 	for (i = 1; i <= blackSteps.length; i++) { 
 		if(blackSteps[blackSteps.length-i]) {
 			graphics.fillRect(0,yPointer,resolution[0],stepHeight);
 		}
-		graphics.strokeRect(0,yPointer,resolution[0],stepHeight);
+		graphics.strokeRect(0,yPointer,resolution[0],stepHeight); //Rectangle border
 		yPointer += stepHeight;
 	}
 	
 	graphics.generateTexture('background',resolution[0],resolution[1]);
 	
 	graphics.destroy();
-	
 }
 
 
@@ -122,70 +162,58 @@ function create ()
 {	
 	initVariables();
 	
-	//Calculation of levels Field (Height of the scene in which levels can appear)
-	levelsFieldHeight = resolution[1]-playerHeight*2;
+	//WORLD
 	
 	//Add Background
-	createBackground(this);
-	this.add.image(resolution[0]/2, resolution[1]/2, 'background').setAlpha(0.09);
+	createBackground(this); //Draw the background texture
+	this.add.image(resolution[0]/2, resolution[1]/2, 'background');
 	
 	//Set world bounds
 	this.physics.world.setBounds(0, 0, resolution[0], resolution[1]);
 	
-	//Player Creation
-	player = this.physics.add.sprite(playerFixedX, playerInitialY, 'dude');
-	
+	//PLAYER
+
+	player = this.physics.add.sprite(playerFixedX, playerInitialY, 'player');
 	player.setCollideWorldBounds(false); //So the player can exceed the world boundaries
 	player.body.setGravityY(-gravity); //For the player to have an y acceleration
-	
-	
-	//Platforms group creation
-	createGraphicRect(this, 'platform', platformWidth, platformHeight);
-	platforms = this.physics.add.staticGroup();
-	
-	//First Platform creation
-	
-	//List of levels generation
-	for (i = 1; i <= numberOfLevels; i++) { 
-		levels[i-1] = i;
-	}
-	
-	//Generation of the platforms visible when the game starts
-	numberOfPlatforms = (resolution[0]-platformInitialX)/platformWidth;
-	for(i=0; i<numberOfPlatforms; i++) {
-		newRandomLevel = generateRandomLevel();
-		levelValue = newRandomLevel[0];
-		levelHeight = newRandomLevel[1];
-		randomLevel = platforms.create((platformInitialX+platformWidth*i), levelHeight, 'platform');
-		randomLevel.note = levelValue;
-	}
-	
-	
+
 	//Player Animations Creation
 	this.anims.create({
 		key: 'playerRun',
-		frames: this.anims.generateFrameNumbers('dude', { start: 1, end: 9 }),
-		frameRate: 15*Math.sqrt(gameVelocity),
+		frames: this.anims.generateFrameNumbers('player', { start: 1, end: 9 }),
+		frameRate: 15*Math.sqrt(gameVelocity), //To set the veloticy of "rotation" dependent to the gameVelocity
 		repeat: -1 //loop=true
 	});
 
 	this.anims.create({
 		key: 'playerStop',
-		frames: [ { key: 'dude', frame: 1 } ],
-		frameRate: 5
+		frames: [ { key: 'player', frame: 1 } ],
+		frameRate: 2
 	});
-		
 	
-	//Creation of colliders btw player and game field
+	//PLATFORMS GENERATION
+	
+	createPlatformTexture(this, platformWidth, platformHeight); //Draw the platform texture
+	platforms = this.physics.add.staticGroup(); //Platforms empty group creation
+	
+	//Generation of the platforms visible when the game starts
+	numberOfInitialPlatforms = resolution[0]/platformWidth; //Exceed the number of effectively shown platforms to avoid horizontal white spaces between platforms
+	for(i=0; i<numberOfInitialPlatforms; i++) {
+		newLevel = generateLevel();
+		levelIndex = newLevel[0];
+		levelHeight = newLevel[1];
+		randomLevel = platforms.create((platformInitialX+platformWidth*i), levelHeight, 'platform');
+		randomLevel.note = levelIndex;
+	}
+	
+	//Creation of collider between the player and the platforms, with a callback function
 	this.physics.add.collider(player, platforms, platformsColliderCallback);
 		
 	
-	//Adding score
-	scoreText = this.add.text(16, 16, 'score:       Enter/Space to start', { fontSize: '32px', fill: '#000' });
-	scoreText.setScrollFactor(0);
+	//SCORE
+	scoreText = this.add.text(16, 16, 'score:       Enter/Space to start', { fontSize: fontSize, fill: fontColor });
 	
 	sceneCreated = true;
-	console.log("sceneCreated: ",sceneCreated);
 }
 
 function update ()
@@ -242,9 +270,9 @@ function update ()
 			
 			if(randomLevel.x < resolution[0]-randomLevel.width/2){
 				
-				newRandomLevel = generateRandomLevel();
-				levelValue = newRandomLevel[0];
-				levelHeight = newRandomLevel[1];
+				newLevel = generateLevel();
+				levelValue = newLevel[0];
+				levelHeight = newLevel[1];
 				//console.log("New level\nLevel Value: ",levelValue, "\nLevel Height: ",levelHeight)
 				randomLevel = platforms.create(resolution[0]+randomLevel.width/2, levelHeight, 'platform');
 				randomLevel.note = levelValue;
@@ -269,6 +297,7 @@ function update ()
 				this.physics.world.colliders.destroy();
 			}
 		} else {
+			//player.setTint(0xFF0000);
 			player.anims.play('playerStop', true);
 		}
 	}
@@ -280,43 +309,9 @@ function update ()
 	}
 }
 
-function initVariables() {
-	//Game score
-	score = 0;
-	
-	//Game state managing
-	gameOver = false;
-	restartScene = false;
-	startedGame = false;
-	pausedGame = false;
-	sceneCreated = false;
-	
-	//Jump event managing
-	goAhead = true;
-	correctAnswer = true;
-	jumpArea = false;
-	jumpAreaWidth = playerWidth+30*gameVelocity;
-	
-	//Player position
-	playerFixedX = 200;
-	playerInitialY = playerHeight/2;
-	
-	//Platforms (levels)
-	levels = [];
-	platformVelocity = 0;
-	platformWidth = 300;
-	platformHeight = 30;
-	platformInitialX = (playerFixedX-playerWidth/2)+platformWidth/2;
-	nextNote = 0;
-	currentNote = 0;
-	
-	//Pitch detector initialization
-	const pitchDetector = new PitchDetector();
-	pitchDetector.start();
-}
 
-var generateRandomLevel = function() {
-	randomLevelValue = Math.floor(Math.random()*(levels.length))+1;
+var generateLevel = function() {
+	randomLevelValue = Math.floor(Math.random()*(numberOfLevels))+1;
 	currentLevelHeight = (((numberOfLevels+1)-randomLevelValue)*(levelsFieldHeight/numberOfLevels))+((levelsFieldHeight/numberOfLevels)/2)+(player.height-(levelsFieldHeight/numberOfLevels));
 	console.log("New Random level: ", randomLevelValue);
 	return [randomLevelValue, currentLevelHeight];
@@ -329,6 +324,38 @@ function platformsColliderCallback () {
 		scoreText.setText('score: ' + score);
 	}
 	platformTouched = true;
+}
+
+document.onclick = function () {
+	if(!startedGame){
+		if(sceneCreated) {
+			player.body.setGravityY(playerGravity);
+			scoreText.setText('score: ' + score);
+			startedGame = true;
+			//console.log("startedGame: ",startedGame);
+			pitchDetector.toggleEnable();
+		}
+		
+	} else if(!gameOver){
+		pausedGame = !pausedGame;
+		if(pausedGame) scoreText.setText('score: ' + score + ' Game Paused, Enter/Space to resume...');
+		else scoreText.setText('score: ' + score);
+		console.log("PausedGame: ",pausedGame);
+		pitchDetector.toggleEnable();
+	}
+		
+	if(gameOver) {
+		score = 0;
+		restartScene = true;
+		goAhead = true;
+		//console.log("restartScene: ",restartScene);
+		gameOver = false;
+		//console.log("gameOver: ",gameOver);
+		startedGame = false;
+		//console.log("startedGame: ",startedGame);
+		correctAnswer = true;
+		//console.log("correctAnswer: ",correctAnswer);
+	}
 }
 
 document.onkeydown = function(event) {
@@ -453,6 +480,6 @@ function jumpLevel(level) {
 				}
 	}
 	else if(level ==0 && player.body.touching.down && !pausedGame) {
-					goAhead = false;
+					//goAhead = false;
 				}
 }
