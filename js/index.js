@@ -178,7 +178,7 @@ function create ()
 	//Player Animations Creation
 	this.anims.create({
 		key: 'playerRun',
-		frames: this.anims.generateFrameNumbers('player', { start: 1, end: 9 }),
+		frames: this.anims.generateFrameNumbers('player', { start: 0, end: 8 }),
 		frameRate: 15*Math.sqrt(gameVelocity), //To set the veloticy of "rotation" dependent to the gameVelocity
 		repeat: -1 //loop=true
 	});
@@ -220,8 +220,8 @@ function create ()
 	
 	//SCORE
 	scoreText = this.add.text(16, 16, 'score:       Enter/Space to start', { fontSize: fontSize, fill: fontColor });
-	
 	//SETTING OF GAME STATE
+	
 	this.scene.pause("default"); //After the game is created it paused
 	gameStatus = "Created"; //The game status is updated: now the game is created but not yet started. (Where not started=paused)
 }
@@ -229,7 +229,7 @@ function create ()
 function update ()
 {	
 	if(restartScene) {
-		this.scene.restart();		
+		this.scene.restart();
 	}
 	else {
 		
@@ -239,7 +239,7 @@ function update ()
 		platforms.getChildren().forEach(function(p){
 			
 			//PLATFORM MOVEMENT-REMOVAL MANAGEMENT
-			if(p.x < -2*p.width)
+			if(p.x < -p.width/2)
 				p.destroy(); //Remove platforms that are no more visible (take some margin to avoid lags on previous platform)
 			else {
 				//Move platforms (body and texture)
@@ -289,16 +289,20 @@ function update ()
 			lastCreatedPlatform.level = levelValue;
 		}
 		
-		//PLAYER ANIMATION MANAGER + GAME VELOCITY
+		//PLAYER ANIMATION MANAGER + 
 		
 		if(player.body.touching.down) {
 			player.anims.play('playerRun', true);
-			platformVelocity = gameVelocity; //Keeps the platforms velocity updated when the player is touching a platform
+			gameStatus = "Running"; //The first time change the game status from Started to Running
 		}	
 		else {
 			player.anims.play('playerStop', true);
 			platformTouched = false;
 		}
+		
+		//GAME VELOCITY MANAGER
+		if(gameStatus == "Running")
+			platformVelocity = gameVelocity; //Keeps the platforms velocity updated since when the game is Running
 		
 		//GAME OVER HANDLER
 		
@@ -356,7 +360,7 @@ document.onkeydown = function(event) {
 					//Starting scene (update() function starts looping)
 					game.scene.resume("default");
 					
-					gameStatus = "Running";
+					gameStatus = "Started"; //This status identify the period of time from when the user press the key and when the player touch a platform
 					break;
 				
 				case "Running": //The game should toggle the pause status
@@ -482,7 +486,7 @@ function jumpLevel(level, fromKey = false) {
 			goAhead = true; //The answer is correct
 			noAnswer = false; //An answer has been given
 		} else if (level == nextLevel) { //Go down
-					player.setVelocityY(-350); //OK
+					player.setVelocityY(-450/gameVelocity); //OK
 					goAhead = true;
 					noAnswer = false;
 				}
