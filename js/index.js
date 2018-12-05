@@ -390,7 +390,6 @@ document.onkeydown = function(event) {
 		else if(player.body.touching.down && gameStatus=="Running" && jumpArea) {
 					jumpLevel(event.key, true);
 							
-//*************************************************************************************************************************
 					/*
 					Ti ho messo 2 approcci, scegli tu quale ti pare più comodo
 					N.B: In questa sezione siamo dentro a un if in cui si entra solo se:
@@ -401,49 +400,38 @@ document.onkeydown = function(event) {
 					*/
 					
 					noteKeys = "asdfghjk" //Tasti da usare
-					
-					//Questo è il metodo che avevamo usato per la tastierina
-						/*
-						noteFreq = []
-						for(var i=0;i<12;i++){
-							//Qui inizializzi il vettore delle frequenze da passare alla tua funzione playNote()
-						}
-						playNote(noteFreq(noteKeys.indexOf(event.key)))
-						*/
+				
 					
 					//Metodo con un semplice switch
-						/*
 						switch(event.key){
-							case "a":
-								playNote(frequenzaDO);
-								break;
-							case "s":
-								playNote(frequenzaRE);
-								break;
-							case "d":
-								playNote(frequenzaMI);
-								break;
-							case "f":
-								playNote(frequenzaFA);
-								break;
-							case "g":
-								playNote(frequenzaSOL);
-								break;
-							case "h":
-								playNote(frequenzaLA);
-								break;
-							case "j":
-								playNote(frequenzaSI);
-								break;
-							case "k":
-								playNote(frequenzaDO+ottava);
-								break;
-							default:
-								break;
+						case "a":
+							pitchDetector.tuner.play(noteFreq["C3"])
+							break;
+						case "s":
+							pitchDetector.tuner.play(noteFreq["D3"])
+							break;
+						case "d":
+							pitchDetector.tuner.play(noteFreq["E3"])
+							break;
+						case "f":
+							pitchDetector.tuner.play(noteFreq["F3"]);
+							break;
+						case "g":
+							pitchDetector.tuner.play(noteFreq["G3"])
+							break;
+						case "h":
+							pitchDetector.tuner.play(noteFreq["A3"])
+							break;
+						case "j":
+							pitchDetector.tuner.play(noteFreq["B3"])
+							break;
+						case "k":
+							pitchDetector.tuner.play(noteFreq["C4"])
+							break;
+						default:
+							break;
 						}
-						*/
-
-//*************************************************************************************************************************					
+					
 				}
 	}
 }
