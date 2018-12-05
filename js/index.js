@@ -236,6 +236,7 @@ function update ()
 		// PLATFORMS MANAGER: MOVEMENT, REMOVAL, CONDITIONS
 		
 		playerLeftBorder = (playerFixedX-player.width/2);
+		
 		platforms.getChildren().forEach(function(p){
 			
 			//PLATFORM MOVEMENT-REMOVAL MANAGEMENT
