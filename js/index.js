@@ -238,15 +238,17 @@ function update ()
 		playerLeftBorder = (playerFixedX-player.width/2);
 		
 		platforms.getChildren().forEach(function(p){
+			if(p.x < -p.width/2)
+				p.destroy(); //Remove platforms that are no more visible
+		})
+		
+		platforms.getChildren().forEach(function(p){
 			
 			//PLATFORM MOVEMENT-REMOVAL MANAGEMENT
-			if(p.x < -p.width/2)
-				p.destroy(); //Remove platforms that are no more visible (take some margin to avoid lags on previous platform)
-			else {
-				//Move platforms (body and texture)
-				p.x = p.x - platformVelocity;
-				p.body.x = p.body.x - platformVelocity;
-			}
+			
+			//Move platforms (body and texture)
+			p.x = p.x - platformVelocity;
+			p.body.x = p.body.x - platformVelocity;
 			
 			//PLATFORMS CONDITIONAL EVENTS
 			platformLeftBorder = (p.x-(p.width/2));
