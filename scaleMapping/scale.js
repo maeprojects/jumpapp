@@ -1,23 +1,5 @@
-/*
-* this function is called from the pitchDetector Module when a new note is detected
-*/function newNote(musicalNote){
-	console.log(musicalNote)
-  	level = 0
-  	
-  	switch(musicalNote){
-    case "A3": level = 1; break;
-    case "B3": level = 2; break;
-    case "C#3": level = 3; break;
-    case "D3": level = 4; break;
-    case "E3": level = 5; break;
-    case "F#3": level = 6; break;
-    case "G#3": level = 7; break;
-    case "A4": level = 8; break;
-  	}
-	console.log(level)
-  	//CALL graphicsModule
-  	jumpLevel(level)
-}
+var majorScale = [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1]
+var NoteReference = "C3"
 
 // calulate tones from C2 to A5
 numTones = 49
@@ -39,5 +21,53 @@ for(i=0; i<tones.length; i++){
   noteFreq[noteLetter] = tones[i]
 }
 
-var majorScale = [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1]
-var NoteReference = "C3"
+
+
+
+/*
+* this function is called from the pitchDetector Module when a new note is detected
+*/function newNote(musicalNote){
+  	level = 0
+  	
+  	switch(musicalNote){
+    case "C3": level = 1; break;
+    case "D3": level = 2; break;
+    case "E3": level = 3; break;
+    case "F3": level = 4; break;
+    case "G3": level = 5; break;
+    case "A3": level = 6; break;
+    case "B3": level = 7; break;
+    case "C4": level = 8; break;
+  	}
+  	//CALL graphicsModule
+  	jumpLevel(level)
+}
+
+
+
+
+
+
+//------------------------------------------
+// function for debug
+
+function changeReference(note){
+	NoteReference = note;
+}
+
+function buttonPlayReference(){
+	ctx = new AudioContext()
+	osc = ctx.createOscillator()
+	g = ctx.createGain()
+	osc.frequency.value = noteFreq[NoteReference]
+	osc.connect(g)
+	g.connect(ctx.destination)
+	g.gain.value = 0
+    now = ctx.currentTime
+  	g.gain.linearRampToValueAtTime(1, now+0.1)
+  	
+  	g.gain.linearRampToValueAtTime(0, now+0.8)
+  	osc.start()
+  	
+
+}
