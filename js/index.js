@@ -402,7 +402,7 @@ document.onkeydown = function(event) {
 					noteKeys = "asdfghjk" //Tasti da usare
 				
 					
-					//Metodo con un semplice switch
+					//Metodo con un semplice switch play
 						switch(event.key){
 						case "a":
 							pitchDetector.tuner.play(noteFreq["C3"])
@@ -433,6 +433,7 @@ document.onkeydown = function(event) {
 						}
 					
 				}
+
 	}
 }
 
