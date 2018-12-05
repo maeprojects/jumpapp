@@ -406,28 +406,28 @@ document.onkeydown = function(event) {
 					//Metodo con un semplice switch play
 						switch(event.key){
 						case "a":
-							pitchDetector.tuner.play(noteFreq["C3"])
-							break;
-						case "s":
-							pitchDetector.tuner.play(noteFreq["D3"])
-							break;
-						case "d":
-							pitchDetector.tuner.play(noteFreq["E3"])
-							break;
-						case "f":
-							pitchDetector.tuner.play(noteFreq["F3"]);
-							break;
-						case "g":
-							pitchDetector.tuner.play(noteFreq["G3"])
-							break;
-						case "h":
 							pitchDetector.tuner.play(noteFreq["A3"])
 							break;
-						case "j":
+						case "s":
 							pitchDetector.tuner.play(noteFreq["B3"])
 							break;
+						case "d":
+							pitchDetector.tuner.play(noteFreq["C#3"])
+							break;
+						case "f":
+							pitchDetector.tuner.play(noteFreq["D3"]);
+							break;
+						case "g":
+							pitchDetector.tuner.play(noteFreq["E3"])
+							break;
+						case "h":
+							pitchDetector.tuner.play(noteFreq["F#3"])
+							break;
+						case "j":
+							pitchDetector.tuner.play(noteFreq["G#3"])
+							break;
 						case "k":
-							pitchDetector.tuner.play(noteFreq["C4"])
+							pitchDetector.tuner.play(noteFreq["A4"])
 							break;
 						default:
 							break;
@@ -440,7 +440,7 @@ document.onkeydown = function(event) {
 
 function jumpLevel(level, fromKey = false) {
 	if(!fromKey)
-		console.log("Pitch detected level: ", level);
+		//console.log("Pitch detected level: ", level);
 	
 	if(player.body.touching.down && gameStatus=="Running" && jumpArea) {
 		jumpRatio = String(nextLevel-currentLevel+1);
