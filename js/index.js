@@ -339,6 +339,7 @@ function platformsColliderCallback () {
 	if(!platformTouched && player.body.touching.down) {
 		score++;
 		scoreText.setText('score: ' + score);
+		player.setVelocityX(0);
 	}
 	platformTouched = true; //Needed to take only the first collision with the platform
 }
@@ -447,38 +448,11 @@ function jumpLevel(level, fromKey = false) {
 	if(player.body.touching.down && gameStatus=="Running" && jumpArea) {
 		jumpRatio = String(nextLevel-currentLevel+1);
 		if(level == nextLevel && currentLevel<=nextLevel) { //Go up
-			switch(jumpRatio) {
-				case "1":
-					player.setVelocityY(-250*Math.pow(stepHeight,1/26)*Math.pow(gameVelocity, 1/3));
-					break;
-				case "2":
-					player.setVelocityY(-450*Math.pow(stepHeight,1/25)*Math.pow(gameVelocity, 1/3));
-					break; 
-				case "3":
-					player.setVelocityY(-600*Math.pow(stepHeight,1/24)*Math.pow(gameVelocity, 1/6));
-					break;
-				case "4":
-					player.setVelocityY(-750*Math.pow(stepHeight,1/23)*Math.pow(gameVelocity, 1/15));
-					break;
-				case "5":
-					player.setVelocityY(-830*Math.pow(stepHeight,1/22)*Math.pow(gameVelocity, 1/17));
-					break;
-				case "6":
-					player.setVelocityY(-950*Math.pow(stepHeight,1/21)*Math.pow(gameVelocity, 1/18));
-					break;
-				case "7":
-					player.setVelocityY(-1000*Math.pow(stepHeight,1/20)*Math.pow(gameVelocity, 1/19));
-					break;
-				case "8":
-					player.setVelocityY(-1090*Math.pow(stepHeight,1/19)*Math.pow(gameVelocity, 1/20));   
-					break;
-				default:
-					break;
-			}
+			player.setVelocityY(-10*Math.pow(2*gravity*jumpRatio,1/2));
 			goAhead = true; //The answer is correct
 			noAnswer = false; //An answer has been given
 		} else if (level == nextLevel) { //Go down
-					player.setVelocityY(-450/gameVelocity); //OK
+					player.setVelocityY(-450/Math.pow(gameVelocity, 1/2)); //OK
 					goAhead = true;
 					noAnswer = false;
 				}
