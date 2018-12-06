@@ -22,6 +22,17 @@ for(i=0; i<tones.length; i++){
 }
 
 
+//ternary mapping
+var LeveleScaleColorsMatrix = [["ionian",[1,0,1,0,1,1,0,1,0,1,0,1,1],["red", "white", "pink", "white", "light-red", "white", "white", "red"]], 
+		["lydian",[1,0,1,0,1,0,1,1,0,1,0,1,1],["red", "white", "pink", "yellow", "light-red", "white", "white", "red"]], 
+		["mixolydian",[1,0,1,0,1,1,0,1,0,1,1,0,1],["red", "white", "pink", "white", "light-red", "white", "blue", "red"]], 
+		["dorian",[1,0,1,1,0,1,0,1,0,1,1,0,1],["red", "white", "blue", "white", "light-red", "white", "blue", "red"]],
+		["eolian",[1,0,1,1,0,1,0,1,1,0,1,0,1],["red", "white", "blue", "white", "light-red", "blue", "blue", "red"]],
+		["phrigian",[1,1,0,1,0,1,0,1,1,0,1,0,1],["red", "blue", "blue", "white", "light-red", "blue", "blue", "red"]],
+		["locryan",[1,1,0,1,0,1,1,0,1,0,1,0,1],["red", "blue", "blue", "white", "blue", "blue", "blue", "red"]]]
+
+
+
 
 
 /*
