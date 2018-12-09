@@ -392,50 +392,16 @@ document.onkeydown = function(event) {
 		
 		}
 		else if(player.body.touching.down && gameStatus=="Running" && jumpArea) {
-					jumpLevel(event.key, true);
-							
-					/*
-					Ti ho messo 2 approcci, scegli tu quale ti pare più comodo
-					N.B: In questa sezione siamo dentro a un if in cui si entra solo se:
-						- il gioco è partito
-						- il gioco non è in pausa
-						- il player sta toccando una piattaforma
-						- il player è nell'area di salto
-					*/
 					
+					//Play a note directly into the pitchDetector module for the pitch detecting phase (Debug code)
 					noteKeys = "asdfghjk" //Tasti da usare
-				
+					notes = ["C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4"];
+					noteFreqKeys = [];
+					for(i=0; i<8; i++) {
+						noteFreqKeys[i] = noteFreq[notes[i]];
+					}
 					
-					//Metodo con un semplice switch play
-						switch(event.key){
-						case "a":
-							pitchDetector.tuner.play(noteFreq["C3"])
-							break;
-						case "s":
-							pitchDetector.tuner.play(noteFreq["D3"])
-							break;
-						case "d":
-							pitchDetector.tuner.play(noteFreq["E3"])
-							break;
-						case "f":
-							pitchDetector.tuner.play(noteFreq["F3"]);
-							break;
-						case "g":
-							pitchDetector.tuner.play(noteFreq["G3"])
-							break;
-						case "h":
-							pitchDetector.tuner.play(noteFreq["A3"])
-							break;
-						case "j":
-							pitchDetector.tuner.play(noteFreq["B3"])
-							break;
-						case "k":
-							pitchDetector.tuner.play(noteFreq["C4"])
-							break;
-						default:
-							break;
-						}
-					
+					pitchDetector.tuner.play(noteFreqKeys[noteKeys.indexOf(event.key)]);
 				}
 
 	}
