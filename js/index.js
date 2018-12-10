@@ -344,9 +344,6 @@ function platformsColliderCallback () {
 	platformTouched = true; //Needed to take only the first collision with the platform
 }
 
-document.onclick = function () {
-}
-
 document.onkeydown = function(event) {
 	if(!event.repeat){
 		if(event.key == "Enter" || event.key == " "){
@@ -391,7 +388,7 @@ document.onkeydown = function(event) {
 			}
 		
 		}
-		else if(player.body.touching.down && gameStatus=="Running" && jumpArea) {
+		else if(gameStatus=="Running" && player.body.touching.down && jumpArea) {
 					
 					//Play a note directly into the pitchDetector module for the pitch detecting phase (Debug code)
 					noteKeys = "asdfghjk" //Tasti da usare
