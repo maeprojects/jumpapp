@@ -390,7 +390,7 @@ document.onkeydown = function(event) {
 		}
 		else if(gameStatus=="Running" && player.body.touching.down && jumpArea) {
 					
-					//Play a note directly into the pitchDetector module for the pitch detecting phase (Debug code)
+					//Play a note directly into the pitchDetector module for the pitch detecting step (Debug code)
 					noteKeys = "asdfghjk" //Tasti da usare
 					notes = ["C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4"];
 					noteFreqKeys = [];
@@ -404,23 +404,25 @@ document.onkeydown = function(event) {
 	}
 }
 
-function jumpLevel(level, fromKey = false) {
-	if(!fromKey)
-		console.log("Pitch detected level: ", level);
+function jumpLevel(level) {
 	
-	if(player.body.touching.down && gameStatus=="Running" && jumpArea) {
+	if(gameStatus=="Running" && player.body.touching.down && jumpArea) {
 		jumpRatio = String(nextLevel-currentLevel+1);
+		
+		//If the note detected is correct:
 		if(level == nextLevel && currentLevel<=nextLevel) { //Go up
-			player.setVelocityY(-10*Math.pow(2*gravity*jumpRatio,1/2));
+			player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity)*stepHeight*jumpRatio,1/2));
 			goAhead = true; //The answer is correct
 			noAnswer = false; //An answer has been given
 		} else if (level == nextLevel) { //Go down
-					player.setVelocityY(-450/Math.pow(gameVelocity, 1/2)); //OK
+					player.setVelocityY(-450/Math.pow(gameVelocity, 1/2));
 					goAhead = true;
 					noAnswer = false;
 				}
+				//Else go ahead remain false and the player fall down
+				
 	}
-	else if(level ==0 && player.body.touching.down && gameStatus=="Running") {
+	else if(level == 0 && player.body.touching.down && gameStatus=="Running") {
 					//goAhead = false; //The player fall down if a wrong note is singed (even out of the jump area)
 				}
 }
