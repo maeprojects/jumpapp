@@ -79,7 +79,6 @@ function changeNoteReference(note){
 }
 
 function changeScaleReference(scale){
-  //console.log(scale.toString)
   scaleStepsReference = scaleToStepsArray[scale];
   currentScale = getCurrentScale()
 }
