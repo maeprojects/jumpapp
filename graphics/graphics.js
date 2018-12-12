@@ -113,7 +113,7 @@ function initVariables() {
 	platformVelocity = 0;
 	measurePlatformWidth = 600;
 	platformHeight = stepHeight-((stepHeight*40)/100);
-	platformInitialX = (playerFixedX-playerWidth/2)+(measurePlatformWidth/2);
+	platformInitialX = (playerFixedX-playerWidth/2)+(measurePlatformWidth/2/2);
 	nextLevel = 0;
 	currentLevel = 0;
 
@@ -174,12 +174,12 @@ game.scene.add("syncScene", syncScene);
 var playScene = {
 	preload: function() {
 		//Needed to be set here to set the player dimension correctly
-		playerWidth = 25;
+		playerWidth = 19;
 		playerHeight = 48;
 		
 		//Loading of game resources
 		this.load.image('gameover', 'assets/gameover.png');
-		this.load.spritesheet('player', 'assets/dude.png', { frameWidth: playerWidth, frameHeight: playerHeight });
+		this.load.spritesheet('player', 'assets/player.png', { frameWidth: playerWidth, frameHeight: playerHeight });
 	},
 	create: function() {
 		
@@ -202,7 +202,7 @@ var playScene = {
 		player = this.physics.add.sprite(playerFixedX, playerInitialY, 'player');
 		player.setCollideWorldBounds(false); //So the player can exceed the world boundaries
 		player.body.setGravityY(-gravity); //For the player to have an y acceleration; set to (-gravity) to make the player have no y motion at first
-		//player.setTint(0xAAFF00); //Set a color mask for the player
+		//player.setTint(0x000000); //Set a color mask for the player
 
 		//Player Animations Creation
 		this.anims.create({
@@ -221,17 +221,17 @@ var playScene = {
 		//PLATFORMS GENERATION
 		
 		//nextNoteDuration = getDurationNote();
-		createPlatformTexture(this, measurePlatformWidth, platformHeight); //Draw the platform texture
+		createPlatformTexture(this, measurePlatformWidth/2, platformHeight); //Draw the platform texture
 		
 		platforms = this.physics.add.staticGroup(); //Platforms empty group creation
 		
 		//Generation of the platforms visible when the game starts
-		numberOfInitialPlatforms = resolution[0]/measurePlatformWidth; //Exceed the number of effectively shown platforms to avoid horizontal white spaces between platforms
+		numberOfInitialPlatforms = resolution[0]/(measurePlatformWidth/2); //Exceed the number of effectively shown platforms to avoid horizontal white spaces between platforms
 		for(i=0; i<numberOfInitialPlatforms; i++) {
 			newLevel = generateLevel();
 			levelIndex = newLevel[0];
 			levelHeight = newLevel[1];
-			lastCreatedPlatform = platforms.create((platformInitialX+measurePlatformWidth*i), levelHeight, 'platform');
+			lastCreatedPlatform = platforms.create((platformInitialX+(measurePlatformWidth/2)*i), levelHeight, 'platform');
 			lastCreatedPlatform.level = levelIndex;
 			
 			//Set of current and next level when the game starts
@@ -388,7 +388,7 @@ var playScene = {
 				collider.overlapOnly = false;
 				//console.log("overlapOnly: ",collider.overlapOnly);
 			}
-		}
+		} 
 		
 		//GAME VELOCITY MANAGER
 		if(gameStatus == "Running")
