@@ -338,7 +338,7 @@ var playScene = {
 			
 			
 			//New background on level change
-			if(gameLevel<levelScaleColorsMatrix.length-1) {
+			if(gameLevel<gameLevelToScaleArray.length-1) {
 				tween = this.add.tween({ targets: backgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 500, alpha: { getStart: () => 1, getEnd: () => 0 } });
 				tween.setCallback("onComplete", function(){
 					backgroundImage.destroy();
@@ -466,8 +466,18 @@ function createBackground(context, color= backgroundGridColor) {
 	//blackSteps = [true,false,true,false,true,false,false,true]; //From the bottom (position 0) to the top (position 7) of the screen
 																//Dimension must agree with numberOfLevels
 	yPointer = playerHeight; //Starts from the top to draw
+	colorsArray = scaleToColorsArray[gameLevelToScaleArray[gameLevel]]
+	/*
 	for (i = 1; i <= levelScaleColorsMatrix[gameLevel][2].length; i++) {
 		graphics.fillStyle(levelScaleColorsMatrix[gameLevel][2][levelScaleColorsMatrix[0][2].length-i],1);
+		graphics.lineStyle(0.1, "0x000000", 1);
+		graphics.fillRect(0,yPointer,resolution[0],stepHeight);
+			
+		graphics.strokeRect(0,yPointer,resolution[0],stepHeight); //Rectangle border
+		yPointer += stepHeight;
+	}*/
+	for (i = 1; i <= colorsArray.length; i++) {
+		graphics.fillStyle(colorsArray[scaleToColorsArray[gameLevelToScaleArray[0]].length-i],1);
 		graphics.lineStyle(0.1, "0x000000", 1);
 		graphics.fillRect(0,yPointer,resolution[0],stepHeight);
 			

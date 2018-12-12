@@ -1,5 +1,5 @@
 var noteReference = "C3"
-var scaleReference = levelScaleColorsMatrix[0][1]
+var scaleReference = scaleToStepsArray["ionian"]
 var currentScale = getCurrentScale()
 
 /*
@@ -66,13 +66,11 @@ function getCurrentScale(){
 * numLevelGame is in the range [0 - 6]
 */
 function changeGameLevel(numLevelGame){
-  if(numLevelGame < levelScaleColorsMatrix.length)
-    scaleReference = levelScaleColorsMatrix[numLevelGame][1]
+  if(numLevelGame < gameLevelToScaleArray.length)
+    scaleReference = scaleToStepsArray[gameLevelToScaleArray[numLevelGame]]
+  //levelScaleColorsMatrix[numLevelGame][1]
   currentScale = getCurrentScale()
 }
-
-//------------------------------------------
-// function for debug
 
 function changeNoteReference(note){
 	noteReference = note;
@@ -88,15 +86,15 @@ function buttonPlayReference(){
 	ctx = new AudioContext()
 	osc = ctx.createOscillator()
 	g = ctx.createGain()
-	osc.frequency.value = noteFreq[NoteReference]
+	osc.frequency.value = noteFreq[noteReference]
 	osc.connect(g)
 	g.connect(ctx.destination)
 	g.gain.value = 0
-    now = ctx.currentTime
-  	g.gain.linearRampToValueAtTime(1, now+0.1)
-  	
-  	g.gain.linearRampToValueAtTime(0, now+0.8)
-  	osc.start()
-  	
+  now = ctx.currentTime
+	g.gain.linearRampToValueAtTime(1, now+0.1)
+	
+	g.gain.linearRampToValueAtTime(0, now+0.8)
+	osc.start()
+	
 
 }

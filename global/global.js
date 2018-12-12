@@ -29,6 +29,7 @@ majorInt = "0xffffff";  //majorIntC
 minorInt = "0x999cff";  //blue
 
 //ternary mapping
+/*
 var levelScaleColorsMatrix = [["ionian",[1,0,1,0,1,1,0,1,0,1,0,1,1],[fundamental, majorInt, majorThird, majorInt, perfectFifth, majorInt, majorInt, fundamental]], 
 		["lydian",[1,0,1,0,1,0,1,1,0,1,0,1,1],[fundamental, majorInt, majorThird, augFourth, perfectFifth, majorInt, majorInt, fundamental]], 
 		["mixolydian",[1,0,1,0,1,1,0,1,0,1,1,0,1],[fundamental, majorInt, majorThird, majorInt, perfectFifth, majorInt, minorInt, fundamental]], 
@@ -36,7 +37,34 @@ var levelScaleColorsMatrix = [["ionian",[1,0,1,0,1,1,0,1,0,1,0,1,1],[fundamental
 		["eolian",[1,0,1,1,0,1,0,1,1,0,1,0,1],[fundamental, majorInt, minorInt, majorInt, perfectFifth, minorInt, minorInt, fundamental]],
 		["phrigian",[1,1,0,1,0,1,0,1,1,0,1,0,1],[fundamental, minorInt, minorInt, majorInt, perfectFifth, minorInt, minorInt, fundamental]],
 		["locryan",[1,1,0,1,0,1,1,0,1,0,1,0,1],[fundamental, minorInt, minorInt, majorInt, minorInt, minorInt, minorInt, fundamental]]]
+		*/
 
+var scaleToStepsArray=[]
+scaleToStepsArray["ionian"] = [1,0,1,0,1,1,0,1,0,1,0,1,1]
+scaleToStepsArray["lydian"] = [1,0,1,0,1,0,1,1,0,1,0,1,1]
+scaleToStepsArray["mixolydian"] = [1,0,1,0,1,1,0,1,0,1,1,0,1]
+scaleToStepsArray["dorian"] = [1,0,1,1,0,1,0,1,0,1,1,0,1]
+scaleToStepsArray["aeolian"] = [1,0,1,1,0,1,0,1,1,0,1,0,1]
+scaleToStepsArray["phrygian"] = [1,1,0,1,0,1,0,1,1,0,1,0,1]
+scaleToStepsArray["locrian"] = [1,1,0,1,0,1,1,0,1,0,1,0,1]
+
+var scaleToColorsArray = []
+scaleToColorsArray["ionian"] = [fundamental, majorInt, majorThird, majorInt, perfectFifth, majorInt, majorInt, fundamental]
+scaleToColorsArray["lydian"] = [fundamental, majorInt, majorThird, augFourth, perfectFifth, majorInt, majorInt, fundamental]
+scaleToColorsArray["mixolydian"] = [fundamental, majorInt, majorThird, majorInt, perfectFifth, majorInt, minorInt, fundamental]
+scaleToColorsArray["dorian"] = [fundamental, majorInt, minorInt, majorInt, perfectFifth, majorInt, minorInt, fundamental]
+scaleToColorsArray["aeolian"] = [fundamental, majorInt, minorInt, majorInt, perfectFifth, minorInt, minorInt, fundamental]
+scaleToColorsArray["phrygian"] = [fundamental, minorInt, minorInt, majorInt, perfectFifth, minorInt, minorInt, fundamental]
+scaleToColorsArray["locrian"] = [fundamental, minorInt, minorInt, majorInt, minorInt, minorInt, minorInt, fundamental]
+
+var gameLevelToScaleArray = []
+gameLevelToScaleArray[0] = "ionian"
+gameLevelToScaleArray[1] = "lydian"
+gameLevelToScaleArray[2] = "mixolydian"
+gameLevelToScaleArray[3] = "dorian"
+gameLevelToScaleArray[4] = "aeolian"
+gameLevelToScaleArray[5] = "phrygian"
+gameLevelToScaleArray[6] = "locrian"
 
 
 
