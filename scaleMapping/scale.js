@@ -20,7 +20,7 @@ var currentScale = getCurrentScale()
     default: level = 0; break;
   	}
 
-    console.log(musicalNote)
+    //console.log(musicalNote)
     //console.log(level)
 
   	//CALL graphicsModule
@@ -74,8 +74,14 @@ function changeGameLevel(numLevelGame){
 //------------------------------------------
 // function for debug
 
-function changeReference(note){
+function changeNoteReference(note){
 	noteReference = note;
+  currentScale = getCurrentScale()
+}
+
+function changeScaleReference(scale){
+  scaleReference = scale;
+  currentScale = getCurrentScale()
 }
 
 function buttonPlayReference(){

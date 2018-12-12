@@ -459,12 +459,11 @@ document.onkeydown = function(event) {
 					
 					//Play a note directly into the pitchDetector module for the pitch detecting step (Debug code)
 					noteKeys = "asdfghjk" //Tasti da usare
-					notes = ["C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4"];
 					noteFreqKeys = [];
-					for(i=0; i<8; i++) {
-						noteFreqKeys[i] = noteFreq[notes[i]];
+					for(i=0; i<currentScale.length; i++) {
+						noteFreqKeys[i] = noteFreq[currentScale[i]];
 					}
-					
+					console.log(currentScale[noteKeys.indexOf(event.key)])
 					pitchDetector.tuner.play(noteFreqKeys[noteKeys.indexOf(event.key)]);
 				}
 
