@@ -1,5 +1,5 @@
 var noteReference = "C3"
-var scaleReference = scaleToStepsArray["ionian"]
+var scaleStepsReference = scaleToStepsArray["ionian"]
 var currentScale = getCurrentScale()
 
 /*
@@ -20,7 +20,8 @@ var currentScale = getCurrentScale()
     default: level = 0; break;
   	}
 
-    //console.log(musicalNote)
+    if(level!=0)
+      console.log(musicalNote)
     //console.log(level)
 
   	//CALL graphicsModule
@@ -36,8 +37,8 @@ function getCurrentScale(){
 
     // calculate the scale
     j=letters.indexOf(extractLetterReference)
-    for(i=0; i<scaleReference.length; i++){
-      if(scaleReference[i]==1){
+    for(i=0; i<scaleStepsReference.length; i++){
+      if(scaleStepsReference[i]==1){
         currentScale[index] = letters[j]
         index++
       }
@@ -67,7 +68,7 @@ function getCurrentScale(){
 */
 function changeGameLevel(numLevelGame){
   if(numLevelGame < gameLevelToScaleArray.length)
-    scaleReference = scaleToStepsArray[gameLevelToScaleArray[numLevelGame]]
+    scaleStepsReference = scaleToStepsArray[gameLevelToScaleArray[numLevelGame]]
   //levelScaleColorsMatrix[numLevelGame][1]
   currentScale = getCurrentScale()
 }
@@ -78,7 +79,8 @@ function changeNoteReference(note){
 }
 
 function changeScaleReference(scale){
-  scaleReference = scale;
+  //console.log(scale.toString)
+  scaleStepsReference = scaleToStepsArray[scale];
   currentScale = getCurrentScale()
 }
 

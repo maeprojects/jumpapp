@@ -116,6 +116,10 @@ function initVariables() {
 	platformInitialX = (playerFixedX-playerWidth/2)+(measurePlatformWidth/2);
 	nextLevel = 0;
 	currentLevel = 0;
+
+	//ScaleMapping inizialization
+	//changeNoteReference("C3")
+	changeScaleReference("ionian")
 }
 
 
@@ -556,7 +560,7 @@ document.onkeydown = function(event) {
 		else if(gameStatus=="Running" && player.body.touching.down && jumpArea) {
 					
 					//Play a note directly into the pitchDetector module for the pitch detecting step (Debug code)
-					noteKeys = "asdfghjk" //Tasti da usare
+					noteKeys = "12345678" //Tasti da usare
 					noteFreqKeys = [];
 					for(i=0; i<currentScale.length; i++) {
 						noteFreqKeys[i] = noteFreq[currentScale[i]];
