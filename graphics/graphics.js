@@ -40,6 +40,9 @@ var playerHeight;
 //Game score
 var score; //Int
 var scoreText;
+
+//Game grid-rhythm settings
+var timeSignature;
 	
 //Game status managing
 var gameStatus;
@@ -60,7 +63,7 @@ var levelsFieldHeight;
 var stepHeight;
 var platformVelocity;
 var platformTouched;
-var platformWidth;
+var measurePlatformWidth;
 var platformHeight;
 var platformInitialX;
 var nextLevel;
@@ -84,6 +87,9 @@ function initVariables() {
 	//Game state managing
 	gameStatus = "Initialized";
 	restartScene = false;
+	
+	//Game grid-rhythm settings
+	timeSignature = 4;
 
 	//Jump event managing
 	goAhead = true;
@@ -101,9 +107,9 @@ function initVariables() {
 
 	platformTouched = false;
 	platformVelocity = 0;
-	platformWidth = 300;
+	measurePlatformWidth = 600;
 	platformHeight = stepHeight-((stepHeight*40)/100);
-	platformInitialX = (playerFixedX-playerWidth/2)+(platformWidth/2);
+	platformInitialX = (playerFixedX-playerWidth/2)+(measurePlatformWidth/2);
 	nextLevel = 0;
 	currentLevel = 0;
 }
@@ -156,6 +162,10 @@ var syncScene = {
 game.scene.add("syncScene", syncScene);
 
 
+test = function() {
+	console.log("external test working!")
+}
+
 var playScene = {
 	preload: function() {
 		//Needed to be set here to set the player dimension correctly
@@ -167,6 +177,7 @@ var playScene = {
 		this.load.spritesheet('player', 'assets/dude.png', { frameWidth: playerWidth, frameHeight: playerHeight });
 	},
 	create: function() {
+		
 		initVariables();
 
 		//WORLD
@@ -203,18 +214,17 @@ var playScene = {
 		
 		//PLATFORMS GENERATION
 		
-		createPlatformTexture(this, platformWidth, platformHeight); //Draw the platform texture
-		/* platformTimeSignature = "quarter";
-		createGridTexture(this, platformWidth, platformTimeSignature); */
+		createPlatformTexture(this, measurePlatformWidth, platformHeight); //Draw the platform texture
+		
 		platforms = this.physics.add.staticGroup(); //Platforms empty group creation
 		
 		//Generation of the platforms visible when the game starts
-		numberOfInitialPlatforms = resolution[0]/platformWidth; //Exceed the number of effectively shown platforms to avoid horizontal white spaces between platforms
+		numberOfInitialPlatforms = resolution[0]/measurePlatformWidth; //Exceed the number of effectively shown platforms to avoid horizontal white spaces between platforms
 		for(i=0; i<numberOfInitialPlatforms; i++) {
 			newLevel = generateLevel();
 			levelIndex = newLevel[0];
 			levelHeight = newLevel[1];
-			lastCreatedPlatform = platforms.create((platformInitialX+platformWidth*i), levelHeight, 'platform');
+			lastCreatedPlatform = platforms.create((platformInitialX+measurePlatformWidth*i), levelHeight, 'platform');
 			lastCreatedPlatform.level = levelIndex;
 			
 			//Set of current and next level when the game starts
@@ -228,6 +238,20 @@ var playScene = {
 			}
 		}
 		
+		
+		//GRID GENERATION
+		
+		createGridTexture(this, measurePlatformWidth, timeSignature); //Draw grid texture
+		measuresGrid = this.physics.add.staticGroup(); //Platforms empty group creation
+		
+		gridLength = measurePlatformWidth;
+		numberOfInitialMeasures = resolution[0]/measurePlatformWidth;
+		for(i=0; i<numberOfInitialMeasures; i++) {
+			lastGrid = measuresGrid.create((playerFixedX-(playerWidth/2)+(gridLength/2))+(gridLength*i), resolution[1]/2, 'grid-texture');
+			lastGrid.setDepth(0);
+		}
+		
+		
 		//Creation of collider between the player and the platforms, with a callback function
 		this.physics.add.collider(player, platforms, platformsColliderCallback);
 			
@@ -240,6 +264,20 @@ var playScene = {
 	},
 	
 	update: function() {
+		//GRID MANAGER
+		
+		measuresGrid.getChildren().forEach(function(p){
+			if(p.x < -p.width/2)
+				p.destroy(); //Remove grids that are no more visible
+		})
+		
+		measuresGrid.getChildren().forEach(function(p){
+			//Move grids (body and texture)
+			p.x = p.x - platformVelocity;
+			p.body.x = p.body.x - platformVelocity;
+		});
+		
+		
 		// PLATFORMS MANAGER: MOVEMENT, REMOVAL, CONDITIONS
 		
 		playerLeftBorder = (playerFixedX-player.width/2);
@@ -259,10 +297,10 @@ var playScene = {
 			
 			//PLATFORMS CONDITIONAL EVENTS
 			platformLeftBorder = (p.x-(p.width/2));
-			platformWidth = p.width;
+			measurePlatformWidth = p.width;
 			
 			//Set jumpArea when the player enter the jumpArea
-			playerEnterJumpArea = (playerLeftBorder >= platformLeftBorder+platformWidth-jumpAreaWidth) && ((playerLeftBorder-gameVelocity) <= (platformLeftBorder+platformWidth-jumpAreaWidth));
+			playerEnterJumpArea = (playerLeftBorder >= platformLeftBorder+measurePlatformWidth-jumpAreaWidth) && ((playerLeftBorder-gameVelocity) <= (platformLeftBorder+measurePlatformWidth-jumpAreaWidth));
 			if(playerEnterJumpArea) {
 				jumpArea = true;
 				noAnswer = true; //Answer again ungiven
@@ -272,7 +310,7 @@ var playScene = {
 			are true on subsequent elements. (i.e. if the first condition is true on the 3rd element, the second condition is true on the 
 			following 4th element */			
 			currentPlatformChanged =  (playerLeftBorder >= platformLeftBorder) &&  (playerLeftBorder-gameVelocity <= platformLeftBorder); //Condition to summarize when the player enter on another platform
-			nextPlatformChanged =  (playerLeftBorder+platformWidth >= platformLeftBorder)  && ((playerLeftBorder-gameVelocity)+platformWidth <= platformLeftBorder); //Condition to summarize when the platform following the one in which the player enter is changed
+			nextPlatformChanged =  (playerLeftBorder+measurePlatformWidth >= platformLeftBorder)  && ((playerLeftBorder-gameVelocity)+measurePlatformWidth <= platformLeftBorder); //Condition to summarize when the platform following the one in which the player enter is changed
 			
 			//If the next Platform is changed a new nextLevel is set
 			if(nextPlatformChanged) {
@@ -314,6 +352,12 @@ var playScene = {
 				newbackgroundImage.setDepth(-1);
 				newtween = this.add.tween({ targets: newbackgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 			}
+		}
+		
+		//Creation of new grid measures
+		if(lastGrid.x < resolution[0]-lastGrid.width/2){ //When the platform is completely on the screen, generate a new platform
+			lastGrid = platforms.create(resolution[0]+lastGrid.width/2, resolution[1]/2, 'grid-texture');
+			lastGrid.setDepth(0);
 		}
 		
 		//PLAYER ANIMATION MANAGER
@@ -371,7 +415,7 @@ var settingsScene = {
 game.scene.add("settingsScene", settingsScene);
 
 
-game.scene.start("splashScene");
+game.scene.start("playScene");
 
 
 
@@ -380,6 +424,38 @@ function createPlatformTexture(context, width, height, color= platformColor) {
 	graphics.fillStyle(color,1);
 	graphics.fillRect(0,0,width-1,height); //width-1 to see the division between two platforms at the same level
 	graphics.generateTexture('platform',width,height);
+	graphics.destroy();
+}
+
+function createGridTexture(context, measurePlatformWidth, timeSignature) {
+	graphics=context.add.graphics();
+	
+	xPointer = 0;
+	for(i=0; i<timeSignature; i++) {
+		graphics.beginPath();
+		switch(i) {
+			case 0:
+				graphics.lineStyle(20, 0xFF0000, 1);
+				console.log("I: ",i);
+				break;
+			case 1:
+			case 3:
+				graphics.lineStyle(1, 0xFF0000, 1);
+				console.log("I: ",i);				
+				break;
+			case 2:
+				graphics.lineStyle(5, 0xFF0000, 1);
+				console.log("I: ",i);
+				break;
+		}
+		graphics.moveTo(xPointer, 0);
+		graphics.lineTo(xPointer, resolution[1]);
+		xPointer+=(measurePlatformWidth/timeSignature);
+		graphics.closePath();
+		graphics.strokePath();
+	}
+	
+	graphics.generateTexture('grid-texture',measurePlatformWidth,resolution[1]);
 	graphics.destroy();
 }
 
