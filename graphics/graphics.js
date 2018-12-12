@@ -204,6 +204,8 @@ var playScene = {
 		//PLATFORMS GENERATION
 		
 		createPlatformTexture(this, platformWidth, platformHeight); //Draw the platform texture
+		platformTimeSignature = "quarter";
+		createGridTexture(this, platformWidth, platformTimeSignature);
 		platforms = this.physics.add.staticGroup(); //Platforms empty group creation
 		
 		//Generation of the platforms visible when the game starts
@@ -314,7 +316,7 @@ var playScene = {
 			}
 		}
 		
-		//PLAYER ANIMATION MANAGER + 
+		//PLAYER ANIMATION MANAGER
 		
 		if(player.body.touching.down) {
 			player.anims.play('playerRun', true);
