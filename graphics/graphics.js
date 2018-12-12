@@ -392,7 +392,7 @@ function createBackground(context, color= backgroundGridColor) {
 	yPointer = playerHeight; //Starts from the top to draw
 	for (i = 1; i <= levelScaleColorsMatrix[gameLevel][2].length; i++) {
 		graphics.fillStyle(levelScaleColorsMatrix[gameLevel][2][levelScaleColorsMatrix[0][2].length-i],1);
-		graphics.lineStyle(3, levelScaleColorsMatrix[gameLevel][2][levelScaleColorsMatrix[0][2].length-i], 1);
+		graphics.lineStyle(3, "0x000000", 1);
 		graphics.fillRect(0,yPointer,resolution[0],stepHeight);
 			
 		graphics.strokeRect(0,yPointer,resolution[0],stepHeight); //Rectangle border
