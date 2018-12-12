@@ -38,7 +38,6 @@ var levelScaleColorsMatrix = [["ionian",[1,0,1,0,1,1,0,1,0,1,0,1,1],[fundamental
 		["locryan",[1,1,0,1,0,1,1,0,1,0,1,0,1],[fundamental, minorInt, minorInt, majorInt, minorInt, minorInt, minorInt, fundamental]]]
 
 
-var noteReference = "C3"
-var scaleReference = levelScaleColorsMatrix[0][0]
+
 
 
