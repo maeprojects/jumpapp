@@ -24,7 +24,7 @@ var currentScale = getCurrentScale()
     //console.log(level)
 
   	//CALL graphicsModule
-  	jumpLevel(level)
+  	jumpAtLevel(level)
 }
 
 //calucate the current scale based on the note and scale reference in setting

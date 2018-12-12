@@ -1,7 +1,7 @@
 //Settings
 var resolution = [window.innerWidth, window.innerHeight]
 var gravity = 850;
-var playerGravity = 400;
+var playerGravity = 300;
 var gameVelocity = 1;
 var numberOfLevels = 8;
 var backgroundGridColor = 0xffe8e8;
@@ -68,7 +68,11 @@ var platformHeight;
 var platformInitialX;
 var nextLevel;
 var currentLevel;
+var currentPlatform;
 var gameLevel;
+
+//Collider
+var collider;
 
 //Graphic drawings object manager
 var graphics;
@@ -162,9 +166,6 @@ var syncScene = {
 game.scene.add("syncScene", syncScene);
 
 
-test = function() {
-	console.log("external test working!")
-}
 
 var playScene = {
 	preload: function() {
@@ -185,6 +186,7 @@ var playScene = {
 		//Add Background
 		createBackground(this); //Draw the background texture
 		backgroundImage = this.add.image(resolution[0]/2, resolution[1]/2, 'background'+gameLevel);
+		backgroundImage.setDepth(-2);
 		backgroundImage.setAlpha(0); //In order to create a fade-in animation for the background
 		tween = this.add.tween({ targets: backgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 		
@@ -214,6 +216,7 @@ var playScene = {
 		
 		//PLATFORMS GENERATION
 		
+		//nextNoteDuration = getDurationNote();
 		createPlatformTexture(this, measurePlatformWidth, platformHeight); //Draw the platform texture
 		
 		platforms = this.physics.add.staticGroup(); //Platforms empty group creation
@@ -242,18 +245,18 @@ var playScene = {
 		//GRID GENERATION
 		
 		createGridTexture(this, measurePlatformWidth, timeSignature); //Draw grid texture
-		measuresGrid = this.physics.add.staticGroup(); //Platforms empty group creation
+		measureGrids = this.physics.add.staticGroup(); //Grids empty group creation
 		
 		gridLength = measurePlatformWidth;
 		numberOfInitialMeasures = resolution[0]/measurePlatformWidth;
 		for(i=0; i<numberOfInitialMeasures; i++) {
-			lastGrid = measuresGrid.create((playerFixedX-(playerWidth/2)+(gridLength/2))+(gridLength*i), resolution[1]/2, 'grid-texture');
-			lastGrid.setDepth(0);
+			lastGrid = measureGrids.create((playerFixedX-(playerWidth/2)+(gridLength/2))+(gridLength*i)-5, resolution[1]/2, 'grid-texture');
+			lastGrid.setDepth(-1);
 		}
 		
 		
 		//Creation of collider between the player and the platforms, with a callback function
-		this.physics.add.collider(player, platforms, platformsColliderCallback);
+		collider = this.physics.add.collider(player, platforms, platformsColliderCallback);
 			
 		
 		//SCORE
@@ -266,16 +269,22 @@ var playScene = {
 	update: function() {
 		//GRID MANAGER
 		
-		measuresGrid.getChildren().forEach(function(p){
+		measureGrids.getChildren().forEach(function(p){
 			if(p.x < -p.width/2)
 				p.destroy(); //Remove grids that are no more visible
 		})
 		
-		measuresGrid.getChildren().forEach(function(p){
+		measureGrids.getChildren().forEach(function(p){
 			//Move grids (body and texture)
 			p.x = p.x - platformVelocity;
 			p.body.x = p.body.x - platformVelocity;
 		});
+		
+		//Creation of new grid measures
+		if(lastGrid.x < resolution[0]-lastGrid.width/2){ //When the platform is completely on the screen, generate a new platform
+			lastGrid = platforms.create(resolution[0]+lastGrid.width/2, resolution[1]/2, 'grid-texture');
+			lastGrid.setDepth(-1);
+		}
 		
 		
 		// PLATFORMS MANAGER: MOVEMENT, REMOVAL, CONDITIONS
@@ -320,6 +329,9 @@ var playScene = {
 			//Current Platform Changed Event: if no events are triggered before the platform changes, the player was wrong and it has to die, otherwise it jumps to another platform
 			if(currentPlatformChanged) {
 				currentLevel = p.level; //A new currentLevel is set
+				currentPlatform = p;
+				
+				
 				
 				if(noAnswer) //Answer ungiven: the player should die
 					goAhead = false;
@@ -347,17 +359,12 @@ var playScene = {
 				
 				gameLevel++;
 				createBackground(this);
+				changeGameLevel(gameLevel);
 				newbackgroundImage = this.add.image(resolution[0]/2, resolution[1]/2, 'background'+gameLevel);
 				newbackgroundImage.setAlpha(0);
-				newbackgroundImage.setDepth(-1);
+				newbackgroundImage.setDepth(-2);
 				newtween = this.add.tween({ targets: newbackgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 			}
-		}
-		
-		//Creation of new grid measures
-		if(lastGrid.x < resolution[0]-lastGrid.width/2){ //When the platform is completely on the screen, generate a new platform
-			lastGrid = platforms.create(resolution[0]+lastGrid.width/2, resolution[1]/2, 'grid-texture');
-			lastGrid.setDepth(0);
 		}
 		
 		//PLAYER ANIMATION MANAGER
@@ -371,18 +378,26 @@ var playScene = {
 			platformTouched = false;
 		}
 		
+		//Make it possible to pass through the platform if the player comes from below
+		if(!player.body.touching.down){ 
+			if(player.y < currentPlatform.y+playerHeight) {
+				collider.overlapOnly = false;
+				//console.log("overlapOnly: ",collider.overlapOnly);
+			}
+		}
+		
 		//GAME VELOCITY MANAGER
 		if(gameStatus == "Running")
 			platformVelocity = gameVelocity; //Keeps the platforms velocity updated since when the game is Running
 		
-		//GAME OVER HANDLER
 		
+		//GAME OVER HANDLER
 		if(player.y > resolution[1]+player.height/2) { //When the player is below the screen resolution (no more visible), go to gameoverScene
 			game.scene.start("gameoverScene");
 		}
 		
-		//GO TO DEATH MANAGER
 		
+		//GO TO DEATH MANAGER		
 		if(!goAhead) { //If the player can't go ahead, the colliders with the world are destroyed
 			this.physics.world.colliders.destroy();
 		}
@@ -436,16 +451,13 @@ function createGridTexture(context, measurePlatformWidth, timeSignature) {
 		switch(i) {
 			case 0:
 				graphics.lineStyle(20, 0xFF0000, 1);
-				console.log("I: ",i);
 				break;
 			case 1:
 			case 3:
-				graphics.lineStyle(1, 0xFF0000, 1);
-				console.log("I: ",i);				
+				graphics.lineStyle(1, 0xFF0000, 1);			 
 				break;
 			case 2:
 				graphics.lineStyle(5, 0xFF0000, 1);
-				console.log("I: ",i);
 				break;
 		}
 		graphics.moveTo(xPointer, 0);
@@ -455,7 +467,7 @@ function createGridTexture(context, measurePlatformWidth, timeSignature) {
 		graphics.strokePath();
 	}
 	
-	graphics.generateTexture('grid-texture',measurePlatformWidth,resolution[1]);
+	graphics.generateTexture('grid-texture',measurePlatformWidth,resolution[1]-playerHeight*2);
 	graphics.destroy();
 }
 
@@ -546,7 +558,7 @@ document.onkeydown = function(event) {
 	}
 }
 
-function jumpLevel(level) {
+function jumpAtLevel(level) {
 	
 	if(gameStatus=="Running" && player.body.touching.down && jumpArea) {
 		jumpRatio = String(nextLevel-currentLevel+1);
@@ -554,6 +566,8 @@ function jumpLevel(level) {
 		//If the note detected is correct:
 		if(level == nextLevel && currentLevel<=nextLevel) { //Go up
 			player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity)*stepHeight*jumpRatio,1/2));
+			collider.overlapOnly = true;
+			console.log("overlapOnly: ",collider.overlapOnly);
 			goAhead = true; //The answer is correct
 			noAnswer = false; //An answer has been given
 		} else if (level == nextLevel) { //Go down
