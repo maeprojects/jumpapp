@@ -21,15 +21,21 @@ for(i=0; i<tones.length; i++){
   noteFreq[noteLetter] = tones[i]
 }
 
+red = "0xff6b63";
+white = "0xffffff";
+blue = "0x999cff";
+pink = "0xffc2bf";
+lightRed = "0xff9993";
+yellow = "0xebff96";
 
 //ternary mapping
-var LeveleScaleColorsMatrix = [["ionian",[1,0,1,0,1,1,0,1,0,1,0,1,1],["red", "white", "pink", "white", "light-red", "white", "white", "red"]], 
-		["lydian",[1,0,1,0,1,0,1,1,0,1,0,1,1],["red", "white", "pink", "yellow", "light-red", "white", "white", "red"]], 
-		["mixolydian",[1,0,1,0,1,1,0,1,0,1,1,0,1],["red", "white", "pink", "white", "light-red", "white", "blue", "red"]], 
-		["dorian",[1,0,1,1,0,1,0,1,0,1,1,0,1],["red", "white", "blue", "white", "light-red", "white", "blue", "red"]],
-		["eolian",[1,0,1,1,0,1,0,1,1,0,1,0,1],["red", "white", "blue", "white", "light-red", "blue", "blue", "red"]],
-		["phrigian",[1,1,0,1,0,1,0,1,1,0,1,0,1],["red", "blue", "blue", "white", "light-red", "blue", "blue", "red"]],
-		["locryan",[1,1,0,1,0,1,1,0,1,0,1,0,1],["red", "blue", "blue", "white", "blue", "blue", "blue", "red"]]]
+var levelScaleColorsMatrix = [["ionian",[1,0,1,0,1,1,0,1,0,1,0,1,1],[red, white, pink, white, lightRed, white, white, red]], 
+		["lydian",[1,0,1,0,1,0,1,1,0,1,0,1,1],[red, white, pink, yellow, lightRed, white, white, red]], 
+		["mixolydian",[1,0,1,0,1,1,0,1,0,1,1,0,1],[red, white, pink, white, lightRed, white, blue, red]], 
+		["dorian",[1,0,1,1,0,1,0,1,0,1,1,0,1],[red, white, blue, white, lightRed, white, blue, red]],
+		["eolian",[1,0,1,1,0,1,0,1,1,0,1,0,1],[red, white, blue, white, lightRed, blue, blue, red]],
+		["phrigian",[1,1,0,1,0,1,0,1,1,0,1,0,1],[red, blue, blue, white, lightRed, blue, blue, red]],
+		["locryan",[1,1,0,1,0,1,1,0,1,0,1,0,1],[red, blue, blue, white, blue, blue, blue, red]]]
 
 
 

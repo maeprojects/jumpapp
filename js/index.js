@@ -6,7 +6,7 @@ var gameVelocity = 1;
 var numberOfLevels = 8;
 var backgroundGridColor = 0xffe8e8;
 var backgroundColor = 0xFFFFFF;
-var platformColor = 0xed4747;
+var platformColor = 0x41423c;
 var fontSize = '20px';
 var fontColor = '#F00';
 
@@ -24,15 +24,11 @@ var config = {
 				gravity: { y: gravity },
 				debug: false
 		}
-	},
-	scene: {
-		preload: preload,
-		create: create,
-		update: update
 	}
 };
 
 var game = new Phaser.Game(config);
+
 
 //GAME VARIABLES
 
@@ -69,6 +65,7 @@ var platformHeight;
 var platformInitialX;
 var nextLevel;
 var currentLevel;
+var gameLevel;
 
 //Graphic drawings object manager
 var graphics;
@@ -77,29 +74,31 @@ var graphics;
 const pitchDetector = new PitchDetector();
 pitchDetector.start();
 
-
 function initVariables() {
+	//Game Level
+	gameLevel = 0;
+
 	//Game score
 	score = 0;
-	
+
 	//Game state managing
 	gameStatus = "Initialized";
 	restartScene = false;
-	
+
 	//Jump event managing
 	goAhead = true;
 	noAnswer = false;
 	jumpArea = false;
 	jumpAreaWidth = playerWidth+40*gameVelocity;
-	
+
 	//Player position
 	playerFixedX = 200;
 	playerInitialY = playerHeight/2;
-	
+
 	//Platforms (levels)
 	levelsFieldHeight = resolution[1]-playerHeight*2; //Calculation of levels Field (Height of the scene in which levels can appear)
 	stepHeight = levelsFieldHeight/numberOfLevels;
-	
+
 	platformTouched = false;
 	platformVelocity = 0;
 	platformWidth = 300;
@@ -110,129 +109,135 @@ function initVariables() {
 }
 
 
-function preload ()
-{
-	//Needed to be set here to set the player dimension correctly
-	playerWidth = 32;
-	playerHeight = 48;
-	
-	//Loading of game resources
-	this.load.image('gameover', 'assets/gameover.png');
-	this.load.spritesheet('player', 'assets/player.png', { frameWidth: playerWidth, frameHeight: playerHeight });
-	
-	gameStatus = "Preloaded";
+//GAME SCENES MANAGER
+/*
+Current Game Scenes pipeline:
+
+splashScene -> syncScene -> playScene --------   (--> settingsScene)
+								^			 |
+								|			 |
+							gameoverScene <---
+							
+playScene: manage the starting state (with variable gameStatus) and the different levels (with the variable gameLevel)
+*/
+
+var splashScene = {
+	create: function() {
+		text = this.add.text(0,0, "Splash Screen: Work in progress...",  { font: "bold 32px Arial", fill: "#000", boundsAlignH: "center", boundsAlignV: "middle" });
+		
+		this.input.on('pointerdown', function() {
+			game.scene.start("syncScene");
+			game.scene.stop("splashScene");
+		});
+		
+		this.input.keyboard.on('keydown', function() {
+			game.scene.start("syncScene");
+			game.scene.stop("splashScene");
+		});
+	}
 }
+game.scene.add("splashScene", splashScene);
 
-function createPlatformTexture(context, width, height, color= platformColor) {
-	graphics=context.add.graphics();
-	graphics.fillStyle(color,1);
-	graphics.fillRect(0,0,width-1,height); //width-1 to see the division between two platforms at the same level
-	graphics.generateTexture('platform',width,height);
-	graphics.destroy();
+var syncScene = {
+	create: function() {
+		text = this.add.text(0,100, "Sync Screen: Work in progress...",  { font: "bold 32px Arial", fill: "#000", boundsAlignH: "center", boundsAlignV: "middle" });
+		
+		this.input.on('pointerdown', function() {
+			game.scene.start("playScene");
+			game.scene.stop("syncScene");
+		});
+		
+		this.input.keyboard.on('keydown', function() {
+			game.scene.start("playScene");
+			game.scene.stop("syncScene");
+		});
+	}
 }
+game.scene.add("syncScene", syncScene);
 
 
-function createBackground(context, color= backgroundGridColor) {
-	graphics=context.add.graphics();
-	
-	graphics.fillStyle(color,1);
-	graphics.lineStyle(3, color, 1);
-	
-	blackSteps = [true,false,true,false,true,false,false,true]; //From the bottom (position 0) to the top (position 7) of the screen
-																//Dimension must agree with numberOfLevels
-	yPointer = playerHeight; //Starts from the top to draw
-	for (i = 1; i <= blackSteps.length; i++) { 
-		if(blackSteps[blackSteps.length-i]) {
-			graphics.fillRect(0,yPointer,resolution[0],stepHeight);
+var playScene = {
+	preload: function() {
+		//Needed to be set here to set the player dimension correctly
+		playerWidth = 25;
+		playerHeight = 48;
+		
+		//Loading of game resources
+		this.load.image('gameover', 'assets/gameover.png');
+		this.load.spritesheet('player', 'assets/dude.png', { frameWidth: playerWidth, frameHeight: playerHeight });
+	},
+	create: function() {
+		initVariables();
+
+		//WORLD
+		
+		//Add Background
+		createBackground(this); //Draw the background texture
+		backgroundImage = this.add.image(resolution[0]/2, resolution[1]/2, 'background'+gameLevel);
+		backgroundImage.setAlpha(0); //In order to create a fade-in animation for the background
+		tween = this.add.tween({ targets: backgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+		
+		//Set world bounds
+		this.physics.world.setBounds(0, 0, resolution[0], resolution[1]);
+		
+		//PLAYER
+
+		player = this.physics.add.sprite(playerFixedX, playerInitialY, 'player');
+		player.setCollideWorldBounds(false); //So the player can exceed the world boundaries
+		player.body.setGravityY(-gravity); //For the player to have an y acceleration; set to (-gravity) to make the player have no y motion at first
+		//player.setTint(0xAAFF00); //Set a color mask for the player
+
+		//Player Animations Creation
+		this.anims.create({
+			key: 'playerRun',
+			frames: this.anims.generateFrameNumbers('player', { start: 0, end: 8 }),
+			frameRate: 15*Math.sqrt(gameVelocity), //To set the veloticy of "rotation" dependent to the gameVelocity
+			repeat: -1 //loop=true
+		});
+
+		this.anims.create({
+			key: 'playerStop',
+			frames: [ { key: 'player', frame: 0 } ],
+			frameRate: 2
+		});
+		
+		//PLATFORMS GENERATION
+		
+		createPlatformTexture(this, platformWidth, platformHeight); //Draw the platform texture
+		platforms = this.physics.add.staticGroup(); //Platforms empty group creation
+		
+		//Generation of the platforms visible when the game starts
+		numberOfInitialPlatforms = resolution[0]/platformWidth; //Exceed the number of effectively shown platforms to avoid horizontal white spaces between platforms
+		for(i=0; i<numberOfInitialPlatforms; i++) {
+			newLevel = generateLevel();
+			levelIndex = newLevel[0];
+			levelHeight = newLevel[1];
+			lastCreatedPlatform = platforms.create((platformInitialX+platformWidth*i), levelHeight, 'platform');
+			lastCreatedPlatform.level = levelIndex;
+			
+			//Set of current and next level when the game starts
+			switch(i){
+				case 0:
+					currentLevel = levelIndex;
+					break;
+				case 1:
+					nextLevel = levelIndex;
+					break;
+			}
 		}
-		graphics.strokeRect(0,yPointer,resolution[0],stepHeight); //Rectangle border
-		yPointer += stepHeight;
-	}
-	
-	graphics.generateTexture('background',resolution[0],resolution[1]);
-	
-	graphics.destroy();
-}
-
-
-function create ()
-{	
-	initVariables();
-	
-	//WORLD
-	
-	//Add Background
-	createBackground(this); //Draw the background texture
-	this.add.image(resolution[0]/2, resolution[1]/2, 'background');
-	
-	//Set world bounds
-	this.physics.world.setBounds(0, 0, resolution[0], resolution[1]);
-	
-	//PLAYER
-
-	player = this.physics.add.sprite(playerFixedX, playerInitialY, 'player');
-	player.setCollideWorldBounds(false); //So the player can exceed the world boundaries
-	player.body.setGravityY(-gravity); //For the player to have an y acceleration; set to (-gravity) to make the player have no y motion at first
-	//player.setTint(0xFF0000); //Set a color mask for the player
-
-	//Player Animations Creation
-	this.anims.create({
-		key: 'playerRun',
-		frames: this.anims.generateFrameNumbers('player', { start: 0, end: 8 }),
-		frameRate: 15*Math.sqrt(gameVelocity), //To set the veloticy of "rotation" dependent to the gameVelocity
-		repeat: -1 //loop=true
-	});
-
-	this.anims.create({
-		key: 'playerStop',
-		frames: [ { key: 'player', frame: 1 } ],
-		frameRate: 2
-	});
-	
-	//PLATFORMS GENERATION
-	
-	createPlatformTexture(this, platformWidth, platformHeight); //Draw the platform texture
-	platforms = this.physics.add.staticGroup(); //Platforms empty group creation
-	
-	//Generation of the platforms visible when the game starts
-	numberOfInitialPlatforms = resolution[0]/platformWidth; //Exceed the number of effectively shown platforms to avoid horizontal white spaces between platforms
-	for(i=0; i<numberOfInitialPlatforms; i++) {
-		newLevel = generateLevel();
-		levelIndex = newLevel[0];
-		levelHeight = newLevel[1];
-		lastCreatedPlatform = platforms.create((platformInitialX+platformWidth*i), levelHeight, 'platform');
-		lastCreatedPlatform.level = levelIndex;
 		
-		//Set of current and next level when the game starts
-		switch(i){
-			case 0:
-				currentLevel = levelIndex;
-				break;
-			case 1:
-				nextLevel = levelIndex;
-				break;
-		}
-	}
-	
-	//Creation of collider between the player and the platforms, with a callback function
-	this.physics.add.collider(player, platforms, platformsColliderCallback);
+		//Creation of collider between the player and the platforms, with a callback function
+		this.physics.add.collider(player, platforms, platformsColliderCallback);
+			
 		
-	
-	//SCORE
-	scoreText = this.add.text(16, 16, 'score:       Enter/Space to start', { fontSize: fontSize, fill: fontColor });
-	//SETTING OF GAME STATE
-	
-	this.scene.pause("default"); //After the game is created it paused
-	gameStatus = "Created"; //The game status is updated: now the game is created but not yet started. (Where not started=paused)
-}
-
-function update ()
-{	
-	if(restartScene) {
-		this.scene.restart();
-	}
-	else {
+		//SCORE
+		scoreText = this.add.text(16, 16, 'score:       Enter/Space to start', { fontSize: fontSize, fill: fontColor });
 		
+		//SETTING OF GAME STATUS
+		gameStatus = "Started";
+	},
+	
+	update: function() {
 		// PLATFORMS MANAGER: MOVEMENT, REMOVAL, CONDITIONS
 		
 		playerLeftBorder = (playerFixedX-player.width/2);
@@ -290,6 +295,23 @@ function update ()
 			levelHeight = newLevel[1];
 			lastCreatedPlatform = platforms.create(resolution[0]+lastCreatedPlatform.width/2, levelHeight, 'platform');
 			lastCreatedPlatform.level = levelValue;
+			
+			
+			//New background on level change
+			if(gameLevel<levelScaleColorsMatrix.length-1) {
+				tween = this.add.tween({ targets: backgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 500, alpha: { getStart: () => 1, getEnd: () => 0 } });
+				tween.setCallback("onComplete", function(){
+					backgroundImage.destroy();
+					backgroundImage = newbackgroundImage;
+				}, backgroundImage);
+				
+				gameLevel++;
+				createBackground(this);
+				newbackgroundImage = this.add.image(resolution[0]/2, resolution[1]/2, 'background'+gameLevel);
+				newbackgroundImage.setAlpha(0);
+				newbackgroundImage.setDepth(-1);
+				newtween = this.add.tween({ targets: newbackgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+			}
 		}
 		
 		//PLAYER ANIMATION MANAGER + 
@@ -309,15 +331,8 @@ function update ()
 		
 		//GAME OVER HANDLER
 		
-		if(player.y > resolution[1]+player.height/2) { //When the player is below the screen resolution (no more visible), set the gameStatus to gameover
-			gameStatus = "Gameover";
-			
-			this.add.image(resolution[0]/2, resolution[1]/2, 'gameover'); //Show game over image
-			player.destroy(); //Destroy the player
-			scoreText.setText('score: ' + score + '    Enter/Space to restart'); //Update the status text
-			if(pitchDetector.isEnable()) 
-				pitchDetector.toggleEnable(); //If the pitch detector is enabled, disable it
-			this.scene.pause("default"); //Stop the update() function
+		if(player.y > resolution[1]+player.height/2) { //When the player is below the screen resolution (no more visible), go to gameoverScene
+			game.scene.start("gameoverScene");
 		}
 		
 		//GO TO DEATH MANAGER
@@ -327,7 +342,65 @@ function update ()
 		}
 	}
 }
+game.scene.add("playScene", playScene);
 
+var gameoverScene = {
+	create: function() {
+		game.scene.pause("playScene");
+		this.add.image(resolution[0]/2, resolution[1]/2, 'gameover'); //Show game over image
+		player.destroy(); //Destroy the player
+		scoreText.setText('score: ' + score + '    Enter/Space to restart'); //Update the status text
+		if(pitchDetector.isEnable()) 
+			pitchDetector.toggleEnable(); //If the pitch detector is enabled, disable it
+				
+		this.input.keyboard.on('keydown', function() {
+			game.scene.start("playScene"); 
+			game.scene.stop("gameoverScene");
+		});
+	}
+}
+game.scene.add("gameoverScene", gameoverScene);
+
+var settingsScene = {
+	create: function() {
+		console.log("Settings Screen: Work in progress...");
+	}
+}
+game.scene.add("settingsScene", settingsScene);
+
+
+game.scene.start("splashScene");
+
+
+
+function createPlatformTexture(context, width, height, color= platformColor) {
+	graphics=context.add.graphics();
+	graphics.fillStyle(color,1);
+	graphics.fillRect(0,0,width-1,height); //width-1 to see the division between two platforms at the same level
+	graphics.generateTexture('platform',width,height);
+	graphics.destroy();
+}
+
+
+function createBackground(context, color= backgroundGridColor) {
+	graphics=context.add.graphics();
+	
+	//blackSteps = [true,false,true,false,true,false,false,true]; //From the bottom (position 0) to the top (position 7) of the screen
+																//Dimension must agree with numberOfLevels
+	yPointer = playerHeight; //Starts from the top to draw
+	for (i = 1; i <= levelScaleColorsMatrix[gameLevel][2].length; i++) {
+		graphics.fillStyle(levelScaleColorsMatrix[gameLevel][2][levelScaleColorsMatrix[0][2].length-i],1);
+		graphics.lineStyle(3, levelScaleColorsMatrix[gameLevel][2][levelScaleColorsMatrix[0][2].length-i], 1);
+		graphics.fillRect(0,yPointer,resolution[0],stepHeight);
+			
+		graphics.strokeRect(0,yPointer,resolution[0],stepHeight); //Rectangle border
+		yPointer += stepHeight;
+	}
+	
+	graphics.generateTexture('background'+gameLevel,resolution[0],resolution[1]);
+	
+	graphics.destroy();
+}
 
 var generateLevel = function() {
 	levelValue = Math.floor(Math.random()*(numberOfLevels))+1;
@@ -350,7 +423,7 @@ document.onkeydown = function(event) {
 			
 			switch(gameStatus) {
 				
-				case "Created": //The game should start
+				case "Started": //The game should start running
 					player.body.setGravityY(playerGravity);
 					scoreText.setText('score: ' + score);
 					
@@ -359,28 +432,20 @@ document.onkeydown = function(event) {
 						pitchDetector.toggleEnable();
 					
 					//Starting scene (update() function starts looping)
-					game.scene.resume("default");
-					
-					gameStatus = "Started"; //This status identify the period of time from when the user press the key and when the player touch a platform
+					game.scene.resume("playScene");
 					break;
 				
 				case "Running": //The game should toggle the pause status
-					if(game.scene.isActive("default")) {
-						game.scene.pause("default");
+					if(game.scene.isActive("playScene")) {
+						game.scene.pause("playScene");
 						scoreText.setText('score: ' + score + ' Game Paused, Enter/Space to resume...');
 					}
 					else {
-						game.scene.resume("default");
+						game.scene.resume("playScene");
 						scoreText.setText('score: ' + score);
 					}
 					
 					pitchDetector.toggleEnable(); //Toggling of active status of the pitch detector (assuming that at first it's already enabled)
-					break;
-				
-				case "Gameover": //The game start the update() function with (restartScene = true) so that the scene will be restarted (not restarted here for context problem)
-					restartScene = true;
-					game.scene.resume("default");
-					
 					break;
 					
 				default:
