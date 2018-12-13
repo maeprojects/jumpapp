@@ -1,14 +1,15 @@
 //Settings
 var resolution = [window.innerWidth, window.innerHeight]
 var gravity = 850;
-var playerGravity = 300;
 var gameVelocity = 1;
+var playerGravity = 2000*gameVelocity;
 var numberOfLevels = 8;
 var backgroundGridColor = 0xffe8e8;
 var backgroundColor = 0xFFFFFF;
 var platformColor = 0x41423c;
 var fontSize = '20px';
 var fontColor = '#F00';
+var changelevelPoints = 3;
 
 
 
@@ -67,8 +68,7 @@ var platformTouched;
 var measurePlatformWidth;
 var platformHeight;
 var platformInitialX;
-var nextLevel;
-var currentLevel;
+var levelsQueue;
 var currentPlatform;
 var gameLevel;
 
@@ -81,6 +81,9 @@ var graphics;
 //Pitch detector initialization (here to create only one object even if the game is restarted)
 const pitchDetector = new PitchDetector();
 pitchDetector.start();
+
+//Game context
+var gameContext;
 
 function initVariables() {
 	//Game Level
@@ -100,7 +103,7 @@ function initVariables() {
 	goAhead = true;
 	noAnswer = false;
 	jumpArea = false;
-	jumpAreaWidth = playerWidth+40*gameVelocity;
+	jumpAreaWidth = playerWidth+10*gameVelocity;
 
 	//Player position
 	playerFixedX = 200;
@@ -116,8 +119,7 @@ function initVariables() {
 	measurePlatformWidth = 800;
 	platformHeight = stepHeight-((stepHeight*40)/100);
 	platformInitialX = (playerFixedX-playerWidth/2)+(measurePlatformWidth/2);
-	nextLevel = 0;
-	currentLevel = 0;
+	levelsQueue = [];
 
 	//ScaleMapping inizialization
 	//changeNoteReference("C3")
@@ -188,6 +190,7 @@ var playScene = {
 	create: function() {
 		
 		initVariables();
+		gameContext = this;
 
 		//WORLD
 		
@@ -224,41 +227,39 @@ var playScene = {
 		
 		//PLATFORMS GENERATION
 		
-		//nextNoteDuration = getDurationNote();
-		createPlatformTexture(this, measurePlatformWidth/2, platformHeight); //Draw the platform texture
-		
 		platforms = this.physics.add.staticGroup(); //Platforms empty group creation
 		
 		//Generation of the platforms visible when the game starts
-		//numberOfInitialPlatforms = resolution[0]/(measurePlatformWidth/2); //Exceed the number of effectively shown platforms to avoid horizontal white spaces between platforms
 		
 		pointer = 0;
-		i = 0;
+		j = 0;
 		while(pointer < resolution[0]) {
 			newLevel = generateLevel();
 			levelValue = newLevel[0];
 			levelHeight = newLevel[1];
 			levelDuration = newLevel[2];
 			createPlatformTexture(this, measurePlatformWidth*levelDuration, platformHeight, levelDuration);
-			if(i==0)
-				platformInitialX = (playerFixedX-playerWidth/2)+((measurePlatformWidth*levelDuration)/2);
-			lastCreatedPlatform = platforms.create(pointer+platformInitialX, levelHeight, 'platform'+levelDuration);
-			lastCreatedPlatform.level = levelValue;
-			
-			pointer += measurePlatformWidth*levelDuration;
-			currentPlatform = lastCreatedPlatform;
-			
-			
-			//Set of current and next level when the game starts
-			switch(i){
-				case 0:
-					currentLevel = levelValue;
-					break;
-				case 1:
-					nextLevel = levelValue;
-					break;
+			if(j==0) {
+				platformInitialX = (playerFixedX-playerWidth/2)+((measurePlatformWidth*levelDuration)/2)-5;
+				pointer = platformInitialX;
 			}
-			i++;
+			else {
+				pointer += (measurePlatformWidth*levelDuration)/2;
+			}
+			
+			lastCreatedPlatform = platforms.create(pointer, levelHeight, 'platform'+levelDuration);
+			lastCreatedPlatform.level = levelValue;
+			levelsQueue.push(levelValue);
+			console.log("levelsQueue: ",levelsQueue);
+			
+			pointer += (measurePlatformWidth*levelDuration)/2;
+			
+			//Set the first platform as current platform when the game starts
+			if(j ==0)
+				currentPlatform = lastCreatedPlatform;
+			
+			j++;
+			
 		}
 		
 		
@@ -326,32 +327,24 @@ var playScene = {
 			
 			//PLATFORMS CONDITIONAL EVENTS
 			platformLeftBorder = (p.x-(p.width/2));
-			currentPlatformWidth = p.width;
+			currentPlatformWidth = currentPlatform.width;
 			
 			//Set jumpArea when the player enter the jumpArea
-			playerEnterJumpArea = (playerLeftBorder >= platformLeftBorder+currentPlatformWidth-jumpAreaWidth) && ((playerLeftBorder-gameVelocity) <= (platformLeftBorder+currentPlatformWidth-jumpAreaWidth));
+			playerEnterJumpArea = (playerLeftBorder > platformLeftBorder+currentPlatformWidth-jumpAreaWidth) && ((playerLeftBorder-gameVelocity) <= (platformLeftBorder+currentPlatformWidth-jumpAreaWidth));
 			if(playerEnterJumpArea) {
 				jumpArea = true;
 				noAnswer = true; //Answer again ungiven
+				console.log("Entered jump area");
 			}
 			
-			/*These two mutually exclusive conditions are needed because during a single execution of forEach() function, these 2 conditions
-			are true on subsequent elements. (i.e. if the first condition is true on the 3rd element, the second condition is true on the 
-			following 4th element */			
-			currentPlatformChanged =  (playerLeftBorder >= platformLeftBorder) &&  (playerLeftBorder-gameVelocity <= platformLeftBorder); //Condition to summarize when the player enter on another platform
-			nextPlatformChanged =  (playerLeftBorder+currentPlatformWidth >= platformLeftBorder)  && ((playerLeftBorder-gameVelocity)+currentPlatformWidth <= platformLeftBorder); //Condition to summarize when the platform following the one in which the player enter is changed
-			
-			//If the next Platform is changed a new nextLevel is set
-			if(nextPlatformChanged) {
-				nextLevel = p.level;
-			}
+			currentPlatformChanged =  (playerLeftBorder > platformLeftBorder) &&  (playerLeftBorder-gameVelocity <= platformLeftBorder); //Condition to summarize when the player enter on another platform				
 			
 			//Current Platform Changed Event: if no events are triggered before the platform changes, the player was wrong and it has to die, otherwise it jumps to another platform
 			if(currentPlatformChanged) {
-				currentLevel = p.level; //A new currentLevel is set
+				
+				levelsQueue.shift(); //Remove the first element of the list
+				
 				currentPlatform = p;
-				
-				
 				
 				if(noAnswer) //Answer ungiven: the player should die
 					goAhead = false;
@@ -369,24 +362,8 @@ var playScene = {
 			createPlatformTexture(this, measurePlatformWidth*levelDuration, platformHeight, levelDuration);
 			lastCreatedPlatform = platforms.create(resolution[0]+(measurePlatformWidth*levelDuration)/2, levelHeight, 'platform'+levelDuration);
 			lastCreatedPlatform.level = levelValue;
-			
-			
-			//New background on level change
-			if(gameLevel<gameLevelToScaleArray.length-1) {
-				tween = this.add.tween({ targets: backgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 500, alpha: { getStart: () => 1, getEnd: () => 0 } });
-				tween.setCallback("onComplete", function(){
-					backgroundImage.destroy();
-					backgroundImage = newbackgroundImage;
-				}, backgroundImage);
-				
-				gameLevel++;
-				createBackground(this);
-				changeGameLevel(gameLevel);
-				newbackgroundImage = this.add.image(resolution[0]/2, resolution[1]/2, 'background'+gameLevel);
-				newbackgroundImage.setAlpha(0);
-				newbackgroundImage.setDepth(-2);
-				newtween = this.add.tween({ targets: newbackgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
-			}
+			levelsQueue.push(levelValue);
+			console.log("levelsQueue: ",levelsQueue);
 		}
 		
 		//PLAYER ANIMATION MANAGER
@@ -404,7 +381,6 @@ var playScene = {
 		if(!player.body.touching.down){ 
 			if(player.y > playerPreviousY && collider.overlapOnly==true) {
 				collider.overlapOnly = false;
-				console.log("overlapOnly: ",collider.overlapOnly);
 			}
 			playerPreviousY = player.y;
 		} 
@@ -431,15 +407,18 @@ game.scene.add("playScene", playScene);
 var gameoverScene = {
 	create: function() {
 		game.scene.pause("playScene");
+		gameStatus="Gameover"; //in order to avoid checks made when the gamestatus is running
 		this.add.image(resolution[0]/2, resolution[1]/2, 'gameover'); //Show game over image
 		player.destroy(); //Destroy the player
 		scoreText.setText('score: ' + score + '    Enter/Space to restart'); //Update the status text
 		if(pitchDetector.isEnable()) 
 			pitchDetector.toggleEnable(); //If the pitch detector is enabled, disable it
 				
-		this.input.keyboard.on('keydown', function() {
-			game.scene.start("playScene"); 
-			game.scene.stop("gameoverScene");
+		this.input.keyboard.on('keydown', function(e) {
+			if(e.code == "Space" || e.code == "Enter") {
+				game.scene.start("playScene"); 
+				game.scene.stop("gameoverScene");
+			}
 		});
 	}
 }
@@ -539,7 +518,27 @@ function platformsColliderCallback () {
 	if(!platformTouched && player.body.touching.down) {
 		score++;
 		scoreText.setText('score: ' + score);
-		player.setVelocityX(0);
+		
+		//Change game level each 3 points
+		if(score == changelevelPoints*(gameLevel+1)) {
+			//New background on level change
+			if(gameLevel<gameLevelToScaleArray.length-1) {
+				tween = gameContext.add.tween({ targets: backgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 500, alpha: { getStart: () => 1, getEnd: () => 0 } });
+				tween.setCallback("onComplete", function(){
+					backgroundImage.destroy();
+					backgroundImage = newbackgroundImage;
+				}, backgroundImage);
+				
+				gameLevel++;
+				createBackground(gameContext);
+				changeGameLevel(gameLevel);
+				newbackgroundImage = gameContext.add.image(resolution[0]/2, resolution[1]/2, 'background'+gameLevel);
+				newbackgroundImage.setAlpha(0);
+				newbackgroundImage.setDepth(-2);
+				newtween = gameContext.add.tween({ targets: newbackgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+			}
+		}		
+		
 	}
 	platformTouched = true; //Needed to take only the first collision with the platform
 }
@@ -583,13 +582,16 @@ document.onkeydown = function(event) {
 		else if(gameStatus=="Running" && player.body.touching.down && jumpArea) {
 					
 					//Play a note directly into the pitchDetector module for the pitch detecting step (Debug code)
-					noteKeys = "12345678" //Tasti da usare
+					noteKeys = "12345678" //Keys To use
 					noteFreqKeys = [];
 					for(i=0; i<currentScale.length; i++) {
 						noteFreqKeys[i] = noteFreq[currentScale[i]];
 					}
-					console.log(currentScale[noteKeys.indexOf(event.key)])
-					pitchDetector.tuner.play(noteFreqKeys[noteKeys.indexOf(event.key)]);
+					
+					if(parseInt(event.key)>=1 && parseInt(event.key)<=8) {
+						console.log("Note played: ", currentScale[noteKeys.indexOf(event.key)])
+						pitchDetector.tuner.play(noteFreqKeys[noteKeys.indexOf(event.key)]);
+					}
 				}
 
 	}
@@ -598,17 +600,19 @@ document.onkeydown = function(event) {
 function jumpAtLevel(level) {
 	console.log("called jumpAtLevel")
 	if(gameStatus=="Running" && player.body.touching.down && jumpArea) {
-		jumpRatio = String(nextLevel-currentLevel+1);
+		jumpRatio = String(levelsQueue[1]-levelsQueue[0]+1);
 		
 		//If the note detected is correct:
-		if(level == nextLevel && currentLevel<=nextLevel) { //Go up
+		if(level == levelsQueue[1] && levelsQueue[0]<=levelsQueue[1]) { //Go up
+			console.log("jump Up!");
 			player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity)*stepHeight*jumpRatio,1/2));
 			collider.overlapOnly = true;
-			console.log("overlapOnly: ",collider.overlapOnly);
+			
 			goAhead = true; //The answer is correct
 			noAnswer = false; //An answer has been given
-		} else if (level == nextLevel) { //Go down
-					player.setVelocityY(-450/Math.pow(gameVelocity, 1/2));
+		} else if (level == levelsQueue[1]) { //Go down
+					console.log("jump Down!");
+					player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity)*stepHeight*1,1/2));
 					goAhead = true;
 					noAnswer = false;
 				}
