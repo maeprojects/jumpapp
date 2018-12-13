@@ -14,7 +14,7 @@ function getDurationAndNote(){
   */
 
   probability = Math.random() // returns a floating-point, pseudo-random number in the range 0–1 (inclusive of 0, but not 1)
-  console.log(probability)
+  
   keys = []
   for(var x in statisticalDuration){
     keys.push(x)
