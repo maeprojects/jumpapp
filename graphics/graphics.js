@@ -596,7 +596,7 @@ document.onkeydown = function(event) {
 }
 
 function jumpAtLevel(level) {
-	
+	console.log("called jumpAtLevel")
 	if(gameStatus=="Running" && player.body.touching.down && jumpArea) {
 		jumpRatio = String(nextLevel-currentLevel+1);
 		
