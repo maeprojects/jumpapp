@@ -57,6 +57,7 @@ var jumpAreaWidth;
 //Player position
 var playerFixedX;
 var playerInitialY;
+var playerPreviousY;
 
 //Platforms (levels)
 var levelsFieldHeight;
@@ -104,6 +105,7 @@ function initVariables() {
 	//Player position
 	playerFixedX = 200;
 	playerInitialY = playerHeight/2;
+	playerPreviousY = 0;
 
 	//Platforms (levels)
 	levelsFieldHeight = resolution[1]-playerHeight*2; //Calculation of levels Field (Height of the scene in which levels can appear)
@@ -111,15 +113,19 @@ function initVariables() {
 
 	platformTouched = false;
 	platformVelocity = 0;
-	measurePlatformWidth = 600;
+	measurePlatformWidth = 800;
 	platformHeight = stepHeight-((stepHeight*40)/100);
-	platformInitialX = (playerFixedX-playerWidth/2)+(measurePlatformWidth/2/2);
+	platformInitialX = (playerFixedX-playerWidth/2)+(measurePlatformWidth/2);
 	nextLevel = 0;
 	currentLevel = 0;
 
 	//ScaleMapping inizialization
 	//changeNoteReference("C3")
-	changeScaleReference("ionian")
+	changeScaleReference("ionian");
+	
+	//Pitch manager
+	if(pitchDetector.isEnable())
+		pitchDetector.toggleEnable();
 }
 
 
@@ -168,8 +174,6 @@ var syncScene = {
 	}
 }
 game.scene.add("syncScene", syncScene);
-
-
 
 var playScene = {
 	preload: function() {
@@ -226,23 +230,35 @@ var playScene = {
 		platforms = this.physics.add.staticGroup(); //Platforms empty group creation
 		
 		//Generation of the platforms visible when the game starts
-		numberOfInitialPlatforms = resolution[0]/(measurePlatformWidth/2); //Exceed the number of effectively shown platforms to avoid horizontal white spaces between platforms
-		for(i=0; i<numberOfInitialPlatforms; i++) {
+		//numberOfInitialPlatforms = resolution[0]/(measurePlatformWidth/2); //Exceed the number of effectively shown platforms to avoid horizontal white spaces between platforms
+		
+		pointer = 0;
+		i = 0;
+		while(pointer < resolution[0]) {
 			newLevel = generateLevel();
-			levelIndex = newLevel[0];
+			levelValue = newLevel[0];
 			levelHeight = newLevel[1];
-			lastCreatedPlatform = platforms.create((platformInitialX+(measurePlatformWidth/2)*i), levelHeight, 'platform');
-			lastCreatedPlatform.level = levelIndex;
+			levelDuration = newLevel[2];
+			createPlatformTexture(this, measurePlatformWidth*levelDuration, platformHeight, levelDuration);
+			if(i==0)
+				platformInitialX = (playerFixedX-playerWidth/2)+((measurePlatformWidth*levelDuration)/2);
+			lastCreatedPlatform = platforms.create(pointer+platformInitialX, levelHeight, 'platform'+levelDuration);
+			lastCreatedPlatform.level = levelValue;
+			
+			pointer += measurePlatformWidth*levelDuration;
+			currentPlatform = lastCreatedPlatform;
+			
 			
 			//Set of current and next level when the game starts
 			switch(i){
 				case 0:
-					currentLevel = levelIndex;
+					currentLevel = levelValue;
 					break;
 				case 1:
-					nextLevel = levelIndex;
+					nextLevel = levelValue;
 					break;
 			}
+			i++;
 		}
 		
 		
@@ -286,7 +302,7 @@ var playScene = {
 		
 		//Creation of new grid measures
 		if(lastGrid.x < resolution[0]-lastGrid.width/2){ //When the platform is completely on the screen, generate a new platform
-			lastGrid = platforms.create(resolution[0]+lastGrid.width/2, resolution[1]/2, 'grid-texture');
+			lastGrid = measureGrids.create(resolution[0]+lastGrid.width/2, resolution[1]/2, 'grid-texture');
 			lastGrid.setDepth(-1);
 		}
 		
@@ -310,10 +326,10 @@ var playScene = {
 			
 			//PLATFORMS CONDITIONAL EVENTS
 			platformLeftBorder = (p.x-(p.width/2));
-			measurePlatformWidth = p.width;
+			currentPlatformWidth = p.width;
 			
 			//Set jumpArea when the player enter the jumpArea
-			playerEnterJumpArea = (playerLeftBorder >= platformLeftBorder+measurePlatformWidth-jumpAreaWidth) && ((playerLeftBorder-gameVelocity) <= (platformLeftBorder+measurePlatformWidth-jumpAreaWidth));
+			playerEnterJumpArea = (playerLeftBorder >= platformLeftBorder+currentPlatformWidth-jumpAreaWidth) && ((playerLeftBorder-gameVelocity) <= (platformLeftBorder+currentPlatformWidth-jumpAreaWidth));
 			if(playerEnterJumpArea) {
 				jumpArea = true;
 				noAnswer = true; //Answer again ungiven
@@ -323,7 +339,7 @@ var playScene = {
 			are true on subsequent elements. (i.e. if the first condition is true on the 3rd element, the second condition is true on the 
 			following 4th element */			
 			currentPlatformChanged =  (playerLeftBorder >= platformLeftBorder) &&  (playerLeftBorder-gameVelocity <= platformLeftBorder); //Condition to summarize when the player enter on another platform
-			nextPlatformChanged =  (playerLeftBorder+measurePlatformWidth >= platformLeftBorder)  && ((playerLeftBorder-gameVelocity)+measurePlatformWidth <= platformLeftBorder); //Condition to summarize when the platform following the one in which the player enter is changed
+			nextPlatformChanged =  (playerLeftBorder+currentPlatformWidth >= platformLeftBorder)  && ((playerLeftBorder-gameVelocity)+currentPlatformWidth <= platformLeftBorder); //Condition to summarize when the platform following the one in which the player enter is changed
 			
 			//If the next Platform is changed a new nextLevel is set
 			if(nextPlatformChanged) {
@@ -349,7 +365,9 @@ var playScene = {
 			newLevel = generateLevel();
 			levelValue = newLevel[0];
 			levelHeight = newLevel[1];
-			lastCreatedPlatform = platforms.create(resolution[0]+lastCreatedPlatform.width/2, levelHeight, 'platform');
+			levelDuration = newLevel[2];
+			createPlatformTexture(this, measurePlatformWidth*levelDuration, platformHeight, levelDuration);
+			lastCreatedPlatform = platforms.create(resolution[0]+(measurePlatformWidth*levelDuration)/2, levelHeight, 'platform'+levelDuration);
 			lastCreatedPlatform.level = levelValue;
 			
 			
@@ -384,10 +402,11 @@ var playScene = {
 		
 		//Make it possible to pass through the platform if the player comes from below
 		if(!player.body.touching.down){ 
-			if(player.y < currentPlatform.y+playerHeight) {
+			if(player.y > playerPreviousY && collider.overlapOnly==true) {
 				collider.overlapOnly = false;
-				//console.log("overlapOnly: ",collider.overlapOnly);
+				console.log("overlapOnly: ",collider.overlapOnly);
 			}
+			playerPreviousY = player.y;
 		} 
 		
 		//GAME VELOCITY MANAGER
@@ -438,11 +457,11 @@ game.scene.start("playScene");
 
 
 
-function createPlatformTexture(context, width, height, color= platformColor) {
+function createPlatformTexture(context, width, height, levelDuration, color= platformColor) {
 	graphics=context.add.graphics();
 	graphics.fillStyle(color,1);
 	graphics.fillRect(0,0,width-1,height); //width-1 to see the division between two platforms at the same level
-	graphics.generateTexture('platform',width,height);
+	graphics.generateTexture('platform'+levelDuration, width, height);
 	graphics.destroy();
 }
 
@@ -479,19 +498,9 @@ function createGridTexture(context, measurePlatformWidth, timeSignature) {
 function createBackground(context, color= backgroundGridColor) {
 	graphics=context.add.graphics();
 	
-	//blackSteps = [true,false,true,false,true,false,false,true]; //From the bottom (position 0) to the top (position 7) of the screen
-																//Dimension must agree with numberOfLevels
+	//From the bottom (position 0) to the top (position 7) of the screen
 	yPointer = playerHeight; //Starts from the top to draw
 	colorsArray = scaleToColorsArray[gameLevelToScaleArray[gameLevel]]
-	/*
-	for (i = 1; i <= levelScaleColorsMatrix[gameLevel][2].length; i++) {
-		graphics.fillStyle(levelScaleColorsMatrix[gameLevel][2][levelScaleColorsMatrix[0][2].length-i],1);
-		graphics.lineStyle(0.1, "0x000000", 1);
-		graphics.fillRect(0,yPointer,resolution[0],stepHeight);
-			
-		graphics.strokeRect(0,yPointer,resolution[0],stepHeight); //Rectangle border
-		yPointer += stepHeight;
-	}*/
 	for (i = 1; i <= colorsArray.length; i++) {
 		graphics.fillStyle(colorsArray[scaleToColorsArray[gameLevelToScaleArray[0]].length-i],1);
 		graphics.lineStyle(0.1, "0x000000", 1);
@@ -507,9 +516,23 @@ function createBackground(context, color= backgroundGridColor) {
 }
 
 var generateLevel = function() {
-	levelValue = Math.floor(Math.random()*(numberOfLevels))+1;
+	durationAndNote = getDurationAndNote();
+	
+	if(durationAndNote[0]!=null) {
+		levelDuration = durationAndNote[0]; //level Duration i.e.:1, 1/2, 1/4, 1/8, ...
+	}
+	else {
+		console.log("WARNINGGGGGGGG!!!! YOUR DEVICE WILL EXPLODE!!!!");
+		levelDuration = 1;
+	}
+		
+	if(durationAndNote[1]!=null)
+		levelValue = durationAndNote[1];
+	else
+		levelValue = Math.floor(Math.random()*(numberOfLevels))+1;
+	
 	levelHeight = (player.height)+((numberOfLevels-levelValue)*stepHeight)+(stepHeight/2);
-	return [levelValue, levelHeight];
+	return [levelValue, levelHeight, levelDuration];
 }
 
 function platformsColliderCallback () {
