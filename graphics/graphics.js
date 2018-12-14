@@ -103,7 +103,7 @@ function initVariables() {
 	goAhead = true;
 	noAnswer = false;
 	jumpArea = false;
-	jumpAreaWidth = playerWidth+10*gameVelocity;
+	jumpAreaWidth = playerWidth+20*gameVelocity;
 
 	//Player position
 	playerFixedX = 200;
@@ -250,7 +250,7 @@ var playScene = {
 			lastCreatedPlatform = platforms.create(pointer, levelHeight, 'platform'+levelDuration);
 			lastCreatedPlatform.level = levelValue;
 			levelsQueue.push(levelValue);
-			console.log("levelsQueue: ",levelsQueue);
+			//console.log("levelsQueue: ",levelsQueue);
 			
 			pointer += (measurePlatformWidth*levelDuration)/2;
 			
@@ -504,6 +504,7 @@ var generateLevel = function() {
 		console.log("WARNINGGGGGGGG!!!! YOUR DEVICE WILL EXPLODE!!!!");
 		levelDuration = 1;
 	}
+	console.log(levelDuration)
 		
 	if(durationAndNote[1]!=null)
 		levelValue = durationAndNote[1];
@@ -587,9 +588,9 @@ document.onkeydown = function(event) {
 					for(i=0; i<currentScale.length; i++) {
 						noteFreqKeys[i] = noteFreq[currentScale[i]];
 					}
-					
+					//console.log("keys")
 					if(parseInt(event.key)>=1 && parseInt(event.key)<=8) {
-						console.log("Note played: ", currentScale[noteKeys.indexOf(event.key)])
+						//console.log("Note played: ", currentScale[noteKeys.indexOf(event.key)])
 						pitchDetector.tuner.play(noteFreqKeys[noteKeys.indexOf(event.key)]);
 					}
 				}
