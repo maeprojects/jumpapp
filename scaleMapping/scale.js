@@ -2,23 +2,30 @@ var noteReference = "C3"
 var scaleStepsReference = scaleToStepsArray["ionian"]
 var currentScale = getCurrentScale()
 
+
+// convert a musical note (ex "A#3") to a level between 1 - 8 (the diatonic interval)
+// if return 0 means the musical note is not in the current scale
+function convertNoteToLevel(note){
+  switch(note){
+  case currentScale[0]: level = 1; break;
+  case currentScale[1]: level = 2; break;
+  case currentScale[2]: level = 3; break;
+  case currentScale[3]: level = 4; break;
+  case currentScale[4]: level = 5; break;
+  case currentScale[5]: level = 6; break;
+  case currentScale[6]: level = 7; break;
+  case currentScale[7]: level = 8; break;
+  default: level = 0; break;
+  }
+  return level
+}
+
 /*
 * this function is called from the pitchDetector Module when a new note is detected
 * musicalNote = a note with its octave: ex C#3
 */function newNote(musicalNote){
   	level = 0
-
-  	switch(musicalNote){
-    case currentScale[0]: level = 1; break;
-    case currentScale[1]: level = 2; break;
-    case currentScale[2]: level = 3; break;
-    case currentScale[3]: level = 4; break;
-    case currentScale[4]: level = 5; break;
-    case currentScale[5]: level = 6; break;
-    case currentScale[6]: level = 7; break;
-    case currentScale[7]: level = 8; break;
-    default: level = 0; break;
-  	}
+    level = convertNoteToLevel(musicalNote)
 
     if(level!=0)
       console.log(musicalNote)
