@@ -7,6 +7,8 @@ var numberOfLevels = 8;
 var backgroundGridColor = 0xffe8e8;
 var backgroundColor = 0xFFFFFF;
 var platformColor = 0x41423c;
+var gridColor = 0xbab5b4;
+var gridOpacity = 0.4;
 var fontSize = '20px';
 var fontColor = '#F00';
 var changelevelPoints = 3;
@@ -68,6 +70,8 @@ var platformTouched;
 var measurePlatformWidth;
 var platformHeight;
 var platformInitialX;
+var platformInitialPlayerOffset;
+var spaceBetweenPlatforms;
 var levelsQueue;
 var currentPlatform;
 var gameLevel;
@@ -119,6 +123,8 @@ function initVariables() {
 	measurePlatformWidth = 800;
 	platformHeight = stepHeight-((stepHeight*40)/100);
 	platformInitialX = (playerFixedX-playerWidth/2)+(measurePlatformWidth/2);
+	platformInitialPlayerOffset = 6;
+	spaceBetweenPlatforms = 2;
 	levelsQueue = [];
 
 	//ScaleMapping inizialization
@@ -240,7 +246,7 @@ var playScene = {
 			levelDuration = newLevel[2];
 			createPlatformTexture(this, measurePlatformWidth*levelDuration, platformHeight, levelDuration);
 			if(j==0) {
-				platformInitialX = (playerFixedX-playerWidth/2)+((measurePlatformWidth*levelDuration)/2)-5;
+				platformInitialX = (playerFixedX-playerWidth/2)+((measurePlatformWidth*levelDuration)/2)-platformInitialPlayerOffset;
 				pointer = platformInitialX;
 			}
 			else {
@@ -271,7 +277,7 @@ var playScene = {
 		gridLength = measurePlatformWidth;
 		numberOfInitialMeasures = resolution[0]/measurePlatformWidth;
 		for(i=0; i<numberOfInitialMeasures; i++) {
-			lastGrid = measureGrids.create((playerFixedX-(playerWidth/2)+(gridLength/2))+(gridLength*i)-5, resolution[1]/2, 'grid-texture');
+			lastGrid = measureGrids.create((playerFixedX-(playerWidth/2)+(gridLength/2))+(gridLength*i)-platformInitialPlayerOffset, resolution[1]/2, 'grid-texture');
 			lastGrid.setDepth(-1);
 		}
 		
@@ -302,13 +308,27 @@ var playScene = {
 		});
 		
 		//Creation of new grid measures
-		if(lastGrid.x < resolution[0]-lastGrid.width/2){ //When the platform is completely on the screen, generate a new platform
-			lastGrid = measureGrids.create(resolution[0]+lastGrid.width/2, resolution[1]/2, 'grid-texture');
+		if(lastGrid.x <= resolution[0]-measurePlatformWidth/2){ //When the platform is completely on the screen, generate a new platform
+			lastGrid = measureGrids.create(resolution[0]+(measurePlatformWidth/2), resolution[1]/2, 'grid-texture');
+			//lastGrid = measureGrids.create((playerFixedX-(playerWidth/2)+(gridLength/2))+(gridLength*i)-platformInitialPlayerOffset, resolution[1]/2, 'grid-texture');
 			lastGrid.setDepth(-1);
 		}
 		
 		
 		// PLATFORMS MANAGER: MOVEMENT, REMOVAL, CONDITIONS
+		
+		//Creation of new platforms
+		if(lastCreatedPlatform.x <= resolution[0]-lastCreatedPlatform.width/2){ //When the platform is completely on the screen, generate a new platform
+			newLevel = generateLevel();
+			levelValue = newLevel[0];
+			levelHeight = newLevel[1];
+			levelDuration = newLevel[2];
+			createPlatformTexture(this, measurePlatformWidth*levelDuration, platformHeight, levelDuration);
+			lastCreatedPlatform = platforms.create(resolution[0]+(measurePlatformWidth*levelDuration)/2, levelHeight, 'platform'+levelDuration);
+			lastCreatedPlatform.level = levelValue;
+			levelsQueue.push(levelValue);
+			console.log("levelsQueue: ",levelsQueue);
+		}
 		
 		playerLeftBorder = (playerFixedX-player.width/2);
 		
@@ -353,18 +373,7 @@ var playScene = {
 			}
 		})
 		
-		//Creation of new platforms
-		if(lastCreatedPlatform.x < resolution[0]-lastCreatedPlatform.width/2){ //When the platform is completely on the screen, generate a new platform
-			newLevel = generateLevel();
-			levelValue = newLevel[0];
-			levelHeight = newLevel[1];
-			levelDuration = newLevel[2];
-			createPlatformTexture(this, measurePlatformWidth*levelDuration, platformHeight, levelDuration);
-			lastCreatedPlatform = platforms.create(resolution[0]+(measurePlatformWidth*levelDuration)/2, levelHeight, 'platform'+levelDuration);
-			lastCreatedPlatform.level = levelValue;
-			levelsQueue.push(levelValue);
-			console.log("levelsQueue: ",levelsQueue);
-		}
+		
 		
 		//PLAYER ANIMATION MANAGER
 		
@@ -439,7 +448,7 @@ game.scene.start("playScene");
 function createPlatformTexture(context, width, height, levelDuration, color= platformColor) {
 	graphics=context.add.graphics();
 	graphics.fillStyle(color,1);
-	graphics.fillRect(0,0,width-1,height); //width-1 to see the division between two platforms at the same level
+	graphics.fillRect(0,0,width-spaceBetweenPlatforms,height); //width-1 to see the division between two platforms at the same level
 	graphics.generateTexture('platform'+levelDuration, width, height);
 	graphics.destroy();
 }
@@ -452,14 +461,14 @@ function createGridTexture(context, measurePlatformWidth, timeSignature) {
 		graphics.beginPath();
 		switch(i) {
 			case 0:
-				graphics.lineStyle(20, 0xFF0000, 1);
+				graphics.lineStyle(8*2, gridColor, gridOpacity);
 				break;
 			case 1:
 			case 3:
-				graphics.lineStyle(1, 0xFF0000, 1);			 
+				graphics.lineStyle(1, gridColor, gridOpacity);			 
 				break;
 			case 2:
-				graphics.lineStyle(5, 0xFF0000, 1);
+				graphics.lineStyle(4, gridColor, gridOpacity);
 				break;
 		}
 		graphics.moveTo(xPointer, 0);
