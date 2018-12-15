@@ -73,6 +73,18 @@ var GAME_MODE = {
   PROGRESSIVE: 2
 };
 
+// methods to play note or scale using audio samples in Firebase -------------------------------------------
+
+// note is a musical note (ex C#5)
+function playNote(note){
+
+}
+
+// scale is the name scale to play (ex dorian)
+// fundamental is the starting note to play the specific scale
+function playScale(scale, fundamental){
+
+}
 
 
 
