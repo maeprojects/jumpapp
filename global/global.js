@@ -66,6 +66,13 @@ gameLevelToScaleArray[4] = "aeolian"
 gameLevelToScaleArray[5] = "phrygian"
 gameLevelToScaleArray[6] = "locrian"
 
+var scales = gameLevelToScaleArray // to have the scales name of the modes
+
+var GAME_MODE = {
+  STANDARD: 1,
+  PROGRESSIVE: 2
+};
+
 
 
 
