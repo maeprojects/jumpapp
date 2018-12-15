@@ -76,9 +76,32 @@ function getCurrentScale(){
 function changeGameLevel(numLevelGame){
   if(numLevelGame < gameLevelToScaleArray.length)
     scaleStepsReference = scaleToStepsArray[gameLevelToScaleArray[numLevelGame]]
+  else
+    consolo.log("Error in parameter !")
   //levelScaleColorsMatrix[numLevelGame][1]
   currentScale = getCurrentScale()
 }
+
+
+/* function called from the Sync module
+* note: is a musical note (ex A#4)
+* scale: is the musical scale (ex dorian)
+* gameMode: standard or progressive
+*/
+function setReference(note, scale){
+  // set the note reference if it is correct
+  if(noteFreq[note] != undefined)
+    changeNoteReference(note)
+  else
+    console.log("Note parameter Error")
+
+  // set the scale reference if it is correct
+  if(scale.indexOf(scale) != -1)
+    changeScaleReference(scale)
+  else
+    console.log("Scale parameter Error")
+}
+
 
 function changeNoteReference(note){
 	noteReference = note;
