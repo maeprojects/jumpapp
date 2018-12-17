@@ -7,7 +7,7 @@ var numberOfLevels = 8;
 var backgroundGridColor = 0xffe8e8;
 var backgroundColor = 0xFFFFFF;
 var platformColor = 0x41423c;
-var gridColor = 0xbab5b4;
+var gridColor = "186, 181, 180, "
 var gridOpacity = 0.4;
 var fontSize = '20px';
 var fontColor = '#F00';
@@ -425,7 +425,9 @@ var gameoverScene = {
 				
 		this.input.keyboard.on('keydown', function(e) {
 			if(e.code == "Space" || e.code == "Enter") {
-				game.scene.start("playScene"); 
+				game.anims.anims.clear() //Remove player animations before restarting the game
+				game.textures.remove("grid-texture"); //Remove canvas texture before restarting the game
+				game.scene.start("playScene");
 				game.scene.stop("gameoverScene");
 			}
 		});
@@ -454,32 +456,50 @@ function createPlatformTexture(context, width, height, levelDuration, color= pla
 }
 
 function createGridTexture(context, measurePlatformWidth, timeSignature) {
-	graphics=context.add.graphics();
+	
+	var texture = 0;
+	if(texture == 0)
+		texture = context.textures.createCanvas('grid-texture', measurePlatformWidth, resolution[1]-playerHeight*2);
+    textureContext = texture.getContext();
 	
 	xPointer = 0;
 	for(i=0; i<timeSignature; i++) {
-		graphics.beginPath();
 		switch(i) {
 			case 0:
-				graphics.lineStyle(8*2, gridColor, gridOpacity);
+				grd = textureContext.createLinearGradient(xPointer, 0, xPointer+16, 0);
+
+				grd.addColorStop(0, "rgba("+gridColor+"0)");
+				grd.addColorStop(0.5, "rgba("+gridColor+"1)");
+				grd.addColorStop(1, "rgba("+gridColor+"0)");
+
+				textureContext.fillStyle = grd;
+				textureContext.fillRect(xPointer, 0, xPointer+16, window.innerHeight);
 				break;
 			case 1:
 			case 3:
-				graphics.lineStyle(1, gridColor, gridOpacity);			 
+				grd = textureContext.createLinearGradient(xPointer, 0, xPointer+10, 0);
+
+				grd.addColorStop(0, "rgba("+gridColor+"0)");
+				grd.addColorStop(0.5, "rgba("+gridColor+"0.8)");
+				grd.addColorStop(1, "rgba("+gridColor+"0)");
+
+				textureContext.fillStyle = grd;
+				textureContext.fillRect(xPointer, 0, xPointer+1, window.innerHeight); 
 				break;
 			case 2:
-				graphics.lineStyle(4, gridColor, gridOpacity);
+				grd = textureContext.createLinearGradient(xPointer, 0, xPointer+4, 0);
+
+				grd.addColorStop(0, "rgba("+gridColor+"0)");
+				grd.addColorStop(0.5, "rgba("+gridColor+"0.8)");
+				grd.addColorStop(1, "rgba("+gridColor+"0)");
+
+				textureContext.fillStyle = grd;
+				textureContext.fillRect(xPointer, 0, xPointer+4, window.innerHeight);
 				break;
 		}
-		graphics.moveTo(xPointer, 0);
-		graphics.lineTo(xPointer, resolution[1]);
 		xPointer+=(measurePlatformWidth/timeSignature);
-		graphics.closePath();
-		graphics.strokePath();
-	}
-	
-	graphics.generateTexture('grid-texture',measurePlatformWidth,resolution[1]-playerHeight*2);
-	graphics.destroy();
+	}	
+	texture.refresh();
 }
 
 
