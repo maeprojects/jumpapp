@@ -74,6 +74,8 @@ var platformInitialPlayerOffset;
 var spaceBetweenPlatforms;
 var levelsQueue;
 var currentPlatform;
+var beforePauseLevel;
+var playerPauseY;
 var gameLevel;
 
 //Collider
@@ -255,6 +257,11 @@ var playScene = {
 			
 			lastCreatedPlatform = platforms.create(pointer, levelHeight, 'platform'+levelDuration);
 			lastCreatedPlatform.level = levelValue;
+			if(levelValue == 0) {
+				lastCreatedPlatform.setVisible(false); //Hide texture
+				lastCreatedPlatform.disableBody(); //Disable the body
+			}
+			
 			levelsQueue.push(levelValue);
 			//console.log("levelsQueue: ",levelsQueue);
 			
@@ -279,6 +286,7 @@ var playScene = {
 		for(i=0; i<numberOfInitialMeasures; i++) {
 			lastGrid = measureGrids.create((playerFixedX-(playerWidth/2)+(gridLength/2))+(gridLength*i)-platformInitialPlayerOffset, resolution[1]/2, 'grid-texture');
 			lastGrid.setDepth(-1);
+			lastGrid.progressiveNumber = 0; //zero identifies all the grids created when the game is started
 		}
 		
 		
@@ -309,9 +317,17 @@ var playScene = {
 		
 		//Creation of new grid measures
 		if(lastGrid.x <= resolution[0]-measurePlatformWidth/2){ //When the platform is completely on the screen, generate a new platform
-			lastGrid = measureGrids.create(resolution[0]+(measurePlatformWidth/2), resolution[1]/2, 'grid-texture');
-			//lastGrid = measureGrids.create((playerFixedX-(playerWidth/2)+(gridLength/2))+(gridLength*i)-platformInitialPlayerOffset, resolution[1]/2, 'grid-texture');
-			lastGrid.setDepth(-1);
+			prevGridNumber = lastGrid.progressiveNumber;
+			
+			if(lastGrid.progressiveNumber == 0) { //The first to be created with update function
+				lastGrid = measureGrids.create(resolution[0]+(measurePlatformWidth/2)-1, resolution[1]/2, 'grid-texture');
+				lastGrid.setDepth(-1);
+			} 
+			else {
+				lastGrid = measureGrids.create(resolution[0]+(measurePlatformWidth/2), resolution[1]/2, 'grid-texture');
+				lastGrid.setDepth(-1);
+			}
+			lastGrid.progressiveNumber = prevGridNumber+1;
 		}
 		
 		
@@ -326,6 +342,11 @@ var playScene = {
 			createPlatformTexture(this, measurePlatformWidth*levelDuration, platformHeight, levelDuration);
 			lastCreatedPlatform = platforms.create(resolution[0]+(measurePlatformWidth*levelDuration)/2, levelHeight, 'platform'+levelDuration);
 			lastCreatedPlatform.level = levelValue;
+			if(levelValue == 0) {
+				lastCreatedPlatform.setVisible(false); //Hide texture
+				lastCreatedPlatform.disableBody(); //Disable the body
+			}
+			
 			levelsQueue.push(levelValue);
 			console.log("levelsQueue: ",levelsQueue);
 		}
@@ -362,6 +383,12 @@ var playScene = {
 			//Current Platform Changed Event: if no events are triggered before the platform changes, the player was wrong and it has to die, otherwise it jumps to another platform
 			if(currentPlatformChanged) {
 				
+				if(levelsQueue[1] == 0)  { 
+					beforePauseLevel = levelsQueue[0]; //If the next platform is a pause, save the previous level (needed for jumpRatio)
+					playerPauseY = player.y;
+				}
+					
+				
 				levelsQueue.shift(); //Remove the first element of the list
 				
 				currentPlatform = p;
@@ -388,11 +415,21 @@ var playScene = {
 		
 		//Make it possible to pass through the platform if the player comes from below
 		if(!player.body.touching.down){ 
-			if(player.y > playerPreviousY && collider.overlapOnly==true) {
+			if(player.y > playerPreviousY+1 && collider.overlapOnly==true) {
 				collider.overlapOnly = false;
 			}
 			playerPreviousY = player.y;
-		} 
+		}
+		
+		// PAUSE MANAGER
+		
+		if(levelsQueue[0] == 0) {
+			goAhead = true;
+			if(player.y == playerPauseY) 
+				player.body.setGravityY(-gravity);
+			console.log("IN PAUSE");
+			//player.setVelocityX();
+		}
 		
 		//GAME VELOCITY MANAGER
 		if(gameStatus == "Running")
@@ -401,6 +438,7 @@ var playScene = {
 		
 		//GAME OVER HANDLER
 		if(player.y > resolution[1]+player.height/2) { //When the player is below the screen resolution (no more visible), go to gameoverScene
+			game.scene.pause("playScene");
 			game.scene.start("gameoverScene");
 		}
 		
@@ -408,6 +446,8 @@ var playScene = {
 		//GO TO DEATH MANAGER		
 		if(!goAhead) { //If the player can't go ahead, the colliders with the world are destroyed
 			this.physics.world.colliders.destroy();
+			if(gameStatus == "Running")
+				player.body.setGravityY(playerGravity); //Needed to fall when in a pause step
 		}
 	}
 }
@@ -415,7 +455,6 @@ game.scene.add("playScene", playScene);
 
 var gameoverScene = {
 	create: function() {
-		game.scene.pause("playScene");
 		gameStatus="Gameover"; //in order to avoid checks made when the gamestatus is running
 		this.add.image(resolution[0]/2, resolution[1]/2, 'gameover'); //Show game over image
 		player.destroy(); //Destroy the player
@@ -463,13 +502,12 @@ function createGridTexture(context, measurePlatformWidth, timeSignature) {
     textureContext = texture.getContext();
 	
 	xPointer = 0;
-	for(i=0; i<timeSignature; i++) {
+	for(i=0; i<=timeSignature; i++) {
 		switch(i) {
 			case 0:
 				grd = textureContext.createLinearGradient(xPointer, 0, xPointer+16, 0);
 
-				grd.addColorStop(0, "rgba("+gridColor+"0)");
-				grd.addColorStop(0.5, "rgba("+gridColor+"1)");
+				grd.addColorStop(0, "rgba("+gridColor+"1)");
 				grd.addColorStop(1, "rgba("+gridColor+"0)");
 
 				textureContext.fillStyle = grd;
@@ -477,24 +515,33 @@ function createGridTexture(context, measurePlatformWidth, timeSignature) {
 				break;
 			case 1:
 			case 3:
-				grd = textureContext.createLinearGradient(xPointer, 0, xPointer+10, 0);
+				grd = textureContext.createLinearGradient(xPointer-5-spaceBetweenPlatforms/2, 0, xPointer+5, 0);
 
 				grd.addColorStop(0, "rgba("+gridColor+"0)");
 				grd.addColorStop(0.5, "rgba("+gridColor+"0.8)");
 				grd.addColorStop(1, "rgba("+gridColor+"0)");
 
 				textureContext.fillStyle = grd;
-				textureContext.fillRect(xPointer, 0, xPointer+1, window.innerHeight); 
+				textureContext.fillRect(xPointer-5-spaceBetweenPlatforms/2, 0, xPointer+5, window.innerHeight); 
 				break;
 			case 2:
-				grd = textureContext.createLinearGradient(xPointer, 0, xPointer+4, 0);
+				grd = textureContext.createLinearGradient(xPointer-2-spaceBetweenPlatforms/2, 0, xPointer+2, 0);
 
 				grd.addColorStop(0, "rgba("+gridColor+"0)");
 				grd.addColorStop(0.5, "rgba("+gridColor+"0.8)");
 				grd.addColorStop(1, "rgba("+gridColor+"0)");
 
 				textureContext.fillStyle = grd;
-				textureContext.fillRect(xPointer, 0, xPointer+4, window.innerHeight);
+				textureContext.fillRect(xPointer-2-spaceBetweenPlatforms/2, 0, xPointer+2, window.innerHeight);
+				break;
+			case 4:
+				grd = textureContext.createLinearGradient(xPointer-16, 0, xPointer, 0);
+
+				grd.addColorStop(0, "rgba("+gridColor+"0)");
+				grd.addColorStop(1, "rgba("+gridColor+"1)");
+
+				textureContext.fillStyle = grd;
+				textureContext.fillRect(xPointer-16, 0, xPointer, window.innerHeight);
 				break;
 		}
 		xPointer+=(measurePlatformWidth/timeSignature);
@@ -537,8 +584,14 @@ var generateLevel = function() {
 		
 	if(durationAndNote[1]!=null)
 		levelValue = durationAndNote[1];
-	else
-		levelValue = Math.floor(Math.random()*(numberOfLevels))+1;
+	else if(levelsQueue.length == 0) { //If it's the first level of the game, avoid generation of a pause
+			levelValue = Math.floor(Math.random()*(numberOfLevels))+1;
+		}
+		else {
+			levelValue = Math.floor(Math.random()*(numberOfLevels+1)); //Generate levels with pause
+		}
+	
+	console.log("Level Value: ",levelValue);
 	
 	levelHeight = (player.height)+((numberOfLevels-levelValue)*stepHeight)+(stepHeight/2);
 	return [levelValue, levelHeight, levelDuration];
@@ -609,7 +662,7 @@ document.onkeydown = function(event) {
 			}
 		
 		}
-		else if(gameStatus=="Running" && player.body.touching.down && jumpArea) {
+		else if(gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0 && player.y == playerPauseY) ) && jumpArea) {
 					
 					//Play a note directly into the pitchDetector module for the pitch detecting step (Debug code)
 					noteKeys = "12345678" //Keys To use
@@ -629,12 +682,18 @@ document.onkeydown = function(event) {
 
 function jumpAtLevel(level) {
 	console.log("called jumpAtLevel")
-	if(gameStatus=="Running" && player.body.touching.down && jumpArea) {
-		jumpRatio = String(levelsQueue[1]-levelsQueue[0]+1);
+	if(gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0 && player.y == playerPauseY) ) && jumpArea) {
+		console.log("Should not enter", player.y, playerPauseY);
+		if(levelsQueue[0] == 0) {
+			jumpRatio = String(levelsQueue[1]-beforePauseLevel+1);
+			console.log("Jump ratio in pause: ", jumpRatio);
+		} else
+			jumpRatio = String(levelsQueue[1]-levelsQueue[0]+1);
 		
 		//If the note detected is correct:
-		if(level == levelsQueue[1] && levelsQueue[0]<=levelsQueue[1]) { //Go up
+		if(level == levelsQueue[1] && parseInt(jumpRatio) > 0) { //Go up
 			console.log("jump Up!");
+			player.body.setGravityY(playerGravity);
 			player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity)*stepHeight*jumpRatio,1/2));
 			collider.overlapOnly = true;
 			
@@ -642,6 +701,7 @@ function jumpAtLevel(level) {
 			noAnswer = false; //An answer has been given
 		} else if (level == levelsQueue[1]) { //Go down
 					console.log("jump Down!");
+					player.body.setGravityY(playerGravity);
 					player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity)*stepHeight*1,1/2));
 					goAhead = true;
 					noAnswer = false;
@@ -649,7 +709,8 @@ function jumpAtLevel(level) {
 				//Else go ahead remain false and the player fall down
 				
 	}
-	else if(level == 0 && player.body.touching.down && gameStatus=="Running") {
+	else if(level == -1 && player.body.touching.down && gameStatus=="Running") {
 					//goAhead = false; //The player fall down if a wrong note is singed (even out of the jump area)
+					player.body.setGravityY(playerGravity);
 				}
 }
