@@ -50,6 +50,9 @@ var timeSignature;
 //Game status managing
 var gameStatus;
 var restartScene;
+var changeLevelEvent;
+var changeLevelStatusDuration;
+var scoreToChangeLevel;
 
 //Jump event managing
 var goAhead;
@@ -104,6 +107,9 @@ function initVariables() {
 	//Game state managing
 	gameStatus = "Initialized";
 	restartScene = false;
+	changeLevelEvent = false; //Manage the period in which there's a change of level
+	changeLevelStatusDuration = 1/2;
+	scoreToChangeLevel = 0;
 
 	//Game grid-rhythm settings
 	timeSignature = 4;
@@ -273,6 +279,7 @@ var playScene = {
 			lastCreatedPlatform = platforms.create(pointer, levelHeight, 'platform'+levelDuration);
 			lastCreatedPlatform.level = levelValue;
 			lastCreatedPlatform.duration = levelDuration;
+			lastCreatedPlatform.changeLevel = false;
 			if(levelValue == 0) {
 				lastCreatedPlatform.setVisible(false); //Hide texture
 				lastCreatedPlatform.disableBody(); //Disable the body
@@ -361,6 +368,12 @@ var playScene = {
 			lastCreatedPlatform = platforms.create(resolution[0]+(measurePlatformWidth*levelDuration)/2, levelHeight, 'platform'+levelDuration);
 			lastCreatedPlatform.level = levelValue;
 			lastCreatedPlatform.duration = levelDuration;
+			lastCreatedPlatform.changeLevel = false;
+			if(changeLevelEvent) {
+				lastCreatedPlatform.changeLevel = true;
+				changeLevelEvent = false;
+			}
+
 			if(levelValue == 0) {
 				lastCreatedPlatform.setVisible(false); //Hide texture
 				lastCreatedPlatform.disableBody(); //Disable the body
@@ -462,6 +475,10 @@ var playScene = {
 				}, player);
 
 				playerPauseMotion = true; //condition should not enter anymore
+
+				//Detect of "change level" type of pause and call of change level and background
+				if(currentPlatform.changeLevel)
+					changeLevelAndBackground();
 			}
 
 			//Condition needed because the playerWidth with the wings is greater than the normal player
@@ -482,7 +499,6 @@ var playScene = {
 			game.scene.pause("playScene");
 			game.scene.start("gameoverScene");
 		}
-
 
 		//GO TO DEATH MANAGER
 		//------------------------------------------------------------------------------------------------------
@@ -549,26 +565,16 @@ function createGridTexture(context, measurePlatformWidth, timeSignature) {
 	for(i=0; i<=timeSignature; i++) {
 		switch(i) {
 			case 0:
-				grd = textureContext.createLinearGradient(xPointer, 0, xPointer+16, 0);
+				grd = textureContext.createLinearGradient(xPointer, 0, xPointer+5, 0);
 
-				grd.addColorStop(0, "rgba("+gridColor+"1)");
+				grd.addColorStop(0, "rgba("+gridColor+"0.8)");
 				grd.addColorStop(1, "rgba("+gridColor+"0)");
 
 				textureContext.fillStyle = grd;
-				textureContext.fillRect(xPointer, 0, xPointer+16, window.innerHeight);
+				textureContext.fillRect(xPointer, 0, xPointer+5, window.innerHeight);
 				break;
 			case 1:
 			case 3:
-				grd = textureContext.createLinearGradient(xPointer-5-spaceBetweenPlatforms/2, 0, xPointer+5, 0);
-
-				grd.addColorStop(0, "rgba("+gridColor+"0)");
-				grd.addColorStop(0.5, "rgba("+gridColor+"0.8)");
-				grd.addColorStop(1, "rgba("+gridColor+"0)");
-
-				textureContext.fillStyle = grd;
-				textureContext.fillRect(xPointer-5-spaceBetweenPlatforms/2, 0, xPointer+5, window.innerHeight);
-				break;
-			case 2:
 				grd = textureContext.createLinearGradient(xPointer-2-spaceBetweenPlatforms/2, 0, xPointer+2, 0);
 
 				grd.addColorStop(0, "rgba("+gridColor+"0)");
@@ -578,14 +584,24 @@ function createGridTexture(context, measurePlatformWidth, timeSignature) {
 				textureContext.fillStyle = grd;
 				textureContext.fillRect(xPointer-2-spaceBetweenPlatforms/2, 0, xPointer+2, window.innerHeight);
 				break;
-			case 4:
-				grd = textureContext.createLinearGradient(xPointer-16, 0, xPointer, 0);
+			case 2:
+				grd = textureContext.createLinearGradient(xPointer-1-spaceBetweenPlatforms/2, 0, xPointer+1, 0);
 
 				grd.addColorStop(0, "rgba("+gridColor+"0)");
-				grd.addColorStop(1, "rgba("+gridColor+"1)");
+				grd.addColorStop(0.5, "rgba("+gridColor+"0.8)");
+				grd.addColorStop(1, "rgba("+gridColor+"0)");
 
 				textureContext.fillStyle = grd;
-				textureContext.fillRect(xPointer-16, 0, xPointer, window.innerHeight);
+				textureContext.fillRect(xPointer-2-spaceBetweenPlatforms/2, 0, xPointer+2, window.innerHeight);
+				break;
+			case 4:
+				grd = textureContext.createLinearGradient(xPointer-5, 0, xPointer, 0);
+
+				grd.addColorStop(0, "rgba("+gridColor+"0)");
+				grd.addColorStop(1, "rgba("+gridColor+"0.8)");
+
+				textureContext.fillStyle = grd;
+				textureContext.fillRect(xPointer-5, 0, xPointer, window.innerHeight);
 				break;
 		}
 		xPointer+=(measurePlatformWidth/timeSignature);
@@ -639,7 +655,10 @@ var generateLevel = function() {
 				levelValue = Math.floor(Math.random()*(numberOfLevels+1)); //Generate levels with pause
 		}
 
-
+	if(changeLevelEvent) {
+		levelValue = 0;
+		levelDuration = changeLevelStatusDuration;
+	}
 
 	levelHeight = (player.height)+((numberOfLevels-levelValue)*stepHeight)+(stepHeight/2);
 	return [levelValue, levelHeight, levelDuration];
@@ -651,27 +670,38 @@ function platformsColliderCallback () {
 		scoreText.setText('score: ' + score);
 
 		//Change game level each 3 points
-		if(score == pointsToChangeLevel*(gameLevel+1)) {
-			//New background on level change
-			if(gameLevel<gameLevelToScaleArray.length-1) {
-				tween = gameContext.add.tween({ targets: backgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 500, alpha: { getStart: () => 1, getEnd: () => 0 } });
-				tween.setCallback("onComplete", function(){
-					backgroundImage.destroy();
-					backgroundImage = newbackgroundImage;
-				}, backgroundImage);
-
-				gameLevel++;
-				createBackground(gameContext);
-				changeGameLevel(gameLevel);
-				newbackgroundImage = gameContext.add.image(resolution[0]/2, resolution[1]/2, 'background'+gameLevel);
-				newbackgroundImage.setAlpha(0);
-				newbackgroundImage.setDepth(-2);
-				newtween = gameContext.add.tween({ targets: newbackgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
-			}
+		scoreToChangeLevel++;
+		if(scoreToChangeLevel == pointsToChangeLevel) {
+			changeLevelEvent = true;
+			console.log("Change Level Event!");
 		}
 
 	}
 	platformTouched = true; //Needed to take only the first collision with the platform
+}
+
+function changeLevelAndBackground() {
+	scoreToChangeLevel = 0; //Reset point to reach in order to change level
+
+	//New background on level change
+	if(gameLevel<gameLevelToScaleArray.length-1) {
+		gameLevel++; //Change Level
+
+		//Remove Old Background
+		tween = gameContext.add.tween({ targets: backgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 500, alpha: { getStart: () => 1, getEnd: () => 0 } });
+		tween.setCallback("onComplete", function(){
+			backgroundImage.destroy();
+			backgroundImage = newbackgroundImage;
+		}, backgroundImage);
+
+		//Add new background
+		createBackground(gameContext);
+		changeGameLevel(gameLevel);
+		newbackgroundImage = gameContext.add.image(resolution[0]/2, resolution[1]/2, 'background'+gameLevel);
+		newbackgroundImage.setAlpha(0);
+		newbackgroundImage.setDepth(-2);
+		newtween = gameContext.add.tween({ targets: newbackgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+	}
 }
 
 document.onkeydown = function(event) {
