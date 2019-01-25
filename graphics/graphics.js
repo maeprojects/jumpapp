@@ -61,7 +61,7 @@ var jumpArea;
 var jumpAreaWidth;
 
 //Player position
-var playerFixedX;
+var gameInitialX;
 var playerInitialY;
 var playerPreviousY;
 
@@ -84,6 +84,9 @@ var gameLevel;
 var playerPauseMotion;
 var jumpFromPause;
 
+//Intro
+var initialScaleNote;
+
 //Collider
 var collider;
 
@@ -104,6 +107,9 @@ function initVariables() {
 	//Game score
 	score = 0;
 
+	//Game Intro
+	initialScaleNote = 1;
+
 	//Game state managing
 	gameStatus = "Initialized";
 	restartScene = false;
@@ -121,8 +127,8 @@ function initVariables() {
 	jumpAreaWidth = playerWidth+20*gameVelocity;
 
 	//Player position
-	playerFixedX = 200;
-	playerInitialY = playerHeight/2;
+	playerFixedX = 100;
+	playerInitialY = resolution[1] - playerHeight/2;
 	playerPreviousY = 0;
 
 	//Platforms (levels)
@@ -132,8 +138,9 @@ function initVariables() {
 	platformTouched = false;
 	platformVelocity = 0;
 	measurePlatformWidth = 800;
+	gameInitialX = 200;
 	platformHeight = stepHeight-((stepHeight*40)/100);
-	platformInitialX = (playerFixedX-playerWidth/2)+(measurePlatformWidth/2);
+	platformInitialX = (gameInitialX-playerWidth/2)+(measurePlatformWidth/2);
 	platformInitialPlayerOffset = 6;
 	spaceBetweenPlatforms = 2;
 	levelsQueue = [];
@@ -269,14 +276,14 @@ var playScene = {
 			levelDuration = newLevel[2];
 			createPlatformTexture(this, measurePlatformWidth*levelDuration, platformHeight, levelDuration);
 			if(j==0) {
-				platformInitialX = (playerFixedX-playerWidth/2)+((measurePlatformWidth*levelDuration)/2)-platformInitialPlayerOffset;
+				platformInitialX = (gameInitialX-playerWidth/2)+((measurePlatformWidth*levelDuration)/2)-platformInitialPlayerOffset;
 				pointer = platformInitialX;
 			}
 			else {
 				pointer += (measurePlatformWidth*levelDuration)/2;
 			}
 
-			lastCreatedPlatform = platforms.create(pointer, levelHeight, 'platform'+levelDuration);
+			lastCreatedPlatform = platforms.create(pointer, levelHeight, 'platform'+levelDuration+platformHeight);
 			lastCreatedPlatform.level = levelValue;
 			lastCreatedPlatform.duration = levelDuration;
 			lastCreatedPlatform.changeLevel = false;
@@ -298,6 +305,18 @@ var playScene = {
 
 		}
 
+		//INITIAL SCALE, HIDDEN PLATFORMS GENERATION
+		for(note=1; note<=8; note++) {
+			levelValue = note;
+			levelHeight = (player.height)+((numberOfLevels-levelValue)*stepHeight)+(stepHeight/2);
+			levelDuration = 1/8;
+
+			createPlatformTexture(this, measurePlatformWidth*levelDuration, 5, levelDuration);
+
+			scalePlatform = platforms.create(playerFixedX, levelHeight, 'platform'+levelDuration+5);
+			scalePlatform.setVisible(false); //Hide texture
+		}
+
 
 		//GRID GENERATION
 		//------------------------------------------------------------------------------------------------------
@@ -307,7 +326,7 @@ var playScene = {
 		gridLength = measurePlatformWidth;
 		numberOfInitialMeasures = resolution[0]/measurePlatformWidth;
 		for(i=0; i<numberOfInitialMeasures; i++) {
-			lastGrid = measureGrids.create((playerFixedX-(playerWidth/2)+(gridLength/2))+(gridLength*i)-platformInitialPlayerOffset, resolution[1]/2, 'grid-texture');
+			lastGrid = measureGrids.create((gameInitialX-(playerWidth/2)+(gridLength/2))+(gridLength*i)-platformInitialPlayerOffset, resolution[1]/2, 'grid-texture');
 			lastGrid.setDepth(-1);
 			lastGrid.progressiveNumber = 0; //zero identifies all the grids created when the game is started
 		}
@@ -365,7 +384,7 @@ var playScene = {
 			levelHeight = newLevel[1];
 			levelDuration = newLevel[2];
 			createPlatformTexture(this, measurePlatformWidth*levelDuration, platformHeight, levelDuration);
-			lastCreatedPlatform = platforms.create(resolution[0]+(measurePlatformWidth*levelDuration)/2, levelHeight, 'platform'+levelDuration);
+			lastCreatedPlatform = platforms.create(resolution[0]+(measurePlatformWidth*levelDuration)/2, levelHeight, 'platform'+levelDuration+platformHeight);
 			lastCreatedPlatform.level = levelValue;
 			lastCreatedPlatform.duration = levelDuration;
 			lastCreatedPlatform.changeLevel = false;
@@ -380,10 +399,10 @@ var playScene = {
 			}
 
 			levelsQueue.push(levelValue);
-			console.log("levelsQueue: ",levelsQueue);
+			//console.log("levelsQueue: ",levelsQueue);
 		}
 
-		playerLeftBorder = (playerFixedX-player.width/2);
+		playerLeftBorder = (gameInitialX-player.width/2);
 
 		platforms.getChildren().forEach(function(p){
 			if(p.x < -p.width/2)
@@ -408,7 +427,7 @@ var playScene = {
 			if(playerEnterJumpArea) {
 				jumpArea = true;
 				noAnswer = true; //Answer again ungiven
-				console.log("Entered jump area");
+				//console.log("Entered jump area");
 			}
 
 			currentPlatformChanged =  (playerLeftBorder > platformLeftBorder) &&  (playerLeftBorder-gameVelocity <= platformLeftBorder); //Condition to summarize when the player enter on another platform
@@ -421,7 +440,7 @@ var playScene = {
 				}
 
 				levelsQueue.shift(); //Remove the first element of the list
-				console.log('remove item!: ', levelsQueue);
+				//console.log('remove item!: ', levelsQueue);
 
 				currentPlatform = p;
 
@@ -435,9 +454,12 @@ var playScene = {
 
 		//PLAYER ANIMATION MANAGER
 		//------------------------------------------------------------------------------------------------------
-		if(player.body.touching.down) {
+		if(player.body.touching.down && playerFixedX == 200) {
 			player.anims.play('playerRun', true);
 			gameStatus = "Running"; //The first time change the game status from Started to Running
+			//Starting Pitch Detector (the condition is not mandatory)
+			if(!pitchDetector.isEnable())
+				pitchDetector.toggleEnable();
 
 			//Reset Pause variables when the player touch a platform
 			jumpFromPause = false;
@@ -484,6 +506,24 @@ var playScene = {
 			//Condition needed because the playerWidth with the wings is greater than the normal player
 			if(player.x-playerWidth/2-5>currentPlatform.x-currentPlatform.width/2) {
 					player.anims.play('playerFly', true);
+			}
+		}
+
+		//INITIAL SCALE ANIMATION MANAGER
+		//------------------------------------------------------------------------------------------------------
+		if(gameStatus == "Intro") {
+			if(player.body.touching.down && initialScaleNote<8){
+				player.setVelocityY(-380);
+				collider.overlapOnly = true;
+				initialScaleNote++;
+			}
+			else if(player.body.touching.down){ //If you are at the last step, the game should start
+				player.setVelocityY(-400);
+				t = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: 1000, delay: 0, x: { getStart: () => playerFixedX, getEnd: () =>  gameInitialX} });
+				t.setCallback("onComplete", function(){
+					playerFixedX = gameInitialX;
+					player.setGravityY(playerGravity);
+				}, player);
 			}
 		}
 
@@ -536,7 +576,7 @@ game.scene.add("gameoverScene", gameoverScene);
 
 var settingsScene = {
 	create: function() {
-		console.log("Settings Screen: Work in progress...");
+		//console.log("Settings Screen: Work in progress...");
 	}
 }
 game.scene.add("settingsScene", settingsScene);
@@ -550,7 +590,7 @@ function createPlatformTexture(context, width, height, levelDuration, color= pla
 	graphics=context.add.graphics();
 	graphics.fillStyle(color,1);
 	graphics.fillRect(0,0,width-spaceBetweenPlatforms,height); //width-1 to see the division between two platforms at the same level
-	graphics.generateTexture('platform'+levelDuration, width, height);
+	graphics.generateTexture('platform'+levelDuration+height, width, height);
 	graphics.destroy();
 }
 
@@ -673,7 +713,7 @@ function platformsColliderCallback () {
 		scoreToChangeLevel++;
 		if(scoreToChangeLevel == pointsToChangeLevel) {
 			changeLevelEvent = true;
-			console.log("Change Level Event!");
+			//console.log("Change Level Event!");
 		}
 
 	}
@@ -693,6 +733,7 @@ function changeLevelAndBackground() {
 			backgroundImage.destroy();
 			backgroundImage = newbackgroundImage;
 		}, backgroundImage);
+		
 
 		//Add new background
 		createBackground(gameContext);
@@ -704,6 +745,7 @@ function changeLevelAndBackground() {
 	}
 }
 
+
 document.onkeydown = function(event) {
 	if(!event.repeat){
 		if(event.key == "Enter" || event.key == " "){
@@ -712,16 +754,16 @@ document.onkeydown = function(event) {
 
 				case "Started": //The game should start running
 					pitchDetector.resumeAudioContext()	//to enable the AudioContext of PitchDetector
-					player.body.setGravityY(playerGravity);
-					scoreText.setText('score: ' + score);
+					game.scene.resume("playScene"); //Starting scene (update() function starts looping)
 
-					//Starting Pitch Detector (the condition is not mandatory)
-					if(!pitchDetector.isEnable())
-						pitchDetector.toggleEnable();
-
-					//Starting scene (update() function starts looping)
-					game.scene.resume("playScene");
+					gameStatus = "Intro";
+					player.body.setGravityY(playerGravity/100);
+					player.setVelocityY(-400);
+					collider.overlapOnly = true;
 					break;
+
+				case "Intro":
+					scoreText.setText('score: ' + score);
 
 				case "Running": //The game should toggle the pause status
 					if(game.scene.isActive("playScene")) {
@@ -759,7 +801,7 @@ document.onkeydown = function(event) {
 }
 
 function jumpAtLevel(level) {
-	console.log("called jumpAtLevel", level)
+	//console.log("called jumpAtLevel", level)
 	if(gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea) {
 		if(levelsQueue[0] == 0) {
 			jumpRatio = 1.5;
@@ -771,7 +813,7 @@ function jumpAtLevel(level) {
 
 		//If the note detected is correct:
 		if(level == levelsQueue[1] && parseInt(jumpRatio) > 0) { //Go up
-			console.log("jump Up!", level);
+			//console.log("jump Up!", level);
 			player.body.setGravityY(playerGravity);
 			player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity)*stepHeight*jumpRatio,1/2));
 			collider.overlapOnly = true;
@@ -779,7 +821,7 @@ function jumpAtLevel(level) {
 			goAhead = true; //The answer is correct
 			noAnswer = false; //An answer has been given
 		} else if (level == levelsQueue[1]) { //Go down
-					console.log("jump Down!", level);
+					//console.log("jump Down!", level);
 					player.body.setGravityY(playerGravity);
 					player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity)*stepHeight*1,1/2));
 					goAhead = true;
