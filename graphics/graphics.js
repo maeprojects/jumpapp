@@ -681,6 +681,7 @@ document.onkeydown = function(event) {
 			switch(gameStatus) {
 
 				case "Started": //The game should start running
+					pitchDetector.resumeAudioContext()	//to enable the AudioContext of PitchDetector
 					player.body.setGravityY(playerGravity);
 					scoreText.setText('score: ' + score);
 
