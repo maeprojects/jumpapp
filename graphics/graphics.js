@@ -696,6 +696,7 @@ function changeLevelAndBackground() {
 			backgroundImage = newbackgroundImage;
 		}, backgroundImage);
 
+
 		//Add new background
 		createBackground(gameContext);
 		changeGameLevel(gameLevel);
@@ -703,6 +704,9 @@ function changeLevelAndBackground() {
 		newbackgroundImage.setAlpha(0);
 		newbackgroundImage.setDepth(-2);
 		newtween = gameContext.add.tween({ targets: newbackgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+
+		//play next scale
+		playScale(gameLevelToScaleArray[gameLevel], noteReference, 0.5)
 	}
 }
 

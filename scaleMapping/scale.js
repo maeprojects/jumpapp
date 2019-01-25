@@ -131,17 +131,6 @@ function changeScaleReference(scale){
 }
 
 function buttonPlayReference(){
-	ctx = new AudioContext()
-	osc = ctx.createOscillator()
-	g = ctx.createGain()
-	osc.frequency.value = noteFreq[noteReference]
-	osc.connect(g)
-	g.connect(ctx.destination)
-	g.gain.value = 0
-  now = ctx.currentTime
-	g.gain.linearRampToValueAtTime(1, now+0.1)
-	
-	g.gain.linearRampToValueAtTime(0, now+0.8)
-	osc.start()
+	playNote(noteReference, 2)
 
 }

@@ -81,6 +81,7 @@ var GAME_MODE = {
 */
 
 Synth instanceof AudioSynth; // true
+Synth.setVolume(0.8)
 var pianoInstrument = Synth.createInstrument('piano');
 
 // note is a musical note (ex C#5)
