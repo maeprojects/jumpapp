@@ -425,12 +425,8 @@ var playScene = {
 
 				currentPlatform = p;
 
-				if(noAnswer) { //Answer ungiven: the player should die
+				if(noAnswer) //Answer ungiven: the player should die
 					goAhead = false;
-					// play the right note while you're dying
-					if(levelsQueue[0]!=0)
-					playNote(convertLevelToNote(levelsQueue[0]), 1)
-				}
 
 				jumpArea = false;//Not anymore in the jump area
 
@@ -524,6 +520,7 @@ var gameoverScene = {
 		this.add.image(resolution[0]/2, resolution[1]/2, 'gameover'); //Show game over image
 		player.destroy(); //Destroy the player
 		scoreText.setText('score: ' + score + '    Enter/Space to restart'); //Update the status text
+		playNote(convertLevelToNote(levelsQueue[0]), 1)
 		if(pitchDetector.isEnable())
 			pitchDetector.toggleEnable(); //If the pitch detector is enabled, disable it
 
