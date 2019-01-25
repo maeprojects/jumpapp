@@ -359,7 +359,7 @@ var playScene = {
 			 player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.4,1/2));
 			 collider.overlapOnly = true;
 
-			 scoreText.setText('Listen Carefully to the pitches of the scale...'); 
+			 scoreText.setText('Listen Carefully to the pitches of the scale...');
 	    }, this);
 
 		//SETTING OF GAME STATUS
@@ -612,6 +612,14 @@ var gameoverScene = {
 				game.scene.stop("gameoverScene");
 			}
 		});
+
+		//Touch input MANAGER
+		this.input.on('pointerup', function(){
+			game.anims.anims.clear() //Remove player animations before restarting the game
+			game.textures.remove("grid-texture"); //Remove canvas texture before restarting the game
+			game.scene.start("playScene");
+			game.scene.stop("gameoverScene");
+		 }, this);
 	}
 }
 game.scene.add("gameoverScene", gameoverScene);
