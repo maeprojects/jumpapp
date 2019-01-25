@@ -20,6 +20,23 @@ function convertNoteToLevel(note){
   return level
 }
 
+// convert a level between 1 - 8 (the diatonic interval, ex 3) to a musical note 
+// if return 0 means the level is not in the current scale
+function convertLevelToNote(level){
+  switch(level){
+  case 1: note = currentScale[0]; break;
+  case 2: note = currentScale[1]; break;
+  case 3: note = currentScale[2]; break;
+  case 4: note = currentScale[3]; break;
+  case 5: note = currentScale[4]; break;
+  case 6: note = currentScale[5]; break;
+  case 7: note = currentScale[6]; break;
+  case 8: note = currentScale[7]; break;
+  default: note = 0; break;
+  }
+  return note
+}
+
 /*
 * this function is called from the pitchDetector Module when a new note is detected
 * musicalNote = a note with its octave: ex C#3
