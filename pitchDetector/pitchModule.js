@@ -44,6 +44,11 @@ PitchDetector.prototype.isEnable = function() {
   return this.notes.isAutoMode
 }
 
+// this method is for the upgrade of AudioContext (December 2018)
+PitchDetector.prototype.resumeAudioContext = function() {
+  this.tuner.audioContext.resume()
+}
+
 //-----------------------------------------------------------------
 // INIZIALIZE ALL PITCH DETECTOR
 //const pitchDetector = new PitchDetector()
