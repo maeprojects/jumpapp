@@ -448,6 +448,7 @@ var playScene = {
 					goAhead = false;
 
 				jumpArea = false;//Not anymore in the jump area
+
 			}
 		})
 
@@ -559,6 +560,7 @@ var gameoverScene = {
 		this.add.image(resolution[0]/2, resolution[1]/2, 'gameover'); //Show game over image
 		player.destroy(); //Destroy the player
 		scoreText.setText('score: ' + score + '    Enter/Space to restart'); //Update the status text
+		playNote(convertLevelToNote(levelsQueue[0]), 1)
 		if(pitchDetector.isEnable())
 			pitchDetector.toggleEnable(); //If the pitch detector is enabled, disable it
 
@@ -734,6 +736,7 @@ function changeLevelAndBackground() {
 			backgroundImage = newbackgroundImage;
 		}, backgroundImage);
 		
+
 
 		//Add new background
 		createBackground(gameContext);

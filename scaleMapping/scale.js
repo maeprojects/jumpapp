@@ -1,6 +1,6 @@
 var noteReference = "C3"
 var scaleStepsReference = scaleToStepsArray["ionian"]
-var currentScale = getCurrentScale()
+var currentScale = getScale(scaleStepsReference, noteReference)
 
 
 // convert a musical note (ex "A#3") to a level between 1 - 8 (the diatonic interval)
@@ -20,6 +20,23 @@ function convertNoteToLevel(note){
   return level
 }
 
+// convert a level between 1 - 8 (the diatonic interval, ex 3) to a musical note 
+// if return 0 means the level is not in the current scale
+function convertLevelToNote(level){
+  switch(level){
+  case 1: note = currentScale[0]; break;
+  case 2: note = currentScale[1]; break;
+  case 3: note = currentScale[2]; break;
+  case 4: note = currentScale[3]; break;
+  case 5: note = currentScale[4]; break;
+  case 6: note = currentScale[5]; break;
+  case 7: note = currentScale[6]; break;
+  case 8: note = currentScale[7]; break;
+  default: note = 0; break;
+  }
+  return note
+}
+
 /*
 * this function is called from the pitchDetector Module when a new note is detected
 * musicalNote = a note with its octave: ex C#3
@@ -36,17 +53,17 @@ function convertNoteToLevel(note){
 }
 
 //calucate the current scale based on the note and scale reference in setting
-function getCurrentScale(){
-    currentScale =[]
+function getScale(scaleStep, fundamental){
+    scale =[]
     index=0
-    extractLetterReference = noteReference.substring(0, noteReference.length-1)
-    extractOctaveReference = parseInt(noteReference.substring(noteReference.length-1))
+    extractLetterReference = fundamental.substring(0, fundamental.length-1)
+    extractOctaveReference = parseInt(fundamental.substring(fundamental.length-1))
 
     // calculate the scale
     j=letters.indexOf(extractLetterReference)
-    for(i=0; i<scaleStepsReference.length; i++){
-      if(scaleStepsReference[i]==1){
-        currentScale[index] = letters[j]
+    for(i=0; i<scaleStep.length; i++){
+      if(scaleStep[i]==1){
+        scale[index] = letters[j]
         index++
       }
       j++
@@ -57,16 +74,16 @@ function getCurrentScale(){
 
     // update the correct octave
     changeOctave = false
-    currentScale[0] += extractOctaveReference
-    for(i=1; i<currentScale.length; i++){
-      if((currentScale[i] == "C" || currentScale[i] == "C#") && !changeOctave){
+    scale[0] += extractOctaveReference
+    for(i=1; i<scale.length; i++){
+      if((scale[i] == "C" || scale[i] == "C#") && !changeOctave){
         extractOctaveReference++
         changeOctave = true
       }
-      currentScale[i] += extractOctaveReference
+      scale[i] += extractOctaveReference
     }
 
-    return currentScale;
+    return scale;
 
 }
 
@@ -79,7 +96,7 @@ function changeGameLevel(numLevelGame){
   else
     consolo.log("Error in parameter !")
   //levelScaleColorsMatrix[numLevelGame][1]
-  currentScale = getCurrentScale()
+  currentScale = getScale(scaleStepsReference, noteReference)
 }
 
 
@@ -105,27 +122,15 @@ function setReference(note, scale){
 
 function changeNoteReference(note){
 	noteReference = note;
-  currentScale = getCurrentScale()
+  currentScale = getScale(scaleStepsReference, noteReference)
 }
 
 function changeScaleReference(scale){
   scaleStepsReference = scaleToStepsArray[scale];
-  currentScale = getCurrentScale()
+  currentScale = getScale(scaleStepsReference, noteReference)
 }
 
 function buttonPlayReference(){
-	ctx = new AudioContext()
-	osc = ctx.createOscillator()
-	g = ctx.createGain()
-	osc.frequency.value = noteFreq[noteReference]
-	osc.connect(g)
-	g.connect(ctx.destination)
-	g.gain.value = 0
-  now = ctx.currentTime
-	g.gain.linearRampToValueAtTime(1, now+0.1)
-	
-	g.gain.linearRampToValueAtTime(0, now+0.8)
-	osc.start()
-	
+	playNote(noteReference, 2)
 
 }
