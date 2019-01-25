@@ -54,7 +54,7 @@ function convertLevelToNote(level){
 
 //calucate the current scale based on the note and scale reference in setting
 function getScale(scaleStep, fundamental){
-    currentScale =[]
+    scale =[]
     index=0
     extractLetterReference = fundamental.substring(0, fundamental.length-1)
     extractOctaveReference = parseInt(fundamental.substring(fundamental.length-1))
@@ -63,7 +63,7 @@ function getScale(scaleStep, fundamental){
     j=letters.indexOf(extractLetterReference)
     for(i=0; i<scaleStep.length; i++){
       if(scaleStep[i]==1){
-        currentScale[index] = letters[j]
+        scale[index] = letters[j]
         index++
       }
       j++
@@ -74,16 +74,16 @@ function getScale(scaleStep, fundamental){
 
     // update the correct octave
     changeOctave = false
-    currentScale[0] += extractOctaveReference
-    for(i=1; i<currentScale.length; i++){
-      if((currentScale[i] == "C" || currentScale[i] == "C#") && !changeOctave){
+    scale[0] += extractOctaveReference
+    for(i=1; i<scale.length; i++){
+      if((scale[i] == "C" || scale[i] == "C#") && !changeOctave){
         extractOctaveReference++
         changeOctave = true
       }
-      currentScale[i] += extractOctaveReference
+      scale[i] += extractOctaveReference
     }
 
-    return currentScale;
+    return scale;
 
 }
 
