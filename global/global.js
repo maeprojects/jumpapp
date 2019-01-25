@@ -107,7 +107,13 @@ function playScale(scale, fundamental, durationSingleNote){
     note = stepScale[i]
     setTimeout(playNote, d*i*1000, note, d*2) // call playNote(note, d) after d/2 second (scanning the scale)
   }
+}
 
+// play a level of the gameGrid: based on the currentScale and the current noteReference
+function playLevel(level){
+  if(level > 0 && level < 9)
+  note = currentScale[level-1]
+  playNote(note, 1) // play note with 1 sec of duration
 }
 
 
