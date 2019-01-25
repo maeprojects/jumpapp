@@ -1,6 +1,6 @@
 var noteReference = "C3"
 var scaleStepsReference = scaleToStepsArray["ionian"]
-var currentScale = getCurrentScale()
+var currentScale = getScale(scaleStepsReference, noteReference)
 
 
 // convert a musical note (ex "A#3") to a level between 1 - 8 (the diatonic interval)
@@ -36,16 +36,16 @@ function convertNoteToLevel(note){
 }
 
 //calucate the current scale based on the note and scale reference in setting
-function getCurrentScale(){
+function getScale(scaleStep, fundamental){
     currentScale =[]
     index=0
-    extractLetterReference = noteReference.substring(0, noteReference.length-1)
-    extractOctaveReference = parseInt(noteReference.substring(noteReference.length-1))
+    extractLetterReference = fundamental.substring(0, fundamental.length-1)
+    extractOctaveReference = parseInt(fundamental.substring(fundamental.length-1))
 
     // calculate the scale
     j=letters.indexOf(extractLetterReference)
-    for(i=0; i<scaleStepsReference.length; i++){
-      if(scaleStepsReference[i]==1){
+    for(i=0; i<scaleStep.length; i++){
+      if(scaleStep[i]==1){
         currentScale[index] = letters[j]
         index++
       }
@@ -79,7 +79,7 @@ function changeGameLevel(numLevelGame){
   else
     consolo.log("Error in parameter !")
   //levelScaleColorsMatrix[numLevelGame][1]
-  currentScale = getCurrentScale()
+  currentScale = getScale(scaleStepsReference, noteReference)
 }
 
 
@@ -105,12 +105,12 @@ function setReference(note, scale){
 
 function changeNoteReference(note){
 	noteReference = note;
-  currentScale = getCurrentScale()
+  currentScale = getScale(scaleStepsReference, noteReference)
 }
 
 function changeScaleReference(scale){
   scaleStepsReference = scaleToStepsArray[scale];
-  currentScale = getCurrentScale()
+  currentScale = getScale(scaleStepsReference, noteReference)
 }
 
 function buttonPlayReference(){
@@ -126,6 +126,5 @@ function buttonPlayReference(){
 	
 	g.gain.linearRampToValueAtTime(0, now+0.8)
 	osc.start()
-	
 
 }

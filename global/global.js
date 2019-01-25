@@ -73,16 +73,39 @@ var GAME_MODE = {
   PROGRESSIVE: 2
 };
 
-// methods to play note or scale using audio samples in Firebase -------------------------------------------
+//-------------------------------------------------------------------------------------------
+/*
+* Useful methods to reproduce sounds (notes, scales, ...)
+* It use an external library "AudioSynth"
+* Reference: http://keithwhor.github.io/audiosynth/
+*/
+
+Synth instanceof AudioSynth; // true
+var pianoInstrument = Synth.createInstrument('piano');
 
 // note is a musical note (ex C#5)
-function playNote(note){
-
+// durationSingleNote is in seconds
+function playNote(note, duration){
+  // example:
+  // piano.play('C', 4, 2); -> plays C4 for 2s using the 'piano' sound profile
+  name = note.substring(0,note.length-1)
+  octave = note.substring(note.length-1, note.length)
+  d = Math.abs(duration)
+  console.log(d)
+  pianoInstrument.play(name, octave, d)
 }
 
 // scale is the name scale to play (ex dorian)
-// fundamental is the starting note to play the specific scale
-function playScale(scale, fundamental){
+// fundamental is the starting note to play the specific scale (ex C#5)
+// durationSingleNote is in seconds
+function playScale(scale, fundamental, durationSingleNote){
+  stepScale = getScale(scaleToStepsArray[scale], fundamental) //return in form of ["C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4"]
+  d = Math.abs(durationSingleNote)
+  console.log(d)
+  for(i=0; i<stepScale.length; i++){
+    note = stepScale[i]
+    setTimeout(playNote, d*i*1000, note, d*2) // call playNote(note, d) after d/2 second (scanning the scale)
+  }
 
 }
 

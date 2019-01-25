@@ -6,7 +6,6 @@ const PitchDetector = function() {
 
 PitchDetector.prototype.start = function() {
   const self = this
-
   this.tuner.onNoteDetected = function(note) {
     if (self.notes.isAutoMode) {
       if (self.lastNote === note.name && self.lastOctave === note.octave) {
@@ -15,9 +14,8 @@ PitchDetector.prototype.start = function() {
       } else {
         self.lastNote = note.name
         self.lastOctave = note.octave
-        
-        musicalNote = note.name + note.octave
 
+        musicalNote = note.name + note.octave
         //console.log(musicalNote)
         // CALL ScaleCorrelation Module
         newNote(musicalNote)
@@ -28,6 +26,7 @@ PitchDetector.prototype.start = function() {
   self.tuner.init()
   self.frequencyData = new Uint8Array(self.tuner.analyser.frequencyBinCount)
 }
+
 
 /*
 PitchDetector.prototype.update = function(note) {
