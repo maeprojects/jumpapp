@@ -11,7 +11,7 @@ var gridColor = "186, 181, 180, "
 var gridOpacity = 0.4;
 var fontSize = '20px';
 var fontColor = '#F00';
-var changelevelPoints = 3;
+var pointsToChangeLevel = 3;
 
 
 
@@ -651,7 +651,7 @@ function platformsColliderCallback () {
 		scoreText.setText('score: ' + score);
 
 		//Change game level each 3 points
-		if(score == changelevelPoints*(gameLevel+1)) {
+		if(score == pointsToChangeLevel*(gameLevel+1)) {
 			//New background on level change
 			if(gameLevel<gameLevelToScaleArray.length-1) {
 				tween = gameContext.add.tween({ targets: backgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 500, alpha: { getStart: () => 1, getEnd: () => 0 } });
