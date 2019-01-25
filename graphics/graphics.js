@@ -342,11 +342,25 @@ var playScene = {
 		//------------------------------------------------------------------------------------------------------
 		scoreText = this.add.text(16, 16, 'Enter/Space to start', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 
+		//Change Reference Button
 		const referenceNoteButton = this.add.text(resolution[0]-200, resolution[1]-30, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 		referenceNoteButton.setInteractive();
 		referenceNoteButton.on('pointerdown', () => {
 			buttonPlayReference();
 		 });
+
+		 //Touch input MANAGER
+		 this.input.on('pointerdown', function(){
+			 pitchDetector.resumeAudioContext()	//to enable the AudioContext of PitchDetector
+			 game.scene.resume("playScene"); //Starting scene (update() function starts looping)
+
+			 gameStatus = "Intro";
+			 player.body.setGravityY(playerGravity*(introVelocity/10));
+			 player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.4,1/2));
+			 collider.overlapOnly = true;
+
+			 scoreText.setText('Listen Carefully to the pitches of the scale...'); 
+	    }, this);
 
 		//SETTING OF GAME STATUS
 		//------------------------------------------------------------------------------------------------------
@@ -643,17 +657,17 @@ function createGridTexture(context, measurePlatformWidth, timeSignature) {
 				break;
 			case 1:
 			case 3:
-				grd = textureContext.createLinearGradient(xPointer-2-spaceBetweenPlatforms/2, 0, xPointer+2, 0);
+				grd = textureContext.createLinearGradient(xPointer-1-spaceBetweenPlatforms/2, 0, xPointer+1, 0);
 
 				grd.addColorStop(0, "rgba("+gridColor+"0)");
 				grd.addColorStop(0.5, "rgba("+gridColor+"0.8)");
 				grd.addColorStop(1, "rgba("+gridColor+"0)");
 
 				textureContext.fillStyle = grd;
-				textureContext.fillRect(xPointer-2-spaceBetweenPlatforms/2, 0, xPointer+2, window.innerHeight);
+				textureContext.fillRect(xPointer-1-spaceBetweenPlatforms/2, 0, xPointer+1, window.innerHeight);
 				break;
 			case 2:
-				grd = textureContext.createLinearGradient(xPointer-1-spaceBetweenPlatforms/2, 0, xPointer+1, 0);
+				grd = textureContext.createLinearGradient(xPointer-2-spaceBetweenPlatforms/2, 0, xPointer+2, 0);
 
 				grd.addColorStop(0, "rgba("+gridColor+"0)");
 				grd.addColorStop(0.5, "rgba("+gridColor+"0.8)");
