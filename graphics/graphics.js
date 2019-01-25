@@ -86,6 +86,7 @@ var jumpFromPause;
 
 //Intro
 var initialScaleNote;
+var introVelocity;
 
 //Collider
 var collider;
@@ -109,6 +110,7 @@ function initVariables() {
 
 	//Game Intro
 	initialScaleNote = 1;
+	introVelocity = 1;
 
 	//Game state managing
 	gameStatus = "Initialized";
@@ -235,7 +237,7 @@ var playScene = {
 
 		//PLAYER
 		//------------------------------------------------------------------------------------------------------
-		player = this.physics.add.sprite(playerFixedX, playerInitialY, 'player-fly');
+		player = this.physics.add.sprite(playerFixedX, playerInitialY, 'player-fly').setScale(resolution[1]/636);
 		player.setCollideWorldBounds(false); //So the player can exceed the world boundaries
 		player.body.setGravityY(-gravity); //For the player to have an y acceleration; set to (-gravity) to make the player have no y motion at first
 		//player.setTint(0x000000); //Set a color mask for the player
@@ -338,7 +340,13 @@ var playScene = {
 
 		//SCORE
 		//------------------------------------------------------------------------------------------------------
-		scoreText = this.add.text(16, 16, 'score:       Enter/Space to start', { fontSize: fontSize, fill: fontColor });
+		scoreText = this.add.text(16, 16, 'Enter/Space to start', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+
+		const referenceNoteButton = this.add.text(resolution[0]-200, resolution[1]-30, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+		referenceNoteButton.setInteractive();
+		referenceNoteButton.on('pointerdown', () => {
+			buttonPlayReference();
+		 });
 
 		//SETTING OF GAME STATUS
 		//------------------------------------------------------------------------------------------------------
@@ -458,13 +466,22 @@ var playScene = {
 		if(player.body.touching.down && playerFixedX == 200) {
 			player.anims.play('playerRun', true);
 			gameStatus = "Running"; //The first time change the game status from Started to Running
-			//Starting Pitch Detector (the condition is not mandatory)
-			if(!pitchDetector.isEnable())
-				pitchDetector.toggleEnable();
 
 			//Reset Pause variables when the player touch a platform
 			jumpFromPause = false;
 			playerPauseMotion = false;
+
+			//Enter only the first time (at the first collide with a step)
+			if(score==0) {
+				score++;
+				scoreToChangeLevel++;
+				scoreText.setText('score: ' + score);
+
+				//Check if the first note is played correctly
+				if(noAnswer) {
+					goAhead = false;
+				}
+			}
 		}
 		else {
 			if(levelsQueue[0] != 0 || jumpFromPause) {
@@ -515,14 +532,21 @@ var playScene = {
 		if(gameStatus == "Intro") {
 			if(player.body.touching.down && initialScaleNote<8){
 				playLevel(initialScaleNote);
-				player.setVelocityY(-380);
+				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.1,1/2));
 				collider.overlapOnly = true;
 				initialScaleNote++;
 			}
 			else if(player.body.touching.down){ //If you are at the last step, the game should start
+				noAnswer = true;
+				scoreText.setText("Now let's hear your voice!");
 				playLevel(initialScaleNote);
-				player.setVelocityY(-400);
-				t = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: 1000, delay: 0, x: { getStart: () => playerFixedX, getEnd: () =>  gameInitialX} });
+				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.5,1/2));
+
+				//Starting Pitch Detector (the condition is not mandatory)
+				if(!pitchDetector.isEnable())
+					pitchDetector.toggleEnable();
+
+				t = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: 800/Math.sqrt(introVelocity), delay: 0, x: { getStart: () => playerFixedX, getEnd: () =>  gameInitialX} });
 				t.setCallback("onComplete", function(){
 					playerFixedX = gameInitialX;
 					player.setGravityY(playerGravity);
@@ -709,7 +733,7 @@ var generateLevel = function() {
 }
 
 function platformsColliderCallback () {
-	if(!platformTouched && player.body.touching.down) {
+	if(!platformTouched && player.body.touching.down && gameStatus=="Running") {
 		score++;
 		scoreText.setText('score: ' + score);
 
@@ -766,18 +790,28 @@ document.onkeydown = function(event) {
 					game.scene.resume("playScene"); //Starting scene (update() function starts looping)
 
 					gameStatus = "Intro";
-					player.body.setGravityY(playerGravity/100);
-					player.setVelocityY(-400);
+					player.body.setGravityY(playerGravity*(introVelocity/10));
+					player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.4,1/2));
 					collider.overlapOnly = true;
+
+					scoreText.setText('Listen Carefully to the pitches of the scale...');
 					break;
 
 				case "Intro":
-					scoreText.setText('score: ' + score);
+					if(game.scene.isActive("playScene")) {
+						game.scene.pause("playScene");
+						scoreText.setText('Game Paused, Enter/Space to resume...');
+					}
+					else {
+						game.scene.resume("playScene");
+						scoreText.setText('Listen Carefully to the pitches of the scale...');
+					}
+					break;
 
 				case "Running": //The game should toggle the pause status
 					if(game.scene.isActive("playScene")) {
 						game.scene.pause("playScene");
-						scoreText.setText('score: ' + score + ' Game Paused, Enter/Space to resume...');
+						scoreText.setText('Game Paused, Enter/Space to resume...');
 					}
 					else {
 						game.scene.resume("playScene");
@@ -791,7 +825,7 @@ document.onkeydown = function(event) {
 					break;
 			}
 		}
-		else if(gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea) {
+		else if((gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea)||score == 0) {
 
 					//Play a note directly into the pitchDetector module for the pitch detecting step (Debug code)
 					noteKeys = "12345678" //Keys To use
@@ -805,13 +839,15 @@ document.onkeydown = function(event) {
 						pitchDetector.tuner.play(noteFreqKeys[noteKeys.indexOf(event.key)]);
 					}
 				}
-
 	}
 }
 
 function jumpAtLevel(level) {
 	//console.log("called jumpAtLevel", level)
-	if(gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea) {
+	if(score == 0 && level == levelsQueue[0]) {
+		noAnswer = false;
+	}
+	else if(gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea) {
 		if(levelsQueue[0] == 0) {
 			jumpRatio = 1.5;
 
