@@ -514,11 +514,13 @@ var playScene = {
 		//------------------------------------------------------------------------------------------------------
 		if(gameStatus == "Intro") {
 			if(player.body.touching.down && initialScaleNote<8){
+				playLevel(initialScaleNote);
 				player.setVelocityY(-380);
 				collider.overlapOnly = true;
 				initialScaleNote++;
 			}
 			else if(player.body.touching.down){ //If you are at the last step, the game should start
+				playLevel(initialScaleNote);
 				player.setVelocityY(-400);
 				t = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: 1000, delay: 0, x: { getStart: () => playerFixedX, getEnd: () =>  gameInitialX} });
 				t.setCallback("onComplete", function(){
@@ -735,7 +737,7 @@ function changeLevelAndBackground() {
 			backgroundImage.destroy();
 			backgroundImage = newbackgroundImage;
 		}, backgroundImage);
-		
+
 
 
 		//Add new background
@@ -746,7 +748,7 @@ function changeLevelAndBackground() {
 		newbackgroundImage.setDepth(-2);
 		newtween = gameContext.add.tween({ targets: newbackgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 
-		
+
 		//play next scale
 		playScale(gameLevelToScaleArray[gameLevel], noteReference, 0.5)
 	}
