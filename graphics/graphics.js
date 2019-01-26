@@ -904,12 +904,14 @@ document.onkeydown = function(event) {
 
 //stop the play of the oscillator from the keyboard
 document.onkeyup = function(event) {
-	console.log("up")
+	//console.log("up")
 		if((gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea)||score == 0){
 			if(parseInt(event.key)>=1 && parseInt(event.key)<=8){
-				console.log(parseInt(event.key))
-				pitchDetector.tuner.oscillator.stop()
-				pitchDetector.tuner.oscillator = null
+				//console.log(parseInt(event.key))
+				if(pitchDetector.tuner.oscillator != null){
+					pitchDetector.tuner.oscillator.stop()
+					pitchDetector.tuner.oscillator = null
+				}
 			}
 		}
 }

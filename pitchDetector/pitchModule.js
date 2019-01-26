@@ -39,7 +39,7 @@ PitchDetector.prototype.start = function() {
       //se sono a ridosso di un salto "azzero" il pitch per poter eventualmente cantare la stessa nota
       // eseguo questo codice solamente la prima volte che entro nella jumpArea (e rilevo un pitch)
       if(jumpArea && !beforeInJumpArea){
-        console.log("JumpArea")
+        //console.log("JumpArea")
         beforeInJumpArea = true
         self.lastNote = null
         self.lastOctave = null
