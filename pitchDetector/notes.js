@@ -49,7 +49,7 @@ Notes.prototype.createNotes = function() {
         $active.classList.remove('active')
       } else {
         self.tuner.play(this.dataset.frequency)
-        self.update($note.dataset)
+        //self.update($note.dataset)
       }
     })
   })
@@ -61,9 +61,9 @@ Notes.prototype.active = function($note) {
   $note.classList.add('active')
   this.$notesList.scrollLeft =
     $note.offsetLeft - (this.$notesList.clientWidth - $note.clientWidth) / 2
-}*/
+}
 
-/*Notes.prototype.clearActive = function() {
+Notes.prototype.clearActive = function() {
   const $active = this.$notesList.querySelector('.active')
   if ($active) {
     $active.classList.remove('active')

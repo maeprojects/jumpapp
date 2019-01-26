@@ -16,7 +16,7 @@ const Tuner = function() {
     'A#',
     'B'
   ]
-
+  this.oscillator = null
   this.initGetUserMedia()
 }
 
@@ -154,9 +154,19 @@ Tuner.prototype.play = function(frequency) {
     this.oscillator.start()
   }
   this.oscillator.frequency.value = frequency
+  //console.log(this.oscillator)
+  //setTimeout(stop, 1000)
 }
 
 Tuner.prototype.stop = function() {
-  this.oscillator.stop()
-  this.oscillator = null
+  stop()
+}
+
+function stop(){
+  console.log(this.oscillator)
+  if(this.oscillator!=null){
+    this.oscillator.stop()
+    this.oscillator = null
+    console.log("STOP")
+  }
 }

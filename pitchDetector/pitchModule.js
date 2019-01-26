@@ -1,3 +1,7 @@
+/*
+Reference: https://github.com/qiuxiang/tuner
+*/
+
 const PitchDetector = function() {
   this.tuner = new Tuner()
   this.notes = new Notes('.notes', this.tuner)
@@ -10,6 +14,9 @@ PitchDetector.prototype.start = function() {
     if (self.notes.isAutoMode) {
       if (self.lastNote === note.name && self.lastOctave === note.octave) {
         //self.update(note)
+        //stessa nota della precedente (approssimata in centesimi)
+
+        
 
       } else {
         self.lastNote = note.name
@@ -17,9 +24,21 @@ PitchDetector.prototype.start = function() {
 
         musicalNote = note.name + note.octave
         //console.log(musicalNote)
-        // CALL ScaleCorrelation Module
+        // CALL ScaleMapping Module
         newNote(musicalNote)
+
+        //self.lastNote = null
+        
       }
+
+      //adesso chiama sempre il cambio nota anche se uguale a quella precedente 
+      //perchè il controllo del salto viene fatto dalla grafica se l'avatar è nella jumpArea
+      //queste 4 righe saranno da cancellare quando si implemente la durata della nota e si inseriscono nell'else del if sopra
+      /* self.lastNote = note.name
+      self.lastOctave = note.octave
+      musicalNote = note.name + note.octave
+      newNote(musicalNote)
+      */
     }
   }
 
@@ -30,8 +49,8 @@ PitchDetector.prototype.start = function() {
 
 /*
 PitchDetector.prototype.update = function(note) {
-  //this.notes.update(note)
-  //this.meter.update((note.cents / 50) * 45)
+  this.notes.update(note)
+  this.meter.update((note.cents / 50) * 45)
 }*/
 
 // enable or disable the detection

@@ -600,7 +600,8 @@ var gameoverScene = {
 		this.add.image(resolution[0]/2, resolution[1]/2, 'gameover'); //Show game over image
 		player.destroy(); //Destroy the player
 		scoreText.setText('score: ' + score + '    Enter/Space to restart'); //Update the status text
-		playNote(convertLevelToNote(levelsQueue[0]), 1)
+		if(levelsQueue[0]!=0)
+			playNote(convertLevelToNote(levelsQueue[0]), 1.5)
 		if(pitchDetector.isEnable())
 			pitchDetector.toggleEnable(); //If the pitch detector is enabled, disable it
 
@@ -859,6 +860,8 @@ document.onkeydown = function(event) {
 					if(parseInt(event.key)>=1 && parseInt(event.key)<=8) {
 						//console.log("Note played: ", currentScale[noteKeys.indexOf(event.key)])
 						pitchDetector.tuner.play(noteFreqKeys[noteKeys.indexOf(event.key)]);
+						
+						//setTimeout(pitchDetector.tuner.stop, 1000)
 					}
 				}
 	}
