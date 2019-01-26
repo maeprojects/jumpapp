@@ -158,12 +158,12 @@ Tuner.prototype.play = function(frequency) {
   //setTimeout(stop, 1000)
 }
 
-Tuner.prototype.stop = function() {
+Tuner.prototype.stopPlay = function() {
   stop()
 }
 
 function stop(){
-  console.log(this.oscillator)
+  //console.log(this.oscillator)
   if(this.oscillator!=null){
     this.oscillator.stop()
     this.oscillator = null

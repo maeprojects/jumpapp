@@ -129,7 +129,7 @@ function initVariables() {
 	goAhead = true;
 	noAnswer = false;
 	jumpArea = false;
-	jumpAreaWidth = playerWidth+20*gameVelocity;
+	jumpAreaWidth = playerWidth+10*gameVelocity; //befere was 20 
 
 	//Player position
 	playerFixedX = 100;
@@ -895,11 +895,30 @@ document.onkeydown = function(event) {
 					if(parseInt(event.key)>=1 && parseInt(event.key)<=8) {
 						//console.log("Note played: ", currentScale[noteKeys.indexOf(event.key)])
 						pitchDetector.tuner.play(noteFreqKeys[noteKeys.indexOf(event.key)]);
+<<<<<<< HEAD
 
 						//setTimeout(pitchDetector.tuner.stop, 1000)
+=======
+						
+						//setTimeout(pitchDetector.tuner.oscillator.stop(), 1000)
+>>>>>>> 156984f6685529d7eb965ef9ba9683e0ab849ede
 					}
 				}
 	}
+}
+
+//stop the play of the oscillator from the keyboard
+document.onkeyup = function(event) {
+	//console.log("up")
+		if((gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea)||score == 0){
+			if(parseInt(event.key)>=1 && parseInt(event.key)<=8){
+				//console.log(parseInt(event.key))
+				if(pitchDetector.tuner.oscillator != null){
+					pitchDetector.tuner.oscillator.stop()
+					pitchDetector.tuner.oscillator = null
+				}
+			}
+		}
 }
 
 function jumpAtLevel(level) {

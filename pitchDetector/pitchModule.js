@@ -2,6 +2,8 @@
 Reference: https://github.com/qiuxiang/tuner
 */
 
+var beforeInJumpArea = false
+
 const PitchDetector = function() {
   this.tuner = new Tuner()
   this.notes = new Notes('.notes', this.tuner)
@@ -15,8 +17,12 @@ PitchDetector.prototype.start = function() {
       if (self.lastNote === note.name && self.lastOctave === note.octave) {
         //self.update(note)
         //stessa nota della precedente (approssimata in centesimi)
+        //DURATA DELLA NOTA
+        // -> qui posso rilevare i centesimi di divverenza
 
-        
+        musicalNote = note.name + note.octave
+        console.log("SAME NOTE:" + musicalNote)
+
 
       } else {
         self.lastNote = note.name
@@ -26,19 +32,21 @@ PitchDetector.prototype.start = function() {
         //console.log(musicalNote)
         // CALL ScaleMapping Module
         newNote(musicalNote)
-
         //self.lastNote = null
         
       }
 
-      //adesso chiama sempre il cambio nota anche se uguale a quella precedente 
-      //perchè il controllo del salto viene fatto dalla grafica se l'avatar è nella jumpArea
-      //queste 4 righe saranno da cancellare quando si implemente la durata della nota e si inseriscono nell'else del if sopra
-      /* self.lastNote = note.name
-      self.lastOctave = note.octave
-      musicalNote = note.name + note.octave
-      newNote(musicalNote)
-      */
+      //se sono a ridosso di un salto "azzero" il pitch per poter eventualmente cantare la stessa nota
+      // eseguo questo codice solamente la prima volte che entro nella jumpArea (e rilevo un pitch)
+      if(jumpArea && !beforeInJumpArea){
+        //console.log("JumpArea")
+        beforeInJumpArea = true
+        self.lastNote = null
+        self.lastOctave = null
+      }
+
+      if(!jumpArea)
+        beforeInJumpArea = false
     }
   }
 
