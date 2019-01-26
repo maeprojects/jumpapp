@@ -101,6 +101,9 @@ pitchDetector.start();
 //Game context
 var gameContext;
 
+//Play reference button
+var referenceNoteButton;
+
 function initVariables() {
 	//Game Level
 	gameLevel = 0;
@@ -109,7 +112,7 @@ function initVariables() {
 	score = 0;
 
 	//Game Intro
-	initialScaleNote = 1;
+	initialScaleNote = 0;
 	introVelocity = 1;
 
 	//Game state managing
@@ -343,7 +346,7 @@ var playScene = {
 		scoreText = this.add.text(16, 16, 'Enter/Space to start', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 
 		//Change Reference Button
-		const referenceNoteButton = this.add.text(resolution[0]-200, resolution[1]-30, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+		referenceNoteButton = this.add.text(resolution[0]-200, resolution[1]-30, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 		referenceNoteButton.setInteractive();
 		referenceNoteButton.on('pointerdown', () => {
 			buttonPlayReference();
@@ -544,23 +547,24 @@ var playScene = {
 		//INITIAL SCALE ANIMATION MANAGER
 		//------------------------------------------------------------------------------------------------------
 		if(gameStatus == "Intro") {
-			if(player.body.touching.down && initialScaleNote<8){
+			if(player.body.touching.down && initialScaleNote+1<8){
+				initialScaleNote++;
 				playLevel(initialScaleNote);
 				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.1,1/2));
 				collider.overlapOnly = true;
-				initialScaleNote++;
 			}
 			else if(player.body.touching.down){ //If you are at the last step, the game should start
+				initialScaleNote++;
 				noAnswer = true;
 				scoreText.setText("Now let's hear your voice!");
 				playLevel(initialScaleNote);
-				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.5,1/2));
+				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.5*(636/resolution[1]),1/2));
 
 				//Starting Pitch Detector (the condition is not mandatory)
 				if(!pitchDetector.isEnable())
 					pitchDetector.toggleEnable();
 
-				t = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: 800/Math.sqrt(introVelocity), delay: 0, x: { getStart: () => playerFixedX, getEnd: () =>  gameInitialX} });
+				t = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: (800/Math.sqrt(introVelocity))*Math.sqrt(resolution[1]/636)*1.1, delay: 0, x: { getStart: () => playerFixedX, getEnd: () =>  gameInitialX} });
 				t.setCallback("onComplete", function(){
 					playerFixedX = gameInitialX;
 					player.setGravityY(playerGravity);
@@ -593,6 +597,20 @@ var playScene = {
 	}
 }
 game.scene.add("playScene", playScene);
+
+var pauseScene = {
+	create: function() {
+		//Change Reference Button
+		referenceNoteButton = this.add.text(resolution[0]-200, resolution[1]-30, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+		referenceNoteButton.setInteractive();
+		referenceNoteButton.on('pointerdown', () => {
+			buttonPlayReference();
+		 });
+
+		 scoreText.setText('Game Paused, Enter/Space to resume...');
+	}
+}
+game.scene.add("pauseScene", pauseScene);
 
 var gameoverScene = {
 	create: function() {
@@ -811,6 +829,10 @@ document.onkeydown = function(event) {
 					pitchDetector.resumeAudioContext()	//to enable the AudioContext of PitchDetector
 					game.scene.resume("playScene"); //Starting scene (update() function starts looping)
 
+					if(pitchDetector.isEnable()){
+						 pitchDetector.toggleEnable();
+					 }
+
 					gameStatus = "Intro";
 					player.body.setGravityY(playerGravity*(introVelocity/10));
 					player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.4,1/2));
@@ -822,25 +844,38 @@ document.onkeydown = function(event) {
 				case "Intro":
 					if(game.scene.isActive("playScene")) {
 						game.scene.pause("playScene");
-						scoreText.setText('Game Paused, Enter/Space to resume...');
+						game.scene.start("pauseScene");
+						//scoreText.setText('Game Paused, Enter/Space to resume...');
+						if(pitchDetector.isEnable()){
+				 			 pitchDetector.toggleEnable();
+				 		 }
 					}
 					else {
 						game.scene.resume("playScene");
-						scoreText.setText('Listen Carefully to the pitches of the scale...');
-					}
+						game.scene.stop("pauseScene");
+						if(initialScaleNote<8)
+							scoreText.setText('Listen Carefully to the pitches of the scale...');
+						else
+							scoreText.setText("Now let's hear your voice!");
+				 		 }
 					break;
 
 				case "Running": //The game should toggle the pause status
 					if(game.scene.isActive("playScene")) {
 						game.scene.pause("playScene");
-						scoreText.setText('Game Paused, Enter/Space to resume...');
+						game.scene.start("pauseScene");
+						if(pitchDetector.isEnable()){
+				 			 pitchDetector.toggleEnable();
+				 		 }
 					}
 					else {
 						game.scene.resume("playScene");
+						game.scene.stop("pauseScene");
 						scoreText.setText('score: ' + score);
+						if(!pitchDetector.isEnable()){
+				 			 pitchDetector.toggleEnable();
+				 		 }
 					}
-
-					pitchDetector.toggleEnable(); //Toggling of active status of the pitch detector (assuming that at first it's already enabled)
 					break;
 
 				default:
