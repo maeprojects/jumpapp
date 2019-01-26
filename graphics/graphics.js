@@ -113,7 +113,7 @@ function initVariables() {
 
 	//Game Intro
 	initialScaleNote = 0;
-	introVelocity = 1;
+	introVelocity = (resolution[1]/636)*1.5;
 
 	//Game state managing
 	gameStatus = "Initialized";
@@ -133,7 +133,7 @@ function initVariables() {
 
 	//Player position
 	playerFixedX = 100;
-	playerInitialY = resolution[1] - playerHeight/2;
+	playerInitialY = resolution[1] - playerHeight/2 - playerHeight/8;
 	playerPreviousY = 0;
 
 	//Platforms (levels)
@@ -310,17 +310,15 @@ var playScene = {
 
 		}
 
-		//INITIAL SCALE, HIDDEN PLATFORMS GENERATION
-		for(note=1; note<=8; note++) {
-			levelValue = note;
-			levelHeight = (player.height*3)+((numberOfLevels-levelValue)*stepHeight)+(stepHeight/2);
-			levelDuration = 1/8;
+		//INITIAL SCALE, FIRST HIDDEN PLATFORM GENERATION
+		levelValue = 1;
+		levelHeight = (player.height*3)+((numberOfLevels-levelValue)*stepHeight)+(stepHeight/2);
+		levelDuration = 1/8;
 
-			createPlatformTexture(this, measurePlatformWidth*levelDuration, 5, levelDuration);
+		createPlatformTexture(this, measurePlatformWidth*levelDuration, 1, levelDuration);
 
-			scalePlatform = platforms.create(playerFixedX, levelHeight, 'platform'+levelDuration+5);
-			scalePlatform.setVisible(false); //Hide texture
-		}
+		scalePlatform = platforms.create(playerFixedX, levelHeight, 'platform'+levelDuration+1);
+		scalePlatform.setVisible(false); //Hide texture
 
 
 		//GRID GENERATION
@@ -346,23 +344,25 @@ var playScene = {
 		scoreText = this.add.text(16, 16, 'Enter/Space to start', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 
 		//Change Reference Button
-		referenceNoteButton = this.add.text(resolution[0]-200, resolution[1]-30, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+		referenceNoteButton = this.add.text(resolution[0]-200, playerHeight*3/2, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 		referenceNoteButton.setInteractive();
 		referenceNoteButton.on('pointerdown', () => {
-			buttonPlayReference();
+				buttonPlayReference();
 		 });
 
 		 //Touch input MANAGER
 		 this.input.on('pointerdown', function(){
-			 pitchDetector.resumeAudioContext()	//to enable the AudioContext of PitchDetector
-			 game.scene.resume("playScene"); //Starting scene (update() function starts looping)
+			 if(gameStatus == "Started") {
+				 pitchDetector.resumeAudioContext()	//to enable the AudioContext of PitchDetector
+				 game.scene.resume("playScene"); //Starting scene (update() function starts looping)
 
-			 gameStatus = "Intro";
-			 player.body.setGravityY(playerGravity*(introVelocity/10));
-			 player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.4,1/2));
-			 collider.overlapOnly = true;
+				 gameStatus = "Intro";
+				 player.body.setGravityY(playerGravity*(introVelocity/10));
+				 player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.4,1/2));
+				 collider.overlapOnly = true;
 
-			 scoreText.setText('Listen Carefully to the pitches of the scale...');
+				 scoreText.setText('Listen Carefully to the pitches of the scale...');
+			 }
 	    }, this);
 
 		//SETTING OF GAME STATUS
@@ -550,8 +550,18 @@ var playScene = {
 			if(player.body.touching.down && initialScaleNote+1<8){
 				initialScaleNote++;
 				playLevel(initialScaleNote);
-				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.1,1/2));
+				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.5,1/2));
 				collider.overlapOnly = true;
+
+				//INITIAL SCALE, HIDDEN PLATFORMS GENERATION
+				levelValue = initialScaleNote+1;
+				levelHeight = (player.height*3)+((numberOfLevels-levelValue)*stepHeight)+(stepHeight/2);
+				levelDuration = 1/8;
+
+				createPlatformTexture(this, measurePlatformWidth*levelDuration, 1, levelDuration);
+
+				scalePlatform = platforms.create(playerFixedX, levelHeight, 'platform'+levelDuration+1);
+				scalePlatform.setVisible(false); //Hide texture
 			}
 			else if(player.body.touching.down){ //If you are at the last step, the game should start
 				initialScaleNote++;
@@ -564,7 +574,7 @@ var playScene = {
 				if(!pitchDetector.isEnable())
 					pitchDetector.toggleEnable();
 
-				t = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: (800/Math.sqrt(introVelocity))*Math.sqrt(resolution[1]/636)*1.1, delay: 0, x: { getStart: () => playerFixedX, getEnd: () =>  gameInitialX} });
+				t = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: (800/Math.sqrt(introVelocity*1.5))*Math.sqrt(resolution[1]/636)*1.1, delay: 0, x: { getStart: () => playerFixedX, getEnd: () =>  gameInitialX} });
 				t.setCallback("onComplete", function(){
 					playerFixedX = gameInitialX;
 					player.setGravityY(playerGravity);
@@ -601,7 +611,8 @@ game.scene.add("playScene", playScene);
 var pauseScene = {
 	create: function() {
 		//Change Reference Button
-		referenceNoteButton = this.add.text(resolution[0]-200, resolution[1]-30, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+		referenceNoteButton.destroy();
+		referenceNoteButton = this.add.text(resolution[0]-200, playerHeight*3/2, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 		referenceNoteButton.setInteractive();
 		referenceNoteButton.on('pointerdown', () => {
 			buttonPlayReference();
@@ -836,7 +847,7 @@ document.onkeydown = function(event) {
 
 					gameStatus = "Intro";
 					player.body.setGravityY(playerGravity*(introVelocity/10));
-					player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.4,1/2));
+					player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.5*636/resolution[1],1/2));
 					collider.overlapOnly = true;
 
 					scoreText.setText('Listen Carefully to the pitches of the scale...');
@@ -854,6 +865,13 @@ document.onkeydown = function(event) {
 					else {
 						game.scene.resume("playScene");
 						game.scene.stop("pauseScene");
+
+						referenceNoteButton = gameContext.add.text(resolution[0]-200, playerHeight*3/2, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+						referenceNoteButton.setInteractive();
+						referenceNoteButton.on('pointerdown', () => {
+							buttonPlayReference();
+						 });
+
 						if(initialScaleNote<8)
 							scoreText.setText('Listen Carefully to the pitches of the scale...');
 						else
@@ -907,7 +925,7 @@ document.onkeydown = function(event) {
 //stop the play of the oscillator from the keyboard
 document.onkeyup = function(event) {
 	//console.log("up")
-		if((gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea)||score == 0){
+		if((gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea)||(score == 0 && initialScaleNote == 8)){
 			if(parseInt(event.key)>=1 && parseInt(event.key)<=8){
 				//console.log(parseInt(event.key))
 				if(pitchDetector.tuner.oscillator != null){
