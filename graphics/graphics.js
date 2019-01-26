@@ -137,7 +137,7 @@ function initVariables() {
 	playerPreviousY = 0;
 
 	//Platforms (levels)
-	levelsFieldHeight = resolution[1]-playerHeight*2; //Calculation of levels Field (Height of the scene in which levels can appear)
+	levelsFieldHeight = resolution[1]-playerHeight*4; //Calculation of levels Field (Height of the scene in which levels can appear)
 	stepHeight = levelsFieldHeight/numberOfLevels;
 
 	platformTouched = false;
@@ -313,7 +313,7 @@ var playScene = {
 		//INITIAL SCALE, HIDDEN PLATFORMS GENERATION
 		for(note=1; note<=8; note++) {
 			levelValue = note;
-			levelHeight = (player.height)+((numberOfLevels-levelValue)*stepHeight)+(stepHeight/2);
+			levelHeight = (player.height*3)+((numberOfLevels-levelValue)*stepHeight)+(stepHeight/2);
 			levelDuration = 1/8;
 
 			createPlatformTexture(this, measurePlatformWidth*levelDuration, 5, levelDuration);
@@ -331,7 +331,7 @@ var playScene = {
 		gridLength = measurePlatformWidth;
 		numberOfInitialMeasures = resolution[0]/measurePlatformWidth;
 		for(i=0; i<numberOfInitialMeasures; i++) {
-			lastGrid = measureGrids.create((gameInitialX-(playerWidth/2)+(gridLength/2))+(gridLength*i)-platformInitialPlayerOffset, resolution[1]/2, 'grid-texture');
+			lastGrid = measureGrids.create((gameInitialX-(playerWidth/2)+(gridLength/2))+(gridLength*i)-platformInitialPlayerOffset, (resolution[1]/2)+playerHeight, 'grid-texture');
 			lastGrid.setDepth(-1);
 			lastGrid.progressiveNumber = 0; //zero identifies all the grids created when the game is started
 		}
@@ -389,11 +389,11 @@ var playScene = {
 			prevGridNumber = lastGrid.progressiveNumber;
 
 			if(lastGrid.progressiveNumber == 0) { //The first to be created with update function
-				lastGrid = measureGrids.create(resolution[0]+(measurePlatformWidth/2)-1, resolution[1]/2, 'grid-texture');
+				lastGrid = measureGrids.create(resolution[0]+(measurePlatformWidth/2)-1, (resolution[1]/2)+playerHeight, 'grid-texture');
 				lastGrid.setDepth(-1);
 			}
 			else {
-				lastGrid = measureGrids.create(resolution[0]+(measurePlatformWidth/2), resolution[1]/2, 'grid-texture');
+				lastGrid = measureGrids.create(resolution[0]+(measurePlatformWidth/2), (resolution[1]/2)+playerHeight, 'grid-texture');
 				lastGrid.setDepth(-1);
 			}
 			lastGrid.progressiveNumber = prevGridNumber+1;
@@ -523,7 +523,7 @@ var playScene = {
 
 			//This condition is entered only once when the pause starts
 			if(!playerPauseMotion) {
-				playerEndY = ((player.height)+((numberOfLevels-levelsQueue[1])*stepHeight)+(stepHeight/2))-5; //Save the player y position (need to create the animation)
+				playerEndY = ((player.height*3)+((numberOfLevels-levelsQueue[1])*stepHeight)+(stepHeight/2))-5; //Save the player y position (need to create the animation)
 
 				//Player translation animation
 				pauseTween = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: (currentPlatform.duration*10000), delay: 0, y: { getStart: () => playerPauseY, getEnd: () =>  playerEndY} });
@@ -558,7 +558,7 @@ var playScene = {
 				noAnswer = true;
 				scoreText.setText("Now let's hear your voice!");
 				playLevel(initialScaleNote);
-				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.5*(636/resolution[1]),1/2));
+				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*2.3*(636/resolution[1]),1/2));
 
 				//Starting Pitch Detector (the condition is not mandatory)
 				if(!pitchDetector.isEnable())
@@ -667,7 +667,7 @@ function createGridTexture(context, measurePlatformWidth, timeSignature) {
 
 	var texture = 0;
 	if(texture == 0)
-		texture = context.textures.createCanvas('grid-texture', measurePlatformWidth, resolution[1]-playerHeight*2);
+		texture = context.textures.createCanvas('grid-texture', measurePlatformWidth, resolution[1]-playerHeight*4);
     textureContext = texture.getContext();
 
 	xPointer = 0;
@@ -723,7 +723,7 @@ function createBackground(context, color= backgroundGridColor) {
 	graphics=context.add.graphics();
 
 	//From the bottom (position 0) to the top (position 7) of the screen
-	yPointer = playerHeight; //Starts from the top to draw
+	yPointer = playerHeight*3; //Starts from the top to draw
 	colorsArray = scaleToColorsArray[gameLevelToScaleArray[gameLevel]]
 	for (i = 1; i <= colorsArray.length; i++) {
 		graphics.fillStyle(colorsArray[scaleToColorsArray[gameLevelToScaleArray[0]].length-i],1);
@@ -769,7 +769,7 @@ var generateLevel = function() {
 		levelDuration = changeLevelStatusDuration;
 	}
 
-	levelHeight = (player.height)+((numberOfLevels-levelValue)*stepHeight)+(stepHeight/2);
+	levelHeight = (player.height*3)+((numberOfLevels-levelValue)*stepHeight)+(stepHeight/2);
 	return [levelValue, levelHeight, levelDuration];
 }
 
@@ -883,7 +883,7 @@ document.onkeydown = function(event) {
 					break;
 			}
 		}
-		else if((gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea)||score == 0) {
+		else if((gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea)|| (score == 0 && initialScaleNote == 8)) {
 
 					//Play a note directly into the pitchDetector module for the pitch detecting step (Debug code)
 					noteKeys = "12345678" //Keys To use
@@ -895,7 +895,7 @@ document.onkeydown = function(event) {
 					if(parseInt(event.key)>=1 && parseInt(event.key)<=8) {
 						//console.log("Note played: ", currentScale[noteKeys.indexOf(event.key)])
 						pitchDetector.tuner.play(noteFreqKeys[noteKeys.indexOf(event.key)]);
-						
+
 						//setTimeout(pitchDetector.tuner.stop, 1000)
 					}
 				}
@@ -904,7 +904,7 @@ document.onkeydown = function(event) {
 
 function jumpAtLevel(level) {
 	//console.log("called jumpAtLevel", level)
-	if(score == 0 && level == levelsQueue[0]) {
+	if(score == 0 && initialScaleNote == 8 && level == levelsQueue[0]) {
 		noAnswer = false;
 	}
 	else if(gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea) {
