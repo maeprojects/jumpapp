@@ -81,7 +81,7 @@ var playerPauseY;
 var gameLevel;
 
 //PAUSE
-var playerPauseMotion;
+var playerEnterPause;
 var jumpFromPause;
 
 //Intro
@@ -151,7 +151,7 @@ function initVariables() {
 	levelsQueue = [];
 
 	//Pause
-	playerPauseMotion = false;
+	playerEnterPause = false;
 	var jumpFromPause = false;
 
 	//ScaleMapping inizialization
@@ -460,12 +460,18 @@ var playScene = {
 			//Current Platform Changed Event: if no events are triggered before the platform changes, the player was wrong and it has to die, otherwise it jumps to another platform
 			if(currentPlatformChanged) {
 
-				if(levelsQueue[1] == 0)  {
-					playerPauseY = player.y;
-				}
-
 				levelsQueue.shift(); //Remove the first element of the list
 				//console.log('remove item!: ', levelsQueue);
+
+				if(levelsQueue[0] == 0)  {
+					playerPauseY = player.y;
+					playerEnterPause = true;
+					console.log("Entered Pause");
+				}
+				else {
+					playerEnterPause = false;
+					console.log("Player Not in pause");
+				}
 
 				currentPlatform = p;
 
@@ -486,7 +492,6 @@ var playScene = {
 
 			//Reset Pause variables when the player touch a platform
 			jumpFromPause = false;
-			playerPauseMotion = false;
 
 			//Enter only the first time (at the first collide with a step)
 			if(score==0) {
@@ -522,16 +527,18 @@ var playScene = {
 			goAhead = true; //The player can keep going even if there was no answer (pause: you stay silent)
 
 			//This condition is entered only once when the pause starts
-			if(!playerPauseMotion) {
+			if(playerEnterPause) {
 				playerEndY = ((player.height*3)+((numberOfLevels-levelsQueue[1])*stepHeight)+(stepHeight/2))-5; //Save the player y position (need to create the animation)
 
 				//Player translation animation
 				pauseTween = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: (currentPlatform.duration*10000), delay: 0, y: { getStart: () => playerPauseY, getEnd: () =>  playerEndY} });
+				console.log("Start animation");
 				pauseTween.setCallback("onComplete", function(){
 					player.y = playerEndY;
+					console.log("End Pause animation");
 				}, player);
 
-				playerPauseMotion = true; //condition should not enter anymore
+				playerEnterPause = false; //condition should not enter anymore
 
 				//Detect of "change level" type of pause and call of change level and background
 				if(currentPlatform.changeLevel)
