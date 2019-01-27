@@ -87,6 +87,9 @@ var jumpFromPause;
 //Intro
 var initialScaleNote;
 var introVelocity;
+var introText;
+var countdown;
+var centeredText;
 
 //Collider
 var collider;
@@ -114,6 +117,7 @@ function initVariables() {
 	//Game Intro
 	initialScaleNote = 0;
 	introVelocity = (resolution[1]/636)*1.5;
+	countdown = 4;
 
 	//Game state managing
 	gameStatus = "Initialized";
@@ -217,7 +221,6 @@ var playScene = {
 		playerHeight = 48;
 
 		//Loading of game resources
-		this.load.image('gameover', 'assets/gameover.png');
 		this.load.spritesheet('player', 'assets/player.png', { frameWidth: playerWidth, frameHeight: playerHeight });
 		this.load.spritesheet('player-fly', 'assets/player_fly_nice.png', { frameWidth: 28, frameHeight: playerHeight });
 	},
@@ -341,29 +344,41 @@ var playScene = {
 
 		//SCORE
 		//------------------------------------------------------------------------------------------------------
-		scoreText = this.add.text(16, 16, 'Enter/Space to start', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+		scoreText = this.add.text(16, 16, 'score: '+score, { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 
 		//Change Reference Button
-		referenceNoteButton = this.add.text(resolution[0]-200, playerHeight*3/2, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+		referenceNoteButton = this.add.text(resolution[0]-150, playerHeight*2.2, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 		referenceNoteButton.setInteractive();
 		referenceNoteButton.on('pointerdown', () => {
 				buttonPlayReference();
 		 });
 
-		 //Touch input MANAGER
-		 this.input.on('pointerdown', function(){
-			 if(gameStatus == "Started") {
-				 pitchDetector.resumeAudioContext()	//to enable the AudioContext of PitchDetector
-				 game.scene.resume("playScene"); //Starting scene (update() function starts looping)
+	 //Touch input MANAGER
+	 this.input.on('pointerdown', function(){
+		 if(gameStatus == "Started") {
+			 pitchDetector.resumeAudioContext()	//to enable the AudioContext of PitchDetector
+			 game.scene.resume("playScene"); //Starting scene (update() function starts looping)
 
-				 gameStatus = "Intro";
-				 player.body.setGravityY(playerGravity*(introVelocity/10));
-				 player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.4,1/2));
-				 collider.overlapOnly = true;
+			 gameStatus = "Intro";
+			 player.body.setGravityY(playerGravity*(introVelocity/10));
+			 player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.4,1/2));
+			 collider.overlapOnly = true;
 
-				 scoreText.setText('Listen Carefully to the pitches of the scale...');
-			 }
-	    }, this);
+			 introText.setText('Listen Carefully to the pitches of the scale...');
+			 tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+		 }
+    }, this);
+
+		//INTRO MANAGER
+		//------------------------------------------------------------------------------------------------------
+		introText = this.add.text(resolution[0]/2, playerHeight*3/2, 'Click/Space/Enter To Play!', {font: "bold 40px Arial", fill: fontColor}).setOrigin(0.5);
+		introText.setShadow(2, 2, 'rgba(0,0,0,0.5)', 2);
+		introText.setAlign('center');
+		tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+
+		centeredText = this.add.text(resolution[0]/2, resolution[1]/2, '', {font: "bold 190px Arial", fill: fontColor}).setOrigin(0.5);
+		centeredText.setShadow(5, 5, 'rgba(0,0,0,0.5)', 5);
+		centeredText.setAlign('center');
 
 		//SETTING OF GAME STATUS
 		//------------------------------------------------------------------------------------------------------
@@ -466,11 +481,9 @@ var playScene = {
 				if(levelsQueue[0] == 0)  {
 					playerPauseY = player.y;
 					playerEnterPause = true;
-					console.log("Entered Pause");
 				}
 				else {
 					playerEnterPause = false;
-					console.log("Player Not in pause");
 				}
 
 				currentPlatform = p;
@@ -498,6 +511,14 @@ var playScene = {
 				score++;
 				scoreToChangeLevel++;
 				scoreText.setText('score: ' + score);
+
+				//Hide intro and centered text
+				tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
+				tween2 = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
+				tween.setCallback(function() {
+					introText.setText();
+					centeredText.setText();
+				});
 
 				//Check if the first note is played correctly
 				if(noAnswer) {
@@ -570,11 +591,25 @@ var playScene = {
 				scalePlatform = platforms.create(playerFixedX, levelHeight, 'platform'+levelDuration+1);
 				scalePlatform.setVisible(false); //Hide texture
 			}
-			else if(player.body.touching.down){ //If you are at the last step, the game should start
-				initialScaleNote++;
+			else if(player.body.touching.down && countdown>1) {
+				countdown--;
+				if(countdown==3) {
+					initialScaleNote++;
+					playLevel(initialScaleNote);
+					introText.setAlpha(0);
+					introText.setText("Now let's hear your voice!");
+					introTextTween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+				}
+				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*2*(636/resolution[1]),1/2));
+				centeredText.setAlpha(0);
+				centeredText.setText(countdown);
+				centeredTextTween = gameContext.add.tween({ targets: centeredText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+			}
+			else if(player.body.touching.down) { //If you are at the last step, the game should start
+				countdown--; //Bring countdown to 0
+				centeredText.setText();
+				introText.setText();
 				noAnswer = true;
-				scoreText.setText("Now let's hear your voice!");
-				playLevel(initialScaleNote);
 				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*2.3*(636/resolution[1]),1/2));
 
 				//Starting Pitch Detector (the condition is not mandatory)
@@ -619,23 +654,36 @@ var pauseScene = {
 	create: function() {
 		//Change Reference Button
 		referenceNoteButton.destroy();
-		referenceNoteButton = this.add.text(resolution[0]-200, playerHeight*3/2, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+		referenceNoteButton = this.add.text(resolution[0]-150, playerHeight*2.2, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 		referenceNoteButton.setInteractive();
 		referenceNoteButton.on('pointerdown', () => {
 			buttonPlayReference();
 		 });
 
-		 scoreText.setText('Game Paused, Enter/Space to resume...');
+		 introText.setText('Game Paused, Enter/Space to resume...');
+		 tween = this.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 	}
 }
 game.scene.add("pauseScene", pauseScene);
 
 var gameoverScene = {
 	create: function() {
+		gameoverContext = this;
+
 		gameStatus="Gameover"; //in order to avoid checks made when the gamestatus is running
-		this.add.image(resolution[0]/2, resolution[1]/2, 'gameover'); //Show game over image
 		player.destroy(); //Destroy the player
-		scoreText.setText('score: ' + score + '    Enter/Space to restart'); //Update the status text
+
+		introText.setAlpha(0);
+		introText.setText('You should play 🔊'); //Update the status text
+		tween = this.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+		setTimeout(function(){
+			if(game.scene.isActive("gameoverScene")) {
+				introText.setAlpha(0);
+				introText.setText('Game Over! \nEnter/Space to restart'); //Update the status text
+				secondTween = gameoverContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+			}
+		}, 1200);
+
 		if(levelsQueue[0]!=0)
 			playNote(convertLevelToNote(levelsQueue[0]), 1.5)
 		if(pitchDetector.isEnable())
@@ -857,14 +905,14 @@ document.onkeydown = function(event) {
 					player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.5*636/resolution[1],1/2));
 					collider.overlapOnly = true;
 
-					scoreText.setText('Listen Carefully to the pitches of the scale...');
+					introText.setText('Listen Carefully to the pitches of the scale...');
+					tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 					break;
 
 				case "Intro":
 					if(game.scene.isActive("playScene")) {
 						game.scene.pause("playScene");
 						game.scene.start("pauseScene");
-						//scoreText.setText('Game Paused, Enter/Space to resume...');
 						if(pitchDetector.isEnable()){
 				 			 pitchDetector.toggleEnable();
 				 		 }
@@ -873,17 +921,24 @@ document.onkeydown = function(event) {
 						game.scene.resume("playScene");
 						game.scene.stop("pauseScene");
 
-						referenceNoteButton = gameContext.add.text(resolution[0]-200, playerHeight*3/2, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+						referenceNoteButton = gameContext.add.text(resolution[0]-150, playerHeight*2.2, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 						referenceNoteButton.setInteractive();
 						referenceNoteButton.on('pointerdown', () => {
 							buttonPlayReference();
 						 });
 
-						if(initialScaleNote<8)
-							scoreText.setText('Listen Carefully to the pitches of the scale...');
-						else
-							scoreText.setText("Now let's hear your voice!");
-				 		 }
+						if(initialScaleNote<8) {
+							introText.setText('Listen Carefully to the pitches of the scale...');
+							tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+						}
+						else if(countdown>0){
+							introText.setText("Now let's hear your voice!");
+							tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+						}
+						else {
+							introText.setText();
+						}
+				 	}
 					break;
 
 				case "Running": //The game should toggle the pause status
@@ -897,7 +952,15 @@ document.onkeydown = function(event) {
 					else {
 						game.scene.resume("playScene");
 						game.scene.stop("pauseScene");
-						scoreText.setText('score: ' + score);
+						introText.setText();
+
+						//Reload play reference button
+						referenceNoteButton = gameContext.add.text(resolution[0]-150, playerHeight*2.2, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+						referenceNoteButton.setInteractive();
+						referenceNoteButton.on('pointerdown', () => {
+							buttonPlayReference();
+						 });
+
 						if(!pitchDetector.isEnable()){
 				 			 pitchDetector.toggleEnable();
 				 		 }
