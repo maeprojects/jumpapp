@@ -81,6 +81,7 @@ var playerPauseY;
 var gameLevel;
 
 //PAUSE
+var pauseEvent;
 var playerEnterPause;
 var jumpFromPause;
 
@@ -155,8 +156,9 @@ function initVariables() {
 	levelsQueue = [];
 
 	//Pause
-	playerEnterPause = false;
-	var jumpFromPause = false;
+	playerEnterPause = false; //True only when the player enter the pause
+	jumpFromPause = false; //True when the player jump from a pause to the next step
+	pauseEvent = false; //Keep true from when the player enter jumpArea of the step before pause to when the player exit pause
 
 	//ScaleMapping inizialization
 	//changeNoteReference("C3")
@@ -369,7 +371,7 @@ var playScene = {
 			 player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.4,1/2));
 			 collider.overlapOnly = true;
 
-			 introText.setText('Listen Carefully to the pitches of the scale...');
+			 introText.setText('Listen...');
 			 tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 		 }
     }, this);
@@ -472,7 +474,10 @@ var playScene = {
 			if(playerEnterJumpArea) {
 				jumpArea = true;
 				noAnswer = true; //Answer again ungiven
-				//console.log("Entered jump area");
+
+				if(levelsQueue[1] == 0) {
+					pauseEvent = true;
+				}
 			}
 
 			currentPlatformChanged =  (playerLeftBorder > platformLeftBorder) &&  (playerLeftBorder-gameVelocity <= platformLeftBorder); //Condition to summarize when the player enter on another platform
@@ -480,9 +485,15 @@ var playScene = {
 			//Current Platform Changed Event: if no events are triggered before the platform changes, the player was wrong and it has to die, otherwise it jumps to another platform
 			if(currentPlatformChanged) {
 
+				//If the player is exiting a pause
+				if(levelsQueue[0] == 0) { //The step in which the player enter is levelsQueue[1] because it's before the shift of the removal
+					pauseEvent = false;
+				}
+
 				levelsQueue.shift(); //Remove the first element of the list
 				//console.log('remove item!: ', levelsQueue);
 
+				//If the player is entering a pause
 				if(levelsQueue[0] == 0)  {
 					playerPauseY = player.y;
 					playerEnterPause = true;
@@ -515,6 +526,7 @@ var playScene = {
 			if(score==0) {
 				score++;
 				scoreText.setText('score: ' + score);
+				introText.setText("Sing!");
 
 				//Hide intro and centered text
 				tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
@@ -547,7 +559,7 @@ var playScene = {
 
 		// PAUSE MANAGER
 		//------------------------------------------------------------------------------------------------------
-		if(levelsQueue[0] == 0 && !jumpFromPause) {
+		if(levelsQueue[0] == 0 && !jumpFromPause && pauseEvent) {
 			player.body.setGravityY(-gravity); //In order to make the player FLOW
 			goAhead = true; //The player can keep going even if there was no answer (pause: you stay silent)
 
@@ -601,7 +613,7 @@ var playScene = {
 					initialScaleNote++;
 					playLevel(initialScaleNote);
 					introText.setAlpha(0);
-					introText.setText("Now let's hear your voice!");
+					introText.setText("Ready?!");
 					introTextTween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 				}
 				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*2*(636/resolution[1]),1/2));
@@ -612,7 +624,7 @@ var playScene = {
 			else if(player.body.touching.down) { //If you are at the last step, the game should start
 				countdown--; //Bring countdown to 0
 				centeredText.setText();
-				introText.setText();
+				introText.setText("Sing!");
 				noAnswer = true;
 				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*2.3*(636/resolution[1]),1/2));
 
@@ -692,6 +704,7 @@ var gameoverScene = {
 			playNote(convertLevelToNote(levelsQueue[0]), 1.5) //right note after another note
 		else
 			playNote(convertLevelToNote(levelsQueue[1]), 1.5) //right note after a pause
+
 		if(pitchDetector.isEnable())
 			pitchDetector.toggleEnable(); //If the pitch detector is enabled, disable it
 
@@ -912,7 +925,7 @@ document.onkeydown = function(event) {
 					player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.5*636/resolution[1],1/2));
 					collider.overlapOnly = true;
 
-					introText.setText('Listen Carefully to the pitches of the scale...');
+					introText.setText('Listen...');
 					tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 					break;
 
@@ -935,11 +948,11 @@ document.onkeydown = function(event) {
 						 });
 
 						if(initialScaleNote<8) {
-							introText.setText('Listen Carefully to the pitches of the scale...');
+							introText.setText('Listen...');
 							tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 						}
 						else if(countdown>0){
-							introText.setText("Now let's hear your voice!");
+							introText.setText("Ready?!");
 							tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 						}
 						else {
@@ -1026,7 +1039,7 @@ function jumpAtLevel(level) {
 	if(score == 0 && initialScaleNote == 8 && level == levelsQueue[0]) {
 		noAnswer = false;
 	}
-	else if(gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea) {
+	else if(gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea && level!=0) {
 		if(levelsQueue[0] == 0) {
 			jumpRatio = 1.5;
 
@@ -1052,6 +1065,14 @@ function jumpAtLevel(level) {
 					noAnswer = false;
 				}
 				//Else go ahead remain false and the player fall down
+
+		//In order to fall down if you play something before entering the pause
+		if(levelsQueue[1] == 0 && (level == 1 || level == 2 || level == 3 || level == 4 || level == 5 || level == 6 || level == 7 || level == 8 )) {
+			noAnswer = true;
+			goAhead = false;
+			pauseEvent = false;
+			console.log("Next is pause, you play something!");
+		}
 
 	}
 	else if(level == -1 && player.body.touching.down && gameStatus=="Running") {
