@@ -295,6 +295,11 @@ var playScene = {
 			lastCreatedPlatform.level = levelValue;
 			lastCreatedPlatform.duration = levelDuration;
 			lastCreatedPlatform.changeLevel = false;
+			if(changeLevelEvent) {
+				lastCreatedPlatform.changeLevel = true;
+				changeLevelEvent = false;
+			}
+
 			if(levelValue == 0) {
 				lastCreatedPlatform.setVisible(false); //Hide texture
 				lastCreatedPlatform.disableBody(); //Disable the body
@@ -509,7 +514,6 @@ var playScene = {
 			//Enter only the first time (at the first collide with a step)
 			if(score==0) {
 				score++;
-				scoreToChangeLevel++;
 				scoreText.setText('score: ' + score);
 
 				//Hide intro and centered text
@@ -806,6 +810,8 @@ function createBackground(context, color= backgroundGridColor) {
 }
 
 var generateLevel = function() {
+	scoreToChangeLevel++;
+
 	durationAndNote = getDurationAndNote();
 
 	if(durationAndNote[0]!=null) {
@@ -816,7 +822,7 @@ var generateLevel = function() {
 		levelDuration = 1;
 	}
 
-	if(durationAndNote[1]!=null)
+	if(durationAndNote[1]!=null && scoreToChangeLevel <= pointsToChangeLevel)
 		levelValue = durationAndNote[1];
 	else if(levelsQueue.length == 0) { //If it's the first level of the game, avoid generation of a pause
 			levelValue = Math.floor(Math.random()*(numberOfLevels))+1; //Generate levels without pause
@@ -826,12 +832,20 @@ var generateLevel = function() {
 			if(levelsQueue[levelsQueue.length-1] == 0){
 				levelValue = Math.floor(Math.random()*(numberOfLevels))+1; //Generate levels without pause
 			}
-			else
+			else {
 				levelValue = Math.floor(Math.random()*(numberOfLevels+1)); //Generate levels with pause
+			}
+
+			if(scoreToChangeLevel == pointsToChangeLevel){ //Avoid creation of a pause before a change of level
+				levelValue = Math.floor(Math.random()*(numberOfLevels))+1; //Generate levels without pause
+			}
 		}
 
-	if(changeLevelEvent) {
+	//Change game level each n points
+	if(scoreToChangeLevel-1 == pointsToChangeLevel && gameLevel<gameLevelToScaleArray.length-2) {
+		changeLevelEvent = true;
 		levelValue = 0;
+		scoreToChangeLevel = 0;
 		levelDuration = changeLevelStatusDuration;
 	}
 
@@ -843,20 +857,11 @@ function platformsColliderCallback () {
 	if(!platformTouched && player.body.touching.down && gameStatus=="Running") {
 		score++;
 		scoreText.setText('score: ' + score);
-
-		//Change game level each 3 points
-		scoreToChangeLevel++;
-		if(scoreToChangeLevel == pointsToChangeLevel) {
-			changeLevelEvent = true;
-			//console.log("Change Level Event!");
-		}
-
 	}
 	platformTouched = true; //Needed to take only the first collision with the platform
 }
 
 function changeLevelAndBackground() {
-	scoreToChangeLevel = 0; //Reset point to reach in order to change level
 
 	//New background on level change
 	if(gameLevel<gameLevelToScaleArray.length-1) {
@@ -937,6 +942,9 @@ document.onkeydown = function(event) {
 						}
 						else {
 							introText.setText();
+							if(!pitchDetector.isEnable()){
+					 			 pitchDetector.toggleEnable();
+					 		 }
 						}
 				 	}
 					break;
