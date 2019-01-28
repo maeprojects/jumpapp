@@ -85,6 +85,9 @@ var pauseEvent;
 var playerEnterPause;
 var jumpFromPause;
 var fallBeforePause;
+var playerEndY;
+var endedPauseAnimation;
+var initialPauseStability;
 
 //Intro
 var initialScaleNote;
@@ -161,6 +164,9 @@ function initVariables() {
 	jumpFromPause = false; //True when the player jump from a pause to the next step
 	pauseEvent = false; //Keep true from when the player enter jumpArea of the step before pause to when the player exit pause
 	fallBeforePause = false; //True if the player fall because a note is played to enter a pause
+	playerEndY = 0;
+	endedPauseAnimation = false;
+	initialPauseStability = 7; //Increase-> decrease stability; decrease-> increase stability but increase the delay of wings
 
 	//ScaleMapping inizialization
 	//changeNoteReference("C3")
@@ -474,18 +480,15 @@ var playScene = {
 			//Set jumpArea when the player enter the jumpArea
 			playerEnterJumpArea = (playerLeftBorder > platformLeftBorder+currentPlatformWidth-jumpAreaWidth) && ((playerLeftBorder-gameVelocity) <= (platformLeftBorder+currentPlatformWidth-jumpAreaWidth));
 			if(playerEnterJumpArea) {
+				//console.log("Entered jump area");
 				jumpArea = true;
 				noAnswer = true; //Answer again ungiven
 				fallBeforePause = false;
 
 				if(levelsQueue[1] == 0) {
 					pauseEvent = true;
-				}
-
-				if(levelsQueue[0] == 0) {
-					if(!pitchDetector.isEnable()){
-						 pitchDetector.toggleEnable();
-					 }
+					playerPauseY = player.y;
+					//console.log("playerPauseY", playerPauseY);
 				}
 			}
 
@@ -497,6 +500,7 @@ var playScene = {
 				//If the player is exiting a pause
 				if(levelsQueue[0] == 0) { //The step in which the player enter is levelsQueue[1] because it's before the shift of the removal
 					pauseEvent = false;
+					player.setGravityY(playerGravity);
 				}
 
 				levelsQueue.shift(); //Remove the first element of the list
@@ -504,10 +508,10 @@ var playScene = {
 
 				//If the player is entering a pause
 				if(levelsQueue[0] == 0)  {
-					playerPauseY = player.y;
 					playerEnterPause = true;
 					if(pitchDetector.isEnable()){
 						 pitchDetector.toggleEnable();
+						 //console.log("Pitch detector OFF");
 					 }
 				}
 				else {
@@ -529,10 +533,13 @@ var playScene = {
 		//------------------------------------------------------------------------------------------------------
 		if(player.body.touching.down && playerFixedX == 200) {
 			player.anims.play('playerRun', true);
+			player.body.setGravityY(playerGravity);
 			gameStatus = "Running"; //The first time change the game status from Started to Running
 
 			//Reset Pause variables when the player touch a platform
 			jumpFromPause = false;
+			playerEndY = 0;
+			endedPauseAnimation = false;
 
 			//Enter only the first time (at the first collide with a step)
 			if(score==0) {
@@ -571,6 +578,14 @@ var playScene = {
 
 		// PAUSE MANAGER
 		//------------------------------------------------------------------------------------------------------
+
+		//Avoid little initial falling of the player
+		if(levelsQueue[1] == 0 && player.x>currentPlatform.x+currentPlatform.width/2+initialPauseStability && !fallBeforePause) {
+			player.y = playerPauseY;
+			player.body.y = playerPauseY;
+			player.setGravityY(-gravity);
+		}
+		//Pause Event Handler
 		if(levelsQueue[0] == 0 && !jumpFromPause && pauseEvent) {
 			player.body.setGravityY(-gravity); //In order to make the player FLOW
 			goAhead = true; //The player can keep going even if there was no answer (pause: you stay silent)
@@ -580,11 +595,14 @@ var playScene = {
 				playerEndY = ((player.height*3)+((numberOfLevels-levelsQueue[1])*stepHeight)+(stepHeight/2))-5; //Save the player y position (need to create the animation)
 
 				//Player translation animation
-				pauseTween = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: (currentPlatform.duration*10000), delay: 0, y: { getStart: () => playerPauseY, getEnd: () =>  playerEndY} });
-				console.log("Start animation");
-				pauseTween.setCallback("onComplete", function(){
-					player.y = playerEndY;
-					console.log("End Pause animation");
+				pauseStepTween = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: (currentPlatform.duration*10000), delay: 0, y: { getStart: () => playerPauseY, getEnd: () =>  playerEndY} });
+				//console.log("Start animation");
+				pauseStepTween.setCallback("onComplete", function(){
+					endedPauseAnimation = true;
+					if(!pitchDetector.isEnable()){
+						 pitchDetector.toggleEnable();
+						 //console.log("End Animation");
+					 }
 				}, player);
 
 				playerEnterPause = false; //condition should not enter anymore
@@ -594,8 +612,13 @@ var playScene = {
 					changeLevelAndBackground();
 			}
 
+			if(endedPauseAnimation) {
+				player.y = playerEndY;
+				player.body.y = playerEndY;
+			}
+
 			//Condition needed because the playerWidth with the wings is greater than the normal player
-			if(player.x-playerWidth/2-5>currentPlatform.x-currentPlatform.width/2) {
+			if(player.x-playerWidth/2-5>currentPlatform.x-currentPlatform.width/2 && player.x+playerWidth/2<currentPlatform.x+currentPlatform.width/2) {
 					player.anims.play('playerFly', true);
 			}
 		}
@@ -1004,7 +1027,12 @@ document.onkeydown = function(event) {
 						 });
 
 						if(!pitchDetector.isEnable()){
-				 			 pitchDetector.toggleEnable();
+							if(levelsQueue[0]==0 && jumpArea){
+								pitchDetector.toggleEnable();
+							}
+							else if(levelsQueue[0]!=0) {
+								pitchDetector.toggleEnable();
+							}
 				 		}
 
 				 		//if next scale was playing, I finish it
@@ -1068,16 +1096,16 @@ function jumpAtLevel(level) {
 			jumpRatio = String(levelsQueue[1]-levelsQueue[0]+1);
 
 		//If the note detected is correct:
-		if(level == levelsQueue[1] && parseInt(jumpRatio) > 0) { //Go up
-			console.log("jump Up!", level);
+		if(level == levelsQueue[1] && parseInt(jumpRatio) > 0 && noAnswer==true) { //Go up
+			//console.log("jump Up!", level);
 			player.body.setGravityY(playerGravity);
 			player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity)*stepHeight*jumpRatio,1/2));
 			collider.overlapOnly = true;
 
 			goAhead = true; //The answer is correct
 			noAnswer = false; //An answer has been given
-		} else if (level == levelsQueue[1]) { //Go down
-					console.log("jump Down!", level);
+		} else if (level == levelsQueue[1] && noAnswer==true) { //Go down
+					//console.log("jump Down!", level);
 					player.body.setGravityY(playerGravity);
 					player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity)*stepHeight*1,1/2));
 					goAhead = true;
@@ -1091,13 +1119,12 @@ function jumpAtLevel(level) {
 			goAhead = false;
 			pauseEvent = false; //Avoid starting of the pause animation
 			fallBeforePause = true; //Needed to show the right message for this event
-			console.log("Next is pause, you play something!");
+			//console.log("Next is pause, you play something!");
 		}
 
 	}
 	else if(level == -1 && player.body.touching.down && gameStatus=="Running") {
 					//goAhead = false; //The player fall down if a wrong note is singed (even out of the jump area)
 					player.body.setGravityY(playerGravity);
-					console.log("player normal gravity", level);
 				}
 }
