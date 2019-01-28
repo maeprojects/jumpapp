@@ -76,7 +76,7 @@ function getScale(scaleStep, fundamental){
     changeOctave = false
     scale[0] += extractOctaveReference
     for(i=1; i<scale.length; i++){
-      if((scale[i] == "C" || scale[i] == "C#") && !changeOctave){
+      if(scale[i-1] != "C"+extractOctaveReference && (scale[i] == "C" || scale[i] == "C#") && !changeOctave){
         extractOctaveReference++
         changeOctave = true
       }
