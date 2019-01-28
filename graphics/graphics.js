@@ -942,6 +942,9 @@ document.onkeydown = function(event) {
 						}
 						else {
 							introText.setText();
+							if(!pitchDetector.isEnable()){
+					 			 pitchDetector.toggleEnable();
+					 		 }
 						}
 				 	}
 					break;
