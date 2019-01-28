@@ -963,7 +963,12 @@ document.onkeydown = function(event) {
 
 						if(!pitchDetector.isEnable()){
 				 			 pitchDetector.toggleEnable();
-				 		 }
+				 		}
+
+				 		//if next scale was playing, I finish it
+				 		if(scaleOnPlay == true)
+				 			playScale(gameLevelToScaleArray[gameLevel], noteReference, 0.5)
+
 					}
 					break;
 

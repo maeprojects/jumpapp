@@ -83,6 +83,7 @@ var GAME_MODE = {
 Synth instanceof AudioSynth; // true
 Synth.setVolume(0.8)
 var pianoInstrument = Synth.createInstrument('piano');
+var lastNoteToPlayed = ""
 
 // note is a musical note (ex C#5)
 // durationSingleNote is in seconds
@@ -92,21 +93,20 @@ function playNote(note, duration){
   name = note.substring(0,note.length-1)
   octave = note.substring(note.length-1, note.length)
   d = Math.abs(duration)
-  console.log(d)
-  pianoInstrument.play(name, octave, d)
-}
+  
+  if(game.scene.isActive("playScene") || gameStatus=="Gameover"){
+    pianoInstrument.play(name, octave, d)
 
-// scale is the name scale to play (ex dorian)
-// fundamental is the starting note to play the specific scale (ex C#5)
-// durationSingleNote is in seconds
-function playScale(scale, fundamental, durationSingleNote){
-  stepScale = getScale(scaleToStepsArray[scale], fundamental) //return in form of ["C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4"]
-  d = Math.abs(durationSingleNote)
-  console.log(d)
-  for(i=0; i<stepScale.length; i++){
-    note = stepScale[i]
-    setTimeout(playNote, d*i*1000, note, d*2) // call playNote(note, d) after d/2 second (scanning the scale)
+    if(scaleOnPlay && note == stepScale[stepScale.length-1]){ //check if i was playing a scale and to manage the pause
+      scaleOnPlay = false
+    }
   }
+  else {
+    if(lastNoteToPlayed == ""){
+      lastNoteToPlayed = note
+    }
+  }
+
 }
 
 // play a level of the gameGrid: based on the currentScale and the current noteReference
@@ -115,6 +115,37 @@ function playLevel(level){
   note = currentScale[level-1]
   playNote(note, 1) // play note with 1 sec of duration
 }
+
+// scale is the name scale to play (ex dorian)
+// fundamental is the starting note to play the specific scale (ex C#5)
+// durationSingleNote is in seconds
+// -> this method manage if during the play of one scale the player put on pause the game. then restard from the previous note
+var indexNote = 0
+var scaleOnPlay = false
+
+
+function playScale(scale, fundamental, durationSingleNote){
+  scaleOnPlay = true
+  stepScale = getScale(scaleToStepsArray[scale], fundamental) //return in form of ["C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4"]
+  d = Math.abs(durationSingleNote)
+  //console.log(d)
+  //indexNote = 0
+  shiftTime = 0   // in order to set the delay time of the timeout
+  if(lastNoteToPlayed != ""){
+    indexNote = stepScale.indexOf(lastNoteToPlayed)
+    lastNoteToPlayed = ""
+  }
+
+  for(indexNote; indexNote<stepScale.length && game.scene.isActive("playScene"); indexNote++){
+    console.log("CICLO")
+    note = stepScale[indexNote]
+    setTimeout(playNote, d*shiftTime*1000, note, d*2) // call playNote(note, d) after d/2 second (scanning the scale)
+    shiftTime++
+  }
+
+}
+
+
 
 
 

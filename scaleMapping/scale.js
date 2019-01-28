@@ -131,6 +131,8 @@ function changeScaleReference(scale){
 }
 
 function buttonPlayReference(){
-	playNote(noteReference, 2)
+  name = noteReference.substring(0,noteReference.length-1)
+  octave = noteReference.substring(noteReference.length-1, noteReference.length)
+  pianoInstrument.play(name, octave, 2)
 
 }
