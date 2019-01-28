@@ -11,7 +11,7 @@ var gridColor = "186, 181, 180, "
 var gridOpacity = 0.4;
 var fontSize = '20px';
 var fontColor = '#F00';
-var pointsToChangeLevel = 3;
+var pointsToChangeLevel = 1;
 
 
 
@@ -84,6 +84,7 @@ var gameLevel;
 var pauseEvent;
 var playerEnterPause;
 var jumpFromPause;
+var fallBeforePause;
 
 //Intro
 var initialScaleNote;
@@ -159,6 +160,7 @@ function initVariables() {
 	playerEnterPause = false; //True only when the player enter the pause
 	jumpFromPause = false; //True when the player jump from a pause to the next step
 	pauseEvent = false; //Keep true from when the player enter jumpArea of the step before pause to when the player exit pause
+	fallBeforePause = false; //True if the player fall because a note is played to enter a pause
 
 	//ScaleMapping inizialization
 	//changeNoteReference("C3")
@@ -474,9 +476,16 @@ var playScene = {
 			if(playerEnterJumpArea) {
 				jumpArea = true;
 				noAnswer = true; //Answer again ungiven
+				fallBeforePause = false;
 
 				if(levelsQueue[1] == 0) {
 					pauseEvent = true;
+				}
+
+				if(levelsQueue[0] == 0) {
+					if(!pitchDetector.isEnable()){
+						 pitchDetector.toggleEnable();
+					 }
 				}
 			}
 
@@ -497,6 +506,9 @@ var playScene = {
 				if(levelsQueue[0] == 0)  {
 					playerPauseY = player.y;
 					playerEnterPause = true;
+					if(pitchDetector.isEnable()){
+						 pitchDetector.toggleEnable();
+					 }
 				}
 				else {
 					playerEnterPause = false;
@@ -690,8 +702,7 @@ var gameoverScene = {
 		player.destroy(); //Destroy the player
 
 		introText.setAlpha(0);
-		introText.setText('You should play 🔊'); //Update the status text
-		tween = this.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+
 		setTimeout(function(){
 			if(game.scene.isActive("gameoverScene")) {
 				introText.setAlpha(0);
@@ -700,10 +711,18 @@ var gameoverScene = {
 			}
 		}, 1200);
 
-		if(levelsQueue[0]!=0)
+		if(fallBeforePause) {
+			introText.setText('You should play nothing!'); //Update the status text
+		}
+		else if(levelsQueue[0]!=0) {
+			introText.setText('You should play 🔊'); //Update the status text
 			playNote(convertLevelToNote(levelsQueue[0]), 1.5) //right note after another note
-		else
+		}
+		else {
+			introText.setText('You should play 🔊'); //Update the status text
 			playNote(convertLevelToNote(levelsQueue[1]), 1.5) //right note after a pause
+		}
+		tween = this.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 
 		if(pitchDetector.isEnable())
 			pitchDetector.toggleEnable(); //If the pitch detector is enabled, disable it
@@ -1050,7 +1069,7 @@ function jumpAtLevel(level) {
 
 		//If the note detected is correct:
 		if(level == levelsQueue[1] && parseInt(jumpRatio) > 0) { //Go up
-			//console.log("jump Up!", level);
+			console.log("jump Up!", level);
 			player.body.setGravityY(playerGravity);
 			player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity)*stepHeight*jumpRatio,1/2));
 			collider.overlapOnly = true;
@@ -1058,7 +1077,7 @@ function jumpAtLevel(level) {
 			goAhead = true; //The answer is correct
 			noAnswer = false; //An answer has been given
 		} else if (level == levelsQueue[1]) { //Go down
-					//console.log("jump Down!", level);
+					console.log("jump Down!", level);
 					player.body.setGravityY(playerGravity);
 					player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity)*stepHeight*1,1/2));
 					goAhead = true;
@@ -1068,9 +1087,10 @@ function jumpAtLevel(level) {
 
 		//In order to fall down if you play something before entering the pause
 		if(levelsQueue[1] == 0 && (level == 1 || level == 2 || level == 3 || level == 4 || level == 5 || level == 6 || level == 7 || level == 8 )) {
-			noAnswer = true;
+			noAnswer = false;
 			goAhead = false;
-			pauseEvent = false;
+			pauseEvent = false; //Avoid starting of the pause animation
+			fallBeforePause = true; //Needed to show the right message for this event
 			console.log("Next is pause, you play something!");
 		}
 
@@ -1078,5 +1098,6 @@ function jumpAtLevel(level) {
 	else if(level == -1 && player.body.touching.down && gameStatus=="Running") {
 					//goAhead = false; //The player fall down if a wrong note is singed (even out of the jump area)
 					player.body.setGravityY(playerGravity);
+					console.log("player normal gravity", level);
 				}
 }
