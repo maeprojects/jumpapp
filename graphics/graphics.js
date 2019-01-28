@@ -842,7 +842,7 @@ var generateLevel = function() {
 		}
 
 	//Change game level each n points
-	if(scoreToChangeLevel-1 == pointsToChangeLevel) {
+	if(scoreToChangeLevel-1 == pointsToChangeLevel && gameLevel<gameLevelToScaleArray.length-2) {
 		changeLevelEvent = true;
 		levelValue = 0;
 		scoreToChangeLevel = 0;
