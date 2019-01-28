@@ -102,6 +102,8 @@ function playNote(note, duration){
       playNoteQueue.shift()
       if(playNoteQueue.length == 0)
         scaleOnPlay = false
+      else
+        setTimeout(playNote, d/2*1000, null, d)
     }
   }
 }
@@ -134,9 +136,11 @@ function playScale(scale, fundamental, durationSingleNote){
   // playNoteQueue are the note to play
   d = Math.abs(durationSingleNote)
 
-  for(j = 0; j<playNoteQueue.length; j++){
+  playNote(playNoteQueue[0], d*2)
+
+  /*for(j = 0; j<playNoteQueue.length && game.scene.isActive("playScene"); j++){
     setTimeout(playNote, d*j*1000, null, d*2) // call playNote(note, d) after d/2 second (scanning the scale)
-  }
+  }*/
 
 }
 
