@@ -90,6 +90,34 @@ var lastNoteToPlayed = ""
 function playNote(note, duration){
   // example:
   // piano.play('C', 4, 2); -> plays C4 for 2s using the 'piano' sound profile
+  if(scaleOnPlay)
+    note = playNoteQueue[0]
+  name = note.substring(0,note.length-1)
+  octave = note.substring(note.length-1, note.length)
+  d = Math.abs(duration)
+  
+  if(game.scene.isActive("playScene") || gameStatus=="Gameover"){
+    pianoInstrument.play(name, octave, d)
+
+    if(scaleOnPlay){ //check if i was playing a scale and to manage the pause
+      playNoteQueue.shift()
+      if(playNoteQueue.length == 0)
+        scaleOnPlay = false
+    }
+  }
+  /*else {
+    if(lastNoteToPlayed == "" && scaleOnPlay){
+      lastNoteToPlayed = note
+    }
+  }*/
+
+}
+/*
+// note is a musical note (ex C#5)
+// durationSingleNote is in seconds
+function playNote(note, duration){
+  // example:
+  // piano.play('C', 4, 2); -> plays C4 for 2s using the 'piano' sound profile
   name = note.substring(0,note.length-1)
   octave = note.substring(note.length-1, note.length)
   d = Math.abs(duration)
@@ -99,15 +127,17 @@ function playNote(note, duration){
 
     if(scaleOnPlay && note == stepScale[stepScale.length-1]){ //check if i was playing a scale and to manage the pause
       scaleOnPlay = false
+      //lastNoteToPlayed = ""
     }
   }
   else {
-    if(lastNoteToPlayed == ""){
+    if(lastNoteToPlayed == "" && scaleOnPlay){
       lastNoteToPlayed = note
     }
   }
 
 }
+*/
 
 // play a level of the gameGrid: based on the currentScale and the current noteReference
 function playLevel(level){
@@ -122,8 +152,28 @@ function playLevel(level){
 // -> this method manage if during the play of one scale the player put on pause the game. then restard from the previous note
 var indexNote = 0
 var scaleOnPlay = false
+var playNoteQueue = []
 
+function playScale(scale, fundamental, durationSingleNote){
+  scaleOnPlay = true
 
+  if(playNoteQueue.length == 0) {
+    stepScale = getScale(scaleToStepsArray[scale], fundamental) //return in form of ["C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4"]
+    for(i = 0; i<stepScale.length; i++){
+      playNoteQueue[i] = stepScale[i]
+    }
+  }
+  // playNoteQueue are the note to play
+  d = Math.abs(durationSingleNote)
+
+  for(j = 0; j<playNoteQueue.length; j++){
+    setTimeout(playNote, d*j*1000, null, d*2) // call playNote(note, d) after d/2 second (scanning the scale)
+    //shiftTime++
+  }
+
+}
+
+/*
 function playScale(scale, fundamental, durationSingleNote){
   scaleOnPlay = true
   stepScale = getScale(scaleToStepsArray[scale], fundamental) //return in form of ["C3", "D3", "E3", "F3", "G3", "A3", "B3", "C4"]
@@ -137,13 +187,15 @@ function playScale(scale, fundamental, durationSingleNote){
   }
 
   for(indexNote; indexNote<stepScale.length && game.scene.isActive("playScene"); indexNote++){
-    console.log("CICLO")
     note = stepScale[indexNote]
     setTimeout(playNote, d*shiftTime*1000, note, d*2) // call playNote(note, d) after d/2 second (scanning the scale)
     shiftTime++
   }
 
+  //lastNoteToPlayed = ""
+
 }
+*/
 
 
 

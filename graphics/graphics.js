@@ -689,7 +689,9 @@ var gameoverScene = {
 		}, 1200);
 
 		if(levelsQueue[0]!=0)
-			playNote(convertLevelToNote(levelsQueue[0]), 1.5)
+			playNote(convertLevelToNote(levelsQueue[0]), 1.5) //right note after another note
+		else
+			playNote(convertLevelToNote(levelsQueue[1]), 1.5) //right note after a pause
 		if(pitchDetector.isEnable())
 			pitchDetector.toggleEnable(); //If the pitch detector is enabled, disable it
 
