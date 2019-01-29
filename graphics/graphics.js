@@ -53,6 +53,7 @@ var restartScene;
 var changeLevelEvent;
 var changeLevelStatusDuration;
 var scoreToChangeLevel;
+var changeLevelTextShown;
 
 //Jump event managing
 var goAhead;
@@ -96,7 +97,7 @@ var initialPauseStability;
 //Intro
 var initialScaleNote;
 var introVelocity;
-var introText;
+var statusText;
 var countdown;
 var centeredText;
 
@@ -135,6 +136,7 @@ function initVariables() {
 	changeLevelEvent = false; //Manage the period in which there's a change of level
 	changeLevelStatusDuration = 1/2;
 	scoreToChangeLevel = 0;
+	changeLevelTextShown = false;
 
 	//Game grid-rhythm settings
 	timeSignature = 4;
@@ -388,17 +390,17 @@ var playScene = {
 			 player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.4,1/2));
 			 collider.overlapOnly = true;
 
-			 introText.setText('Listen...');
-			 tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+			 statusText.setText('Listen...');
+			 tween = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 		 }
     }, this);
 
 		//INTRO MANAGER
 		//------------------------------------------------------------------------------------------------------
-		introText = this.add.text(resolution[0]/2, playerHeight*3/2, 'Click/Space/Enter To Play!', {font: "bold 40px Arial", fill: fontColor}).setOrigin(0.5);
-		introText.setShadow(2, 2, 'rgba(0,0,0,0.5)', 2);
-		introText.setAlign('center');
-		tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+		statusText = this.add.text(resolution[0]/2, playerHeight*3/2, 'Click/Space/Enter To Play!', {font: "bold 40px Arial", fill: fontColor}).setOrigin(0.5);
+		statusText.setShadow(2, 2, 'rgba(0,0,0,0.5)', 2);
+		statusText.setAlign('center');
+		tween = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 
 		centeredText = this.add.text(resolution[0]/2, resolution[1]/2, '', {font: "bold 190px Arial", fill: fontColor}).setOrigin(0.5);
 		centeredText.setShadow(5, 5, 'rgba(0,0,0,0.5)', 5);
@@ -554,13 +556,13 @@ var playScene = {
 			if(score==0) {
 				score++;
 				scoreText.setText('score: ' + score);
-				introText.setText("Sing!");
+				statusText.setText("Sing!");
 
 				//Hide intro and centered text
-				tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
-				tween2 = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
+				tween = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
+				tween2 = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
 				tween.setCallback(function() {
-					introText.setText();
+					statusText.setText();
 					centeredText.setText();
 				});
 
@@ -661,9 +663,9 @@ var playScene = {
 				if(countdown==3) {
 					initialScaleNote++;
 					playLevel(initialScaleNote);
-					introText.setAlpha(0);
-					introText.setText("Ready?!");
-					introTextTween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+					statusText.setAlpha(0);
+					statusText.setText("Ready?!");
+					statusTextTween = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 				}
 				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*2*(636/resolution[1]),1/2));
 				centeredText.setAlpha(0);
@@ -673,7 +675,7 @@ var playScene = {
 			else if(player.body.touching.down) { //If you are at the last step, the game should start
 				countdown--; //Bring countdown to 0
 				centeredText.setText();
-				introText.setText("Sing!");
+				statusText.setText("Sing!");
 				noAnswer = true;
 				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*2.3*(636/resolution[1]),1/2));
 
@@ -725,8 +727,8 @@ var pauseScene = {
 			buttonPlayReference();
 		 });
 
-		 introText.setText('Game Paused, Enter/Space to resume...');
-		 tween = this.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+		 statusText.setText('Game Paused, Enter/Space to resume...');
+		 tween = this.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 	}
 }
 game.scene.add("pauseScene", pauseScene);
@@ -744,25 +746,25 @@ var gameoverScene = {
 		gameoverText.setAlign('center');
 
 		gameoverText.setAlpha(0);
-		introText.setAlpha(0);
+		statusText.setAlpha(0);
 
 		gameOverTween = gameoverContext.add.tween({ targets: gameoverText, ease: 'Sine.easeInOut', duration: 100, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 
 		if(fallBeforePause) {
-			introText.setText('You should have played nothing!'); //Update the status text
+			statusText.setText('You should have played nothing!'); //Update the status text
 		}
 		else if(levelsQueue[0]!=0) {
-			introText.setText('You should have played 🔊'); //Update the status text
+			statusText.setText('You should have played 🔊'); //Update the status text
 			playNote(convertLevelToNote(levelsQueue[0]), 1.5) //right note after another note
 		}
 		else {
-			introText.setText('You should have played 🔊'); //Update the status text
+			statusText.setText('You should have played 🔊'); //Update the status text
 			playNote(convertLevelToNote(levelsQueue[1]), 1.5) //right note after a pause
 		}
 
-		introTextTween = this.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+		statusTextTween = this.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 		if(!game.scene.isActive("playScene"))
-			introTextTween = this.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 1000, alpha: { getStart: () => 1, getEnd: () => 0 } });
+			statusTextTween = this.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 1000, alpha: { getStart: () => 1, getEnd: () => 0 } });
 
 
 		if(pitchDetector.isEnable())
@@ -864,24 +866,36 @@ function createGridTexture(context, measurePlatformWidth, timeSignature) {
 }
 
 
-function createBackground(context, color= backgroundGridColor) {
-	graphics=context.add.graphics();
+function createBackground(context, color= backgroundGridColor, black = false) {
 
-	//From the bottom (position 0) to the top (position 7) of the screen
-	yPointer = playerHeight*3; //Starts from the top to draw
-	colorsArray = scaleToColorsArray[gameLevelToScaleArray[gameLevel]]
-	for (i = 1; i <= colorsArray.length; i++) {
-		graphics.fillStyle(colorsArray[scaleToColorsArray[gameLevelToScaleArray[0]].length-i],1);
-		graphics.lineStyle(0.1, "0x000000", 1);
-		graphics.fillRect(0,yPointer,resolution[0],stepHeight);
-
-		graphics.strokeRect(0,yPointer,resolution[0],stepHeight); //Rectangle border
-		yPointer += stepHeight;
+	if(black) {
+		graphics=context.add.graphics();
+		yPointer = playerHeight*3; //Starts from the top to draw
+		graphics.fillStyle('#000000',1);
+		graphics.fillRect(0,yPointer,resolution[0],levelsFieldHeight);
+		graphics.strokeRect(0,yPointer,resolution[0],levelsFieldHeight); //Rectangle border
+		graphics.generateTexture('background-black',resolution[0],resolution[1]);
+		graphics.destroy();
 	}
+	else {
+		graphics=context.add.graphics();
 
-	graphics.generateTexture('background'+gameLevel,resolution[0],resolution[1]);
+		//From the bottom (position 0) to the top (position 7) of the screen
+		yPointer = playerHeight*3; //Starts from the top to draw
+		colorsArray = scaleToColorsArray[gameLevelToScaleArray[gameLevel]]
+		for (i = 1; i <= colorsArray.length; i++) {
+			graphics.fillStyle(colorsArray[scaleToColorsArray[gameLevelToScaleArray[0]].length-i],1);
+			graphics.lineStyle(0.1, "0x000000", 1);
+			graphics.fillRect(0,yPointer,resolution[0],stepHeight);
 
-	graphics.destroy();
+			graphics.strokeRect(0,yPointer,resolution[0],stepHeight); //Rectangle border
+			yPointer += stepHeight;
+		}
+
+		graphics.generateTexture('background'+gameLevel,resolution[0],resolution[1]);
+
+		graphics.destroy();
+	}
 }
 
 var generateLevel = function() {
@@ -970,6 +984,47 @@ function changeLevelAndBackground() {
 
 	//play next scale
 	playScale(gameLevelToScaleArray[gameLevel], noteReference, 0.5)
+
+	//Darker background
+
+	//Alternativa 1
+	// createBackground(gameContext, '#000000', true);
+	// darkBackgroundImage = gameContext.add.image(resolution[0]/2, resolution[1]/2, 'background-black');
+	// darkBackgroundImage.setAlpha(0);
+	// darkBackgroundImage.setDepth(-1);
+	// darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: 500, delay: 0, alpha: { getStart: () => 0, getEnd: () => 0.3 } });
+	// darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: 500, delay: 500, alpha: { getStart: () => 0.3, getEnd: () => 0 } });
+	// var q = 0;
+	// blink = setInterval(()=>{
+	// 	console.log("started interval");
+	// 	darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: 500, delay: 0, alpha: { getStart: () => 0, getEnd: () => 0.3 } });
+	// 	darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: 500, delay: 500, alpha: { getStart: () => 0.3, getEnd: () => 0 } });
+	// 	q++;
+	// 	if(q==3) {
+	// 		clearInterval(blink);
+	// 		console.log("ended interval");
+	// 	}
+	// }, 1000);
+
+	//Alternativa 2
+	createBackground(gameContext, '#000000', true);
+	darkBackgroundImage = gameContext.add.image(resolution[0]/2, resolution[1]/2, 'background-black');
+	darkBackgroundImage.setAlpha(0);
+	darkBackgroundImage.setDepth(-1);
+	changelevelDuration = 2000;
+	darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: changelevelDuration*4/5, delay: 0, alpha: { getStart: () => 0, getEnd: () => 0.2 } });
+	darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: changelevelDuration*4/10, delay: changelevelDuration*3.6*changeLevelStatusDuration, alpha: { getStart: () => 0.2, getEnd: () => 0 } });
+
+	statusText.setAlpha(0);
+	statusText.setText("Changed Mode! ("+gameLevelToScaleArray[gameLevel].charAt(0).toUpperCase() + gameLevelToScaleArray[gameLevel].slice(1)+")");
+	gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: changelevelDuration*4/5, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+	gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: changelevelDuration*4/10, delay: changelevelDuration*3.6*changeLevelStatusDuration, alpha: { getStart: () => 1, getEnd: () => 0 } });
+
+	darkTween.setCallback("onUpdate", function(){
+		changeLevelTextShown = false;
+	}, darkBackgroundImage);
+
+	changeLevelTextShown = true;
 }
 
 
@@ -992,8 +1047,8 @@ document.onkeydown = function(event) {
 					player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.5*636/resolution[1],1/2));
 					collider.overlapOnly = true;
 
-					introText.setText('Listen...');
-					tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+					statusText.setText('Listen...');
+					tween = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 					break;
 
 				case "Intro":
@@ -1015,16 +1070,16 @@ document.onkeydown = function(event) {
 						 });
 
 						if(initialScaleNote<8) {
-							introText.setText('Listen...');
-							tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+							statusText.setText('Listen...');
+							tween = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 						}
 						else if(countdown>0){
-							introText.setText("Ready?!");
-							tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+							statusText.setText("Ready?!");
+							tween = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 						}
 						else {
-							introText.setText("Sing!");
-							tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+							statusText.setText("Sing!");
+							tween = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 							if(!pitchDetector.isEnable()){
 					 			 pitchDetector.toggleEnable();
 					 		 }
@@ -1043,7 +1098,12 @@ document.onkeydown = function(event) {
 					else {
 						game.scene.resume("playScene");
 						game.scene.stop("pauseScene");
-						introText.setText();
+						statusText.setText();
+						if(changeLevelTextShown) {
+							statusText.setAlpha(0);
+							statusText.setText("Changed Mode! ("+gameLevelToScaleArray[gameLevel].charAt(0).toUpperCase() + gameLevelToScaleArray[gameLevel].slice(1)+")");
+							gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+						}
 
 						//Reload play reference button
 						referenceNoteButton = gameContext.add.text(resolution[0]-150, playerHeight*2.2, 'Play Reference', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
