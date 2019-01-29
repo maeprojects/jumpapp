@@ -1114,7 +1114,7 @@ function jumpAtLevel(level) {
 				//Else go ahead remain false and the player fall down
 
 		//In order to fall down if you play something before entering the pause
-		if(levelsQueue[1] == 0 && (level == 1 || level == 2 || level == 3 || level == 4 || level == 5 || level == 6 || level == 7 || level == 8 )) {
+		if(level!=levelsQueue[0] && levelsQueue[1] == 0 && (level == 1 || level == 2 || level == 3 || level == 4 || level == 5 || level == 6 || level == 7 || level == 8 )) {
 			noAnswer = false;
 			goAhead = false;
 			pauseEvent = false; //Avoid starting of the pause animation
