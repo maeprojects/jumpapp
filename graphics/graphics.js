@@ -724,28 +724,32 @@ var gameoverScene = {
 		gameStatus="Gameover"; //in order to avoid checks made when the gamestatus is running
 		player.destroy(); //Destroy the player
 
+
+		gameoverText = this.add.text(resolution[0]/2, resolution[1]/2, 'Game Over! \nEnter/Space to restart', {font: "bold 80px Arial", fill: fontColor, stroke: "#000"}).setOrigin(0.5);
+		gameoverText.setShadow(5, 5, 'rgba(0,0,0,0.5)', 5);
+		gameoverText.setAlign('center');
+
+		gameoverText.setAlpha(0);
 		introText.setAlpha(0);
 
-		setTimeout(function(){
-			if(game.scene.isActive("gameoverScene")) {
-				introText.setAlpha(0);
-				introText.setText('Game Over! \nEnter/Space to restart'); //Update the status text
-				secondTween = gameoverContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
-			}
-		}, 1200);
+		gameOverTween = gameoverContext.add.tween({ targets: gameoverText, ease: 'Sine.easeInOut', duration: 100, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 
 		if(fallBeforePause) {
-			introText.setText('You should play nothing!'); //Update the status text
+			introText.setText('You should have played nothing!'); //Update the status text
 		}
 		else if(levelsQueue[0]!=0) {
-			introText.setText('You should play 🔊'); //Update the status text
+			introText.setText('You should have played 🔊'); //Update the status text
 			playNote(convertLevelToNote(levelsQueue[0]), 1.5) //right note after another note
 		}
 		else {
-			introText.setText('You should play 🔊'); //Update the status text
+			introText.setText('You should have played 🔊'); //Update the status text
 			playNote(convertLevelToNote(levelsQueue[1]), 1.5) //right note after a pause
 		}
-		tween = this.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+
+		introTextTween = this.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+		if(!game.scene.isActive("playScene"))
+			introTextTween = this.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 1000, alpha: { getStart: () => 1, getEnd: () => 0 } });
+
 
 		if(pitchDetector.isEnable())
 			pitchDetector.toggleEnable(); //If the pitch detector is enabled, disable it
