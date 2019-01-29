@@ -11,7 +11,7 @@ var gridColor = "186, 181, 180, "
 var gridOpacity = 0.4;
 var fontSize = '20px';
 var fontColor = '#F00';
-var pointsToChangeLevel = 1;
+var pointsToChangeLevel = 3;
 
 
 
@@ -78,7 +78,11 @@ var spaceBetweenPlatforms;
 var levelsQueue;
 var currentPlatform;
 var playerPauseY;
+
+//Game Levels
 var gameLevel;
+var lastLevel;
+var modeText;
 
 //PAUSE
 var pauseEvent;
@@ -115,6 +119,7 @@ var referenceNoteButton;
 function initVariables() {
 	//Game Level
 	gameLevel = 0;
+	lastLevel = false;
 
 	//Game score
 	score = 0;
@@ -368,8 +373,15 @@ var playScene = {
 				buttonPlayReference();
 		 });
 
-	 //Touch input MANAGER
-	 this.input.on('pointerdown', function(){
+		//Current Mode visualization
+		// modeText = this.add.text(250, playerHeight*0.5, 'Current Mode: '+gameLevelToScaleArray[gameLevel], { fontSize: fontSize, fill: fontColor, fontFamily: "Arial"}).setSize(400, 0);
+		// modeText.width = 800;
+		// modeText.setBackgroundColor("#000");
+		// modeText.setAlign('right');
+
+
+	 	//Touch input MANAGER
+	 	this.input.on('pointerdown', function(){
 		 if(gameStatus == "Started") {
 			 pitchDetector.resumeAudioContext()	//to enable the AudioContext of PitchDetector
 			 game.scene.resume("playScene"); //Starting scene (update() function starts looping)
@@ -902,8 +914,8 @@ var generateLevel = function() {
 			}
 		}
 
-	//Change game level each n points
-	if(scoreToChangeLevel-1 == pointsToChangeLevel && gameLevel<gameLevelToScaleArray.length-2) {
+	//Change game level each n points (endless)
+	if(scoreToChangeLevel-1 == pointsToChangeLevel) {
 		changeLevelEvent = true;
 		levelValue = 0;
 		scoreToChangeLevel = 0;
@@ -923,32 +935,40 @@ function platformsColliderCallback () {
 }
 
 function changeLevelAndBackground() {
+	console.log("Change Level And Background!");
 
-	//New background on level change
-	if(gameLevel<gameLevelToScaleArray.length-1) {
-		gameLevel++; //Change Level
-
-		//Remove Old Background
-		tween = gameContext.add.tween({ targets: backgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 500, alpha: { getStart: () => 1, getEnd: () => 0 } });
-		tween.setCallback("onComplete", function(){
-			backgroundImage.destroy();
-			backgroundImage = newbackgroundImage;
-		}, backgroundImage);
-
-
-
-		//Add new background
-		createBackground(gameContext);
-		changeGameLevel(gameLevel);
-		newbackgroundImage = gameContext.add.image(resolution[0]/2, resolution[1]/2, 'background'+gameLevel);
-		newbackgroundImage.setAlpha(0);
-		newbackgroundImage.setDepth(-2);
-		newtween = gameContext.add.tween({ targets: newbackgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
-
-
-		//play next scale
-		playScale(gameLevelToScaleArray[gameLevel], noteReference, 0.5)
+	//Change Level
+	if(gameLevel<gameLevelToScaleArray.length-1 && !lastLevel) {
+		gameLevel++;
+		if(gameLevel == gameLevelToScaleArray.length-1)
+			lastLevel = true;
 	}
+	else {
+		newLevel = Math.round(Math.random()*(gameLevelToScaleArray.length-1)); //After the player reach the last level, random levels will generate
+		while(newLevel==gameLevel) {
+			newLevel = Math.round(Math.random()*(gameLevelToScaleArray.length-1)); //After the player reach the last level, random levels will generate
+		}
+		gameLevel = newLevel;
+	}
+
+	//Remove Old Background
+	tween = gameContext.add.tween({ targets: backgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 500, alpha: { getStart: () => 1, getEnd: () => 0 } });
+	tween.setCallback("onComplete", function(){
+		backgroundImage.destroy();
+		backgroundImage = newbackgroundImage;
+	}, backgroundImage);
+
+	//Add new background
+	createBackground(gameContext);
+	changeGameLevel(gameLevel);
+	newbackgroundImage = gameContext.add.image(resolution[0]/2, resolution[1]/2, 'background'+gameLevel);
+	newbackgroundImage.setAlpha(0);
+	newbackgroundImage.setDepth(-2);
+	newtween = gameContext.add.tween({ targets: newbackgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+
+
+	//play next scale
+	playScale(gameLevelToScaleArray[gameLevel], noteReference, 0.5)
 }
 
 
