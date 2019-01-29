@@ -215,17 +215,36 @@ var splashScene = {
 game.scene.add("splashScene", splashScene);
 
 var syncScene = {
+	preload: function() {
+		this.load.spritesheet('player', 'assets/player.png', { frameWidth: 19, frameHeight: 48 });
+	},
 	create: function() {
 		text = this.add.text(0,100, "Sync Screen: Work in progress...",  { font: "bold 32px Arial", fill: "#000", boundsAlignH: "center", boundsAlignV: "middle" });
 
-		this.input.on('pointerdown', function() {
-			game.scene.start("playScene");
-			game.scene.stop("syncScene");
+		playButtonTest = this.add.sprite(400, 400, 'player').setInteractive();
+
+		this.anims.create({
+			key: 'playerOver',
+			frames: [ { key: 'player', frame: 4 } ],
+			frameRate: 2
 		});
 
-		this.input.keyboard.on('keydown', function() {
-			game.scene.start("playScene");
-			game.scene.stop("syncScene");
+		this.anims.create({
+			key: 'playerOut',
+			frames: [ { key: 'player', frame: 0 } ],
+			frameRate: 2
+		});
+
+    playButton.on('pointerover', function (event) { playButton.anims.play('playerOver', true); });
+    playButton.on('pointerout', function (event) { playButton.anims.play('playerOut', true); });
+    playButton.on('pointerdown', function() {console.log("Play!")}); // Start game on click.
+
+
+		this.input.keyboard.on('keydown', function(event) {
+			if(event.key == " " || event.key == "Enter") {
+				game.scene.start("playScene");
+				game.scene.stop("syncScene");
+			}
 		});
 	}
 }
@@ -798,7 +817,7 @@ var settingsScene = {
 game.scene.add("settingsScene", settingsScene);
 
 
-game.scene.start("playScene");
+game.scene.start("syncScene");
 
 
 
