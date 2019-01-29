@@ -219,25 +219,113 @@ var syncScene = {
 		this.load.spritesheet('player', 'assets/player.png', { frameWidth: 19, frameHeight: 48 });
 	},
 	create: function() {
-		text = this.add.text(0,100, "Sync Screen: Work in progress...",  { font: "bold 32px Arial", fill: "#000", boundsAlignH: "center", boundsAlignV: "middle" });
+		changeScaleReference("ionian");
+		this.cameras.main.setBackgroundColor('#ffc2bf');
 
-		playButtonTest = this.add.sprite(400, 400, 'player').setInteractive();
+		//Game Modality
+		gameModalityTextDesc = this.add.text(resolution[0]/2,resolution[1]/10, "Choose a game modality\n______________________________________",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		gameModalityTextDesc.setAlign('center');
 
-		this.anims.create({
-			key: 'playerOver',
-			frames: [ { key: 'player', frame: 4 } ],
-			frameRate: 2
+		gameModalityStatic = this.add.text(resolution[0]/2-120,resolution[1]/3.5, "Static",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		gameModalityStatic.setBackgroundColor("rgba(240,160,160,0.5)");
+		gameModalityStatic.setPadding(10, 10, 10, 10);
+		gameModalityProgressive = this.add.text(resolution[0]/2+100,resolution[1]/3.5, "Progressive",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		gameModalityProgressive.setBackgroundColor("rgba(240,160,160,0.5)");
+		gameModalityProgressive.setPadding(10, 10, 10, 10);
+
+		//Relative scale settings
+		firstNote = "C3";
+		firstNoteTextDesc = this.add.text(resolution[0]/2,resolution[1]/2, "Choose your tonal reference\n______________________________________",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		firstNoteTextDesc.setAlign('center');
+		firstNoteText = this.add.text(resolution[0]/2-100,resolution[1]/1.5, "",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		firstNoteText.setText(firstNote);
+		firstNoteText.setBackgroundColor("rgba(255,160,160,0.5)");
+		firstNoteText.setPadding(13, 13, 13, 13);
+		prevNote = this.add.text(resolution[0]/2-50-100,resolution[1]/1.5, "<",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		prevNote.setInteractive();
+		prevNote.on('pointerdown', function() {
+			console.log("mouseDown");
+			if(firstNote.substring(1,2) == "#")
+				octave = firstNote.substring(2,3);
+			else
+				octave = firstNote.substring(1,2);
+
+			if(firstNote.substring(0,1) == "C" && firstNote.substring(0,2) != "C#")
+				octave--;
+
+			if(firstNote.substring(1,2) == "#")
+				firstNote = letters[letters.indexOf(firstNote.substring(0,2))-1]+octave;
+			else
+				if(firstNote.substring(0,1) == letters[0])
+					firstNote = letters[letters.length-1]+octave;
+				else
+					firstNote = letters[letters.indexOf(firstNote.substring(0,1))-1]+octave;
+
+
+			firstNoteText.setText(firstNote);
+			changeNoteReference(firstNote);
+			playNote(firstNote, 1.5); //Non suona
 		});
 
-		this.anims.create({
-			key: 'playerOut',
-			frames: [ { key: 'player', frame: 0 } ],
-			frameRate: 2
+		nextNote = this.add.text(resolution[0]/2+50-100,resolution[1]/1.5, ">",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		nextNote.setInteractive();
+		nextNote.on('pointerdown', function() {
+			console.log("mouseDown");
+			if(firstNote.substring(1,2) == "#")
+				octave = firstNote.substring(2,3);
+			else
+				octave = firstNote.substring(1,2);
+
+			if(firstNote.substring(0,1) == "B")
+				octave++;
+
+			if(firstNote.substring(1,2) == "#")
+				if(firstNote.substring(0,2) == letters[letters.length-1])
+					firstNote = letters[0]+octave;
+				else
+					firstNote = letters[letters.indexOf(firstNote.substring(0,2))+1]+octave;
+			else
+				firstNote = letters[letters.indexOf(firstNote.substring(0,1))+1]+octave;
+
+			firstNoteText.setText(firstNote);
+			changeNoteReference(firstNote);
 		});
 
-    playButton.on('pointerover', function (event) { playButton.anims.play('playerOver', true); });
-    playButton.on('pointerout', function (event) { playButton.anims.play('playerOut', true); });
-    playButton.on('pointerdown', function() {console.log("Play!")}); // Start game on click.
+		playScaleButton = this.add.text(resolution[0]/2+100,resolution[1]/1.5, "Play Scale!",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		playScaleButton.setShadow(3, 3, 'rgba(150,160,160,0.5)', 5);
+		playScaleButton.setInteractive();
+		playScaleButton.on('pointerdown', function() {
+			playScale(gameLevelToScaleArray[0], firstNote, 0.4); //Non suona
+		});
+
+		playGame = this.add.text(resolution[0]/2,resolution[1]/1.1, "Play Game!",  { font: "bold 45px Arial", fill: "#F00"}).setOrigin(0.5);
+		playGame.setPadding(15, 15, 15, 15);
+		playGame.setShadow(2, 2, 'rgba(0,0,0,0.5)', 2);
+		playGame.setInteractive();
+		playGame.on('pointerdown', function() {
+			game.scene.start("playScene");
+			game.scene.stop("syncScene");
+		});
+
+
+
+		// playButtonTest = this.add.sprite(400, 400, 'player').setInteractive();
+		//
+		// this.anims.create({
+		// 	key: 'playerOver',
+		// 	frames: [ { key: 'player', frame: 4 } ],
+		// 	frameRate: 2
+		// });
+		//
+		// this.anims.create({
+		// 	key: 'playerOut',
+		// 	frames: [ { key: 'player', frame: 0 } ],
+		// 	frameRate: 2
+		// });
+		//
+    // playButton.on('pointerover', function (event) { playButton.anims.play('playerOver', true); });
+    // playButton.on('pointerout', function (event) { playButton.anims.play('playerOut', true); });
+    // playButton.on('pointerdown', function() {console.log("Play!")}); // Start game on click.
 
 
 		this.input.keyboard.on('keydown', function(event) {
