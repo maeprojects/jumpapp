@@ -11,7 +11,7 @@ var gridColor = "186, 181, 180, "
 var gridOpacity = 0.4;
 var fontSize = '20px';
 var fontColor = '#F00';
-var pointsToChangeLevel = 3;
+var pointsToChangeLevel = 1;
 
 
 
@@ -367,18 +367,15 @@ var playScene = {
 		scoreText = this.add.text(16, 16, 'score: '+score, { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 
 		//Change Reference Button
-		referenceNoteButton = this.add.text(resolution[0]-150, playerHeight*2.2, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+		referenceNoteButton = this.add.text(resolution[0]-150, playerHeight*2.2, 'Play Reference', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 		referenceNoteButton.setInteractive();
 		referenceNoteButton.on('pointerdown', () => {
 				buttonPlayReference();
 		 });
 
 		//Current Mode visualization
-		// modeText = this.add.text(250, playerHeight*0.5, 'Current Mode: '+gameLevelToScaleArray[gameLevel], { fontSize: fontSize, fill: fontColor, fontFamily: "Arial"}).setSize(400, 0);
-		// modeText.width = 800;
-		// modeText.setBackgroundColor("#000");
-		// modeText.setAlign('right');
-
+		modeText = this.add.text(resolution[0]-((resolution[0]-referenceNoteButton.x)-referenceNoteButton.width), playerHeight*0.8, '', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial"}).setOrigin(1);
+		modeText.setText('Current Mode: '+gameLevelToScaleArray[gameLevel].charAt(0).toUpperCase() + gameLevelToScaleArray[gameLevel].slice(1));
 
 	 	//Touch input MANAGER
 	 	this.input.on('pointerdown', function(){
@@ -622,6 +619,11 @@ var playScene = {
 				//Detect of "change level" type of pause and call of change level and background
 				if(currentPlatform.changeLevel)
 					changeLevelAndBackground();
+					modeTextTween = gameContext.add.tween({ targets: modeText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
+					modeTextTween.setCallback("onComplete", function(){
+						modeText.setText('Current Mode: '+gameLevelToScaleArray[gameLevel].charAt(0).toUpperCase() + gameLevelToScaleArray[gameLevel].slice(1)); //Print the mode capitalized
+					}, modeText);
+					gameContext.add.tween({ targets: modeText, ease: 'Sine.easeInOut', duration: 300, delay: 300, alpha: { getStart: () => 0, getEnd: () => 1 } });
 			}
 
 			if(endedPauseAnimation) {
@@ -717,7 +719,7 @@ var pauseScene = {
 	create: function() {
 		//Change Reference Button
 		referenceNoteButton.destroy();
-		referenceNoteButton = this.add.text(resolution[0]-150, playerHeight*2.2, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+		referenceNoteButton = this.add.text(resolution[0]-150, playerHeight*2.2, 'Play Reference', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 		referenceNoteButton.setInteractive();
 		referenceNoteButton.on('pointerdown', () => {
 			buttonPlayReference();
@@ -737,7 +739,7 @@ var gameoverScene = {
 		player.destroy(); //Destroy the player
 
 
-		gameoverText = this.add.text(resolution[0]/2, resolution[1]/2, 'Game Over! \nEnter/Space to restart', {font: "bold 80px Arial", fill: fontColor, stroke: "#000"}).setOrigin(0.5);
+		gameoverText = this.add.text(resolution[0]/2, resolution[1]/2, 'Game Over! \nEnter/Space to restart', {font: "bold 70px Arial", fill: fontColor}).setOrigin(0.5);
 		gameoverText.setShadow(5, 5, 'rgba(0,0,0,0.5)', 5);
 		gameoverText.setAlign('center');
 
@@ -935,7 +937,7 @@ function platformsColliderCallback () {
 }
 
 function changeLevelAndBackground() {
-	console.log("Change Level And Background!");
+	//console.log("Change Level And Background!");
 
 	//Change Level
 	if(gameLevel<gameLevelToScaleArray.length-1 && !lastLevel) {
@@ -965,7 +967,6 @@ function changeLevelAndBackground() {
 	newbackgroundImage.setAlpha(0);
 	newbackgroundImage.setDepth(-2);
 	newtween = gameContext.add.tween({ targets: newbackgroundImage, ease: 'Sine.easeInOut', duration: 1000, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
-
 
 	//play next scale
 	playScale(gameLevelToScaleArray[gameLevel], noteReference, 0.5)
@@ -1007,7 +1008,7 @@ document.onkeydown = function(event) {
 						game.scene.resume("playScene");
 						game.scene.stop("pauseScene");
 
-						referenceNoteButton = gameContext.add.text(resolution[0]-150, playerHeight*2.2, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+						referenceNoteButton = gameContext.add.text(resolution[0]-150, playerHeight*2.2, 'Play Reference', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 						referenceNoteButton.setInteractive();
 						referenceNoteButton.on('pointerdown', () => {
 							buttonPlayReference();
@@ -1022,7 +1023,8 @@ document.onkeydown = function(event) {
 							tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 						}
 						else {
-							introText.setText();
+							introText.setText("Sing!");
+							tween = gameContext.add.tween({ targets: introText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 							if(!pitchDetector.isEnable()){
 					 			 pitchDetector.toggleEnable();
 					 		 }
@@ -1044,7 +1046,7 @@ document.onkeydown = function(event) {
 						introText.setText();
 
 						//Reload play reference button
-						referenceNoteButton = gameContext.add.text(resolution[0]-150, playerHeight*2.2, 'Play Reference!', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
+						referenceNoteButton = gameContext.add.text(resolution[0]-150, playerHeight*2.2, 'Play Reference', { fontSize: fontSize, fill: fontColor, fontFamily: "Arial" });
 						referenceNoteButton.setInteractive();
 						referenceNoteButton.on('pointerdown', () => {
 							buttonPlayReference();
