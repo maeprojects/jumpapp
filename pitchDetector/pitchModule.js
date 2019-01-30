@@ -12,6 +12,11 @@ const PitchDetector = function() {
 
 PitchDetector.prototype.start = function() {
   const self = this
+
+  self.tuner.init()
+  self.frequencyData = new Uint8Array(self.tuner.analyser.frequencyBinCount)
+
+
   this.tuner.onNoteDetected = function(note) {
     if (self.notes.isAutoMode) {
       if (self.lastNote === note.name && self.lastOctave === note.octave) {
@@ -50,8 +55,7 @@ PitchDetector.prototype.start = function() {
     }
   }
 
-  self.tuner.init()
-  self.frequencyData = new Uint8Array(self.tuner.analyser.frequencyBinCount)
+  
 }
 
 
