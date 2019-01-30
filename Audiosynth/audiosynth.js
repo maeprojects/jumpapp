@@ -157,7 +157,20 @@ var Synth, AudioSynth, AudioSynthInstrument;
 	});
 	setPub('play', function(sound, note, octave, duration) {
 		var src = this.generate(sound, note, octave, duration);
+		//console.log(src)
 		var audio = new Audio(src);
+		/*
+		console.log("PLAY AudioSynth")
+		console.log(src)
+		console.log("sound: " + sound)
+		console.log("note: " + note)
+		console.log("octave: " + octave)
+		console.log("duration: " + duration)
+		console.log(audio.autoplay)
+		audio.autoplay = true
+		console.log(audio.autoplay)
+		*/
+		//window.open(src, "_blank");
 		audio.play();
 		return true;
 	});
