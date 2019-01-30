@@ -827,6 +827,7 @@ var playScene = {
 		if(gameStatus == "Running")
 			platformVelocity = gameVelocity; //Keeps the platforms velocity updated since when the game is Running
 
+			console.log("pitch detector: ", pitchDetector.isEnable());
 
 		//GAME OVER HANDLER
 		//------------------------------------------------------------------------------------------------------
@@ -1121,28 +1122,7 @@ function changeLevelAndBackground() {
 	//play next scale
 	playScale(gameLevelToScaleArray[gameLevel], noteReference, 0.5)
 
-	//Darker background
-
-	//Alternativa 1
-	// createBackground(gameContext, '#000000', true);
-	// darkBackgroundImage = gameContext.add.image(resolution[0]/2, resolution[1]/2, 'background-black');
-	// darkBackgroundImage.setAlpha(0);
-	// darkBackgroundImage.setDepth(-1);
-	// darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: 500, delay: 0, alpha: { getStart: () => 0, getEnd: () => 0.3 } });
-	// darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: 500, delay: 500, alpha: { getStart: () => 0.3, getEnd: () => 0 } });
-	// var q = 0;
-	// blink = setInterval(()=>{
-	// 	console.log("started interval");
-	// 	darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: 500, delay: 0, alpha: { getStart: () => 0, getEnd: () => 0.3 } });
-	// 	darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: 500, delay: 500, alpha: { getStart: () => 0.3, getEnd: () => 0 } });
-	// 	q++;
-	// 	if(q==3) {
-	// 		clearInterval(blink);
-	// 		console.log("ended interval");
-	// 	}
-	// }, 1000);
-
-	//Alternativa 2
+	//Darker Background
 	createBackground(gameContext, '#000000', true);
 	darkBackgroundImage = gameContext.add.image(resolution[0]/2, resolution[1]/2, 'background-black');
 	darkBackgroundImage.setAlpha(0);
@@ -1162,7 +1142,6 @@ function changeLevelAndBackground() {
 
 	changeLevelTextShown = true;
 }
-
 
 document.onkeydown = function(event) {
 	if(!event.repeat){
@@ -1257,7 +1236,7 @@ document.onkeydown = function(event) {
 						 });
 
 						if(!pitchDetector.isEnable()){
-							if(levelsQueue[0]==0 && jumpArea){
+							if(levelsQueue[0]==0 && endedPauseAnimation){
 								pitchDetector.toggleEnable();
 							}
 							else if(levelsQueue[0]!=0) {
