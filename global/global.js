@@ -30,9 +30,9 @@ minorInt = "0x999cff";  //blue
 
 //ternary mapping
 /*
-var levelScaleColorsMatrix = [["ionian",[1,0,1,0,1,1,0,1,0,1,0,1,1],[fundamental, majorInt, majorThird, majorInt, perfectFifth, majorInt, majorInt, fundamental]], 
-		["lydian",[1,0,1,0,1,0,1,1,0,1,0,1,1],[fundamental, majorInt, majorThird, augFourth, perfectFifth, majorInt, majorInt, fundamental]], 
-		["mixolydian",[1,0,1,0,1,1,0,1,0,1,1,0,1],[fundamental, majorInt, majorThird, majorInt, perfectFifth, majorInt, minorInt, fundamental]], 
+var levelScaleColorsMatrix = [["ionian",[1,0,1,0,1,1,0,1,0,1,0,1,1],[fundamental, majorInt, majorThird, majorInt, perfectFifth, majorInt, majorInt, fundamental]],
+		["lydian",[1,0,1,0,1,0,1,1,0,1,0,1,1],[fundamental, majorInt, majorThird, augFourth, perfectFifth, majorInt, majorInt, fundamental]],
+		["mixolydian",[1,0,1,0,1,1,0,1,0,1,1,0,1],[fundamental, majorInt, majorThird, majorInt, perfectFifth, majorInt, minorInt, fundamental]],
 		["dorian",[1,0,1,1,0,1,0,1,0,1,1,0,1],[fundamental, majorInt, minorInt, majorInt, perfectFifth, majorInt, minorInt, fundamental]],
 		["eolian",[1,0,1,1,0,1,0,1,1,0,1,0,1],[fundamental, majorInt, minorInt, majorInt, perfectFifth, minorInt, minorInt, fundamental]],
 		["phrigian",[1,1,0,1,0,1,0,1,1,0,1,0,1],[fundamental, minorInt, minorInt, majorInt, perfectFifth, minorInt, minorInt, fundamental]],
@@ -69,7 +69,7 @@ gameLevelToScaleArray[6] = "locrian"
 var scales = gameLevelToScaleArray // to have the scales name of the modes
 
 var GAME_MODE = {
-  STANDARD: 1,
+  STATIC: 1,
   PROGRESSIVE: 2
 };
 
@@ -94,7 +94,7 @@ function playNote(note, duration){
   name = note.substring(0,note.length-1)
   octave = note.substring(note.length-1, note.length)
   d = Math.abs(duration)
-  
+
   //if(game.scene.isActive("playScene") || gameStatus=="Gameover"){
   if(!game.scene.isActive("pauseScene")){
     pianoInstrument.play(name, octave, d)
@@ -144,8 +144,3 @@ function playScale(scale, fundamental, durationSingleNote){
   }*/
 
 }
-
-
-
-
-

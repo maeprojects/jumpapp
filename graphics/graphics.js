@@ -54,6 +54,7 @@ var changeLevelEvent;
 var changeLevelStatusDuration;
 var scoreToChangeLevel;
 var changeLevelTextShown;
+var gameModality;
 
 //Jump event managing
 var goAhead;
@@ -82,6 +83,7 @@ var playerPauseY;
 
 //Game Levels
 var gameLevel;
+var startGameLevel;
 var lastLevel;
 var currentScaleText;
 var gameLevelProgressive; //Always increase
@@ -112,6 +114,9 @@ var graphics;
 //Note reference
 var currentNoteReference;
 
+//Scale
+var modalScaleName;
+
 //Pitch detector initialization (here to create only one object even if the game is restarted)
 const pitchDetector = new PitchDetector();
 pitchDetector.start();
@@ -124,7 +129,7 @@ var referenceNoteButton;
 
 function initVariables() {
 	//Game Level
-	gameLevel = 0;
+	gameLevel = startGameLevel;
 	gameLevelProgressive = 1;
 	lastLevel = false;
 
@@ -183,7 +188,6 @@ function initVariables() {
 
 	//ScaleMapping inizialization
 	//changeNoteReference("C3")
-	changeScaleReference("ionian");
 
 	//Pitch manager
 	if(pitchDetector.isEnable())
@@ -195,10 +199,10 @@ function initVariables() {
 /*
 Current Game Scenes pipeline:
 
-splashScene -> syncScene -> playScene --------   (--> settingsScene)
-								^			 |
-								|			 |
-							gameoverScene <---
+splashScene -> settingsScene -> playScene --------------------|
+																^			 												|
+																|			  											|
+															gameoverScene <-----------------
 
 playScene: manage the starting state (with variable gameStatus) and the different levels (with the variable gameLevel)
 */
@@ -208,49 +212,77 @@ var splashScene = {
 		text = this.add.text(0,0, "Splash Screen: Work in progress...",  { font: "bold 32px Arial", fill: "#000", boundsAlignH: "center", boundsAlignV: "middle" });
 
 		this.input.on('pointerdown', function() {
-			game.scene.start("syncScene");
+			game.scene.start("settingsScene");
 			game.scene.stop("splashScene");
 		});
 
 		this.input.keyboard.on('keydown', function() {
-			game.scene.start("syncScene");
+			game.scene.start("settingsScene");
 			game.scene.stop("splashScene");
 		});
 	}
 }
 game.scene.add("splashScene", splashScene);
 
-var syncScene = {
+var settingsScene = {
 	preload: function() {
 		this.load.spritesheet('player', 'assets/player.png', { frameWidth: 19, frameHeight: 48 });
 	},
 	create: function() {
+		playerWidth = 19;
+		playerHeight = 48;
+
+		initVariables();
+
+		gameModality = GAME_MODE.STATIC; //Default Game Modality
+
 		changeScaleReference("ionian");
 		this.cameras.main.setBackgroundColor('#ffc2bf');
 
-		//Game Modality
-		gameModalityTextDesc = this.add.text(resolution[0]/2,resolution[1]/10, "Choose a game modality\n______________________________________",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
-		gameModalityTextDesc.setAlign('center');
+		settingsOffset = 0;
 
-		gameModalityStatic = this.add.text(resolution[0]/2-120,resolution[1]/3.5, "Static",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
-		gameModalityStatic.setBackgroundColor("rgba(240,160,160,0.5)");
-		gameModalityStatic.setPadding(10, 10, 10, 10);
-		gameModalityProgressive = this.add.text(resolution[0]/2+100,resolution[1]/3.5, "Progressive",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
-		gameModalityProgressive.setBackgroundColor("rgba(240,160,160,0.5)");
-		gameModalityProgressive.setPadding(10, 10, 10, 10);
+		//Animation to the left
+		settingsPlayer = this.physics.add.sprite(resolution[0]/2-400, resolution[1]/2-100, 'player').setScale(resolution[1]/636);
+		settingsPlayer.setCollideWorldBounds(false); //So the player can exceed the world boundaries
+		settingsPlayer.body.setGravityY(playerGravity);
+		settingsPlayer.setBounce(1);
+
+		createPlatformTexture(this, measurePlatformWidth*1/4, platformHeight, 1/4);
+		settingsPlatforms = this.physics.add.staticGroup();
+		settingsPlatforms.create(resolution[0]/2-400, resolution[1]/2+100, 'platform'+1/4+platformHeight);
+
+		settingsCollider = this.physics.add.collider(settingsPlayer, settingsPlatforms);
+
+		//Animation to the right
+		createPlatformTexture(this, measurePlatformWidth*1/4, platformHeight, 1/4);
+		settingsPlatforms2 = this.physics.add.staticGroup();
+		settingsPlatforms2.create(resolution[0]/2+400, resolution[1]/2+100, 'platform'+1/4+platformHeight);
+
+		settingsPlayer2 = this.physics.add.sprite(resolution[0]/2+400, resolution[1]/2-100, 'player').setScale(resolution[1]/636);
+		settingsPlayer2.setCollideWorldBounds(false); //So the player can exceed the world boundaries
+		settingsPlayer2.body.setGravityY(playerGravity-500);
+		settingsPlayer2.setBounce(1);
+
+		settingsCollider2 = this.physics.add.collider(settingsPlayer2, settingsPlatforms2);
 
 		//Relative scale settings
+		//------------------------------------------------------------------------------------------------------
 		firstNote = "C3";
-		firstNoteTextDesc = this.add.text(resolution[0]/2,resolution[1]/2, "Choose your tonal reference\n______________________________________",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		firstNoteTextDesc = this.add.text(resolution[0]/2+settingsOffset,resolution[1]/10, "______________________________________\nTonal Reference",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
 		firstNoteTextDesc.setAlign('center');
-		firstNoteText = this.add.text(resolution[0]/2-100,resolution[1]/1.5, "",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		firstNoteText = this.add.text(resolution[0]/2+settingsOffset-100,resolution[1]/3.6, "",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
 		firstNoteText.setText(firstNote);
 		firstNoteText.setBackgroundColor("rgba(255,160,160,0.5)");
 		firstNoteText.setPadding(13, 13, 13, 13);
-		prevNote = this.add.text(resolution[0]/2-50-100,resolution[1]/1.5, "<",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		firstNoteText.setInteractive();
+		firstNoteText.on('pointerdown', function() {
+			playNote(firstNote, 1.5);
+		});
+
+		prevNote = this.add.text(resolution[0]/2+settingsOffset-50-100,resolution[1]/3.6, "<",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		prevNote.setPadding(6, 10, 6, 10);
 		prevNote.setInteractive();
 		prevNote.on('pointerdown', function() {
-			console.log("mouseDown");
 			if(firstNote.substring(1,2) == "#")
 				octave = firstNote.substring(2,3);
 			else
@@ -273,10 +305,10 @@ var syncScene = {
 			playNote(firstNote, 1.5);
 		});
 
-		nextNote = this.add.text(resolution[0]/2+50-100,resolution[1]/1.5, ">",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		nextNote = this.add.text(resolution[0]/2+settingsOffset+50-100,resolution[1]/3.6, ">",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		nextNote.setPadding(6, 10, 6, 10);
 		nextNote.setInteractive();
 		nextNote.on('pointerdown', function() {
-			console.log("mouseDown");
 			if(firstNote.substring(1,2) == "#")
 				octave = firstNote.substring(2,3);
 			else
@@ -298,38 +330,103 @@ var syncScene = {
 			playNote(firstNote, 1.5);
 		});
 
-		playScaleButton = this.add.text(resolution[0]/2+100,resolution[1]/1.5, "Play Scale!",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
-		playScaleButton.setShadow(3, 3, 'rgba(150,160,160,0.5)', 5);
-		playScaleButton.setInteractive();
-		playScaleButton.on('pointerdown', function() {
-			playScale(gameLevelToScaleArray[0], firstNote, 0.4); //Non suona
+		playOctaveButton = this.add.text(resolution[0]/2+settingsOffset+100,resolution[1]/3.6, "Play Octave",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		playOctaveButton.setBackgroundColor("rgba(240,160,160,0.5)");
+		playOctaveButton.setFill("#F00");
+		playOctaveButton.setPadding(10, 10, 10, 10);
+		playOctaveButton.setInteractive();
+		playOctaveButton.on('pointerdown', function() {
+			playNote(firstNote, 1.5);
+			setTimeout(()=>{
+				if(firstNote.substring(1,2) == "#")
+					playNote(firstNote.substring(0,2)+(parseInt(firstNote.substring(2,3))+1), 1.5);
+				else
+					playNote(firstNote.substring(0,1)+(parseInt(firstNote.substring(1,2))+1), 1.5);
+			},600);
+
 		});
 
-		playGame = this.add.text(resolution[0]/2,resolution[1]/1.1, "Play Game!",  { font: "bold 45px Arial", fill: "#F00"}).setOrigin(0.5);
-		playGame.setPadding(15, 15, 15, 15);
-		playGame.setShadow(2, 2, 'rgba(0,0,0,0.5)', 2);
-		playGame.setInteractive();
-		playGame.on('pointerdown', function() {
+		//Game Modality
+		//------------------------------------------------------------------------------------------------------
+		gameModalityTextDesc = this.add.text(resolution[0]/2+settingsOffset,resolution[1]/2.2, "______________________________________\nGame Modality & Modal Scale",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		gameModalityTextDesc.setAlign('center');
+
+		gameModalityStatic = this.add.text(resolution[0]/2+settingsOffset-120,resolution[1]/1.6, "Static",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		gameModalityStatic.setBackgroundColor("rgba(255,0,0,0.5)");
+		gameModalityStatic.setFill("#FFFFFF");
+		gameModalityStatic.setPadding(10, 10, 10, 10);
+		gameModalityStatic.setInteractive();
+		gameModalityStatic.on('pointerdown', function() {
+			gameModalityStatic.setBackgroundColor("rgba(255,0,0,0.5)");
+			gameModalityStatic.setFill("#FFFFFF");
+			gameModality = GAME_MODE.STATIC;
+
+			gameModalityProgressive.setBackgroundColor("rgba(240,160,160,0.5)");
+			gameModalityProgressive.setFill("#F00");
+		});
+
+
+		modalScaleName = "ionian";
+		startGameLevel = scales.indexOf(modalScaleName);
+		modalScaleText = this.add.text(resolution[0]/2+settingsOffset,resolution[1]/1.6, "",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		modalScaleText.setText(modalScaleName.charAt(0).toUpperCase() + modalScaleName.slice(1));
+		modalScaleText.setBackgroundColor("rgba(255,160,160,0.5)");
+		modalScaleText.setPadding(13, 13, 13, 13);
+
+		prevScale = this.add.text(resolution[0]/2+settingsOffset,resolution[1]/1.8, ">",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		prevScale.setAngle(-90);
+		prevScale.setPadding(6, 10, 6, 10);
+		prevScale.setInteractive();
+		prevScale.on('pointerdown', function() {
+			if(startGameLevel == 0)
+				startGameLevel = scales.indexOf(scales[scales.length-1]);
+			else
+				startGameLevel--;
+			modalScaleName = scales[startGameLevel];
+			changeScaleReference(modalScaleName);
+			modalScaleText.setText(modalScaleName.charAt(0).toUpperCase() + modalScaleName.slice(1));
+		});
+
+		nextScale = this.add.text(resolution[0]/2+settingsOffset,resolution[1]/1.44, ">",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		nextScale.setAngle(90);
+		nextScale.setPadding(6, 10, 6, 10);
+		nextScale.setInteractive();
+		nextScale.on('pointerdown', function() {
+			if(startGameLevel == scales.indexOf(scales[scales.length-1]))
+				startGameLevel = 0;
+			else
+				startGameLevel++;
+			modalScaleName = scales[startGameLevel];
+			changeScaleReference(modalScaleName);
+			modalScaleText.setText(modalScaleName.charAt(0).toUpperCase() + modalScaleName.slice(1));
+		});
+
+		gameModalityProgressive = this.add.text(resolution[0]/2+settingsOffset+160,resolution[1]/1.6, "Progressive",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		gameModalityProgressive.setBackgroundColor("rgba(240,160,160,0.5)");
+		gameModalityProgressive.setFill("#F00");
+		gameModalityProgressive.setPadding(10, 10, 10, 10);
+		gameModalityProgressive.setInteractive();
+		gameModalityProgressive.on('pointerdown', function() {
+			gameModalityProgressive.setBackgroundColor("rgba(255,0,0,0.5)");
+			gameModalityProgressive.setFill("#FFFFFF");
+			gameModality = GAME_MODE.PROGRESSIVE;
+
+			gameModalityStatic.setBackgroundColor("rgba(240,160,160,0.5)");
+			gameModalityStatic.setFill("#F00");
+		});
+
+		//Start Game button
+		//------------------------------------------------------------------------------------------------------
+		startGame = this.add.text(resolution[0]/2+settingsOffset,resolution[1]/1.1, "Start Game",  { font: "bold 50px Arial", fill: "#F00"}).setOrigin(0.5);
+		startGame.setPadding(15, 15, 15, 15);
+		startGame.setShadow(2, 2, 'rgba(0,0,0,0.5)', 2);
+		startGame.setInteractive();
+		startGame.on('pointerdown', function() {
 			game.scene.start("playScene");
-			game.scene.stop("syncScene");
+			game.scene.stop("settingsScene");
 		});
 
 
-
-		// playButtonTest = this.add.sprite(400, 400, 'player').setInteractive();
-		//
-		// this.anims.create({
-		// 	key: 'playerOver',
-		// 	frames: [ { key: 'player', frame: 4 } ],
-		// 	frameRate: 2
-		// });
-		//
-		// this.anims.create({
-		// 	key: 'playerOut',
-		// 	frames: [ { key: 'player', frame: 0 } ],
-		// 	frameRate: 2
-		// });
-		//
     // playButton.on('pointerover', function (event) { playButton.anims.play('playerOver', true); });
     // playButton.on('pointerout', function (event) { playButton.anims.play('playerOut', true); });
     // playButton.on('pointerdown', function() {console.log("Play!")}); // Start game on click.
@@ -338,12 +435,12 @@ var syncScene = {
 		this.input.keyboard.on('keydown', function(event) {
 			if(event.key == " " || event.key == "Enter") {
 				game.scene.start("playScene");
-				game.scene.stop("syncScene");
+				game.scene.stop("settingsScene");
 			}
 		});
 	}
 }
-game.scene.add("syncScene", syncScene);
+game.scene.add("settingsScene", settingsScene);
 
 var playScene = {
 	preload: function() {
@@ -749,7 +846,7 @@ var playScene = {
 				playerEnterPause = false; //condition should not enter anymore
 
 				//Detect of "change level" type of pause and call of change level and background
-				if(currentPlatform.changeLevel)
+				if(currentPlatform.changeLevel && gameModality == GAME_MODE.PROGRESSIVE) {
 					changeLevelAndBackground();
 					currentScaleTextTween = gameContext.add.tween({ targets: currentScaleText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
 					currentScaleTextDescTween = gameContext.add.tween({ targets: currentScaleTextDesc, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
@@ -763,6 +860,7 @@ var playScene = {
 					}, currentScaleText);
 					gameContext.add.tween({ targets: currentScaleText, ease: 'Sine.easeInOut', duration: 300, delay: 300, alpha: { getStart: () => 0, getEnd: () => 1 } });
 					gameContext.add.tween({ targets: currentScaleTextDesc, ease: 'Sine.easeInOut', duration: 300, delay: 300, alpha: { getStart: () => 0, getEnd: () => 1 } });
+				}
 			}
 
 			if(endedPauseAnimation) {
@@ -832,8 +930,6 @@ var playScene = {
 		//------------------------------------------------------------------------------------------------------
 		if(gameStatus == "Running")
 			platformVelocity = gameVelocity; //Keeps the platforms velocity updated since when the game is Running
-
-			console.log("pitch detector: ", pitchDetector.isEnable());
 
 		//GAME OVER HANDLER
 		//------------------------------------------------------------------------------------------------------
@@ -935,15 +1031,8 @@ var gameoverScene = {
 }
 game.scene.add("gameoverScene", gameoverScene);
 
-var settingsScene = {
-	create: function() {
-		//console.log("Settings Screen: Work in progress...");
-	}
-}
-game.scene.add("settingsScene", settingsScene);
 
-
-game.scene.start("syncScene");
+game.scene.start("settingsScene");
 
 
 
@@ -1076,7 +1165,7 @@ var generateLevel = function() {
 		}
 
 	//Change game level each n points (endless)
-	if(scoreToChangeLevel-1 == pointsToChangeLevel) {
+	if(scoreToChangeLevel-1 == pointsToChangeLevel && gameModality == GAME_MODE.PROGRESSIVE) {
 		changeLevelEvent = true;
 		levelValue = 0;
 		scoreToChangeLevel = 0;
