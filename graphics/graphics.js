@@ -230,6 +230,7 @@ var settingsScene = {
 		this.load.spritesheet('player', 'assets/player.png', { frameWidth: 19, frameHeight: 48 });
 	},
 	create: function() {
+
 		playerWidth = 19;
 		playerHeight = 48;
 		startGameLevel = 0;
@@ -368,21 +369,6 @@ var settingsScene = {
 		gameModalityTextDesc = this.add.text(resolution[0]/2+settingsOffset,resolution[1]/2.2, "______________________________________\nGame Modality & Modal Scale",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
 		gameModalityTextDesc.setAlign('center');
 
-		gameModalityStatic = this.add.text(resolution[0]/2+settingsOffset-120,resolution[1]/1.6, "Static",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
-		gameModalityStatic.setBackgroundColor("rgba(255,0,0,0.5)");
-		gameModalityStatic.setFill("#FFFFFF");
-		gameModalityStatic.setPadding(10, 10, 10, 10);
-		gameModalityStatic.setInteractive();
-		gameModalityStatic.on('pointerdown', function() {
-			gameModalityStatic.setBackgroundColor("rgba(255,0,0,0.5)");
-			gameModalityStatic.setFill("#FFFFFF");
-			gameModality = GAME_MODE.STATIC;
-
-			gameModalityProgressive.setBackgroundColor("rgba(240,160,160,0.5)");
-			gameModalityProgressive.setFill("#F00");
-		});
-
-
 		modalScaleName = "ionian";
 		startGameLevel = scales.indexOf(modalScaleName);
 		modalScaleText = this.add.text(resolution[0]/2+settingsOffset,resolution[1]/1.6, "",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
@@ -430,6 +416,20 @@ var settingsScene = {
 
 			gameModalityStatic.setBackgroundColor("rgba(240,160,160,0.5)");
 			gameModalityStatic.setFill("#F00");
+		});
+
+		gameModalityStatic = this.add.text(resolution[0]/2+settingsOffset-160,resolution[1]/1.6, "Static",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
+		gameModalityStatic.setBackgroundColor("rgba(255,0,0,0.5)");
+		gameModalityStatic.setFill("#FFFFFF");
+		gameModalityStatic.setPadding(10+(gameModalityProgressive.width-20-gameModalityStatic.width)/2, 10, 10+(gameModalityProgressive.width-20-gameModalityStatic.width)/2, 10);
+		gameModalityStatic.setInteractive();
+		gameModalityStatic.on('pointerdown', function() {
+			gameModalityStatic.setBackgroundColor("rgba(255,0,0,0.5)");
+			gameModalityStatic.setFill("#FFFFFF");
+			gameModality = GAME_MODE.STATIC;
+
+			gameModalityProgressive.setBackgroundColor("rgba(240,160,160,0.5)");
+			gameModalityProgressive.setFill("#F00");
 		});
 
 		//Start Game button
