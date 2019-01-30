@@ -11,7 +11,7 @@ var gridColor = "186, 181, 180, "
 var gridOpacity = 0.4;
 var fontSize = 20;
 var fontColor = '#F00';
-var pointsToChangeLevel = 1;
+var pointsToChangeLevel = 3;
 
 
 
