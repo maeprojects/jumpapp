@@ -285,51 +285,66 @@ var settingsScene = {
 		prevNote.setPadding(6, 10, 6, 10);
 		prevNote.setInteractive();
 		prevNote.on('pointerdown', function() {
-			if(firstNote.substring(1,2) == "#")
-				octave = firstNote.substring(2,3);
-			else
-				octave = firstNote.substring(1,2);
+			nextNote.setFill("#F00");
+			if(firstNote != "C2"){
+				if(firstNote == "C#2") {
+					prevNote.setFill("rgba(245,160,160,0.5)");
+				}
 
-			if(firstNote.substring(0,1) == "C" && firstNote.substring(0,2) != "C#")
-				octave--;
-
-			if(firstNote.substring(1,2) == "#")
-				firstNote = letters[letters.indexOf(firstNote.substring(0,2))-1]+octave;
-			else
-				if(firstNote.substring(0,1) == letters[0])
-					firstNote = letters[letters.length-1]+octave;
+				if(firstNote.substring(1,2) == "#")
+					octave = firstNote.substring(2,3);
 				else
-					firstNote = letters[letters.indexOf(firstNote.substring(0,1))-1]+octave;
+					octave = firstNote.substring(1,2);
+
+				if(firstNote.substring(0,1) == "C" && firstNote.substring(0,2) != "C#")
+					octave--;
+
+				if(firstNote.substring(1,2) == "#")
+					firstNote = letters[letters.indexOf(firstNote.substring(0,2))-1]+octave;
+				else
+					if(firstNote.substring(0,1) == letters[0])
+						firstNote = letters[letters.length-1]+octave;
+					else
+						firstNote = letters[letters.indexOf(firstNote.substring(0,1))-1]+octave;
 
 
-			firstNoteText.setText(firstNote);
-			changeNoteReference(firstNote);
-			playNote(firstNote, 1.5);
+				firstNoteText.setText(firstNote);
+				changeNoteReference(firstNote);
+				playNote(firstNote, 1.5);
+
+			}
 		});
 
 		nextNote = this.add.text(resolution[0]/2+settingsOffset+50-100,resolution[1]/3.6, ">",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
 		nextNote.setPadding(6, 10, 6, 10);
 		nextNote.setInteractive();
 		nextNote.on('pointerdown', function() {
-			if(firstNote.substring(1,2) == "#")
-				octave = firstNote.substring(2,3);
-			else
-				octave = firstNote.substring(1,2);
+			prevNote.setFill("#F00");
+			if(firstNote != "B5"){ //Set max range
+				if(firstNote == "A#5"){ //Set "inactive"
+					nextNote.setFill("rgba(245,160,160,0.5)");
+				}
 
-			if(firstNote.substring(0,1) == "B")
-				octave++;
-
-			if(firstNote.substring(1,2) == "#")
-				if(firstNote.substring(0,2) == letters[letters.length-1])
-					firstNote = letters[0]+octave;
+				if(firstNote.substring(1,2) == "#")
+					octave = firstNote.substring(2,3);
 				else
-					firstNote = letters[letters.indexOf(firstNote.substring(0,2))+1]+octave;
-			else
-				firstNote = letters[letters.indexOf(firstNote.substring(0,1))+1]+octave;
+					octave = firstNote.substring(1,2);
 
-			firstNoteText.setText(firstNote);
-			changeNoteReference(firstNote);
-			playNote(firstNote, 1.5);
+				if(firstNote.substring(0,1) == "B")
+					octave++;
+
+				if(firstNote.substring(1,2) == "#")
+					if(firstNote.substring(0,2) == letters[letters.length-1])
+						firstNote = letters[0]+octave;
+					else
+						firstNote = letters[letters.indexOf(firstNote.substring(0,2))+1]+octave;
+				else
+					firstNote = letters[letters.indexOf(firstNote.substring(0,1))+1]+octave;
+
+				firstNoteText.setText(firstNote);
+				changeNoteReference(firstNote);
+				playNote(firstNote, 1.5);
+			}
 		});
 
 		playOctaveButton = this.add.text(resolution[0]/2+settingsOffset+100,resolution[1]/3.6, "Play Octave",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
