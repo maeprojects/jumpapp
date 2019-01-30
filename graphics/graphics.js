@@ -188,6 +188,7 @@ function initVariables() {
 
 	//ScaleMapping inizialization
 	//changeNoteReference("C3")
+	changeScaleReference(scales[gameLevel]);
 
 	//Pitch manager
 	if(pitchDetector.isEnable())
@@ -231,6 +232,7 @@ var settingsScene = {
 	create: function() {
 		playerWidth = 19;
 		playerHeight = 48;
+		startGameLevel = 0;
 
 		initVariables();
 
