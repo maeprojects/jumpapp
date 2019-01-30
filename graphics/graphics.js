@@ -11,7 +11,7 @@ var gridColor = "186, 181, 180, "
 var gridOpacity = 0.4;
 var fontSize = 20;
 var fontColor = '#F00';
-var pointsToChangeLevel = 3;
+var pointsToChangeLevel = 1;
 
 
 
@@ -99,6 +99,7 @@ var initialPauseStability;
 var initialScaleNote;
 var introVelocity;
 var statusText;
+var statusTextSmall;
 var countdown;
 var centeredText;
 
@@ -493,7 +494,7 @@ var playScene = {
 		 });
 
 		//Current Mode visualization
-		currentScaleText = this.add.text(resolution[0]-((resolution[0]-referenceNoteButton.x)-referenceNoteButton.width), playerHeight*0.8, '', { fontSize: fontSize+'px', fill: fontColor, fontFamily: "Arial"}).setOrigin(1);
+		currentScaleText = this.add.text(resolution[0]-((resolution[0]-referenceNoteButton.x)-referenceNoteButton.width), playerHeight*0.8, '', { fontSize: fontSize+2+'px', fill: fontColor, fontFamily: "Arial"}).setOrigin(1);
 		currentScaleTextDesc = this.add.text((resolution[0]-((resolution[0]-referenceNoteButton.x)-referenceNoteButton.width)), playerHeight*0.8, 'Current Scale: ', { fontSize: (fontSize-4)+'px', fill: fontColor, fontFamily: "Arial"}).setOrigin(1);
 		currentScaleTextDesc.setX(currentScaleText.x-currentScaleText.width);
 
@@ -526,6 +527,10 @@ var playScene = {
 		statusText.setShadow(2, 2, 'rgba(0,0,0,0.5)', 2);
 		statusText.setAlign('center');
 		tween = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+
+		statusTextSmall = this.add.text(resolution[0]/2, playerHeight*2, '', {font: "bold 25px Arial", fill: fontColor}).setOrigin(0.5);
+		statusTextSmall.setShadow(2, 2, 'rgba(0,0,0,0.5)', 2);
+		statusTextSmall.setAlign('center');
 
 		centeredText = this.add.text(resolution[0]/2, resolution[1]/2, '', {font: "bold 190px Arial", fill: fontColor}).setOrigin(0.5);
 		centeredText.setShadow(5, 5, 'rgba(0,0,0,0.5)', 5);
@@ -828,6 +833,7 @@ var playScene = {
 		if(gameStatus == "Running")
 			platformVelocity = gameVelocity; //Keeps the platforms velocity updated since when the game is Running
 
+			console.log("pitch detector: ", pitchDetector.isEnable());
 
 		//GAME OVER HANDLER
 		//------------------------------------------------------------------------------------------------------
@@ -863,6 +869,9 @@ var pauseScene = {
 			buttonPlayReference();
 		 });
 
+		 statusTextSmall.setText("");
+		 statusText.setAlpha(0);
+		 statusText.setY(playerHeight*3/2);
 		 statusText.setText('Game Paused, Enter/Space to resume...');
 		 tween = this.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 	}
@@ -1122,28 +1131,7 @@ function changeLevelAndBackground() {
 	//play next scale
 	playScale(gameLevelToScaleArray[gameLevel], noteReference, 0.5)
 
-	//Darker background
-
-	//Alternativa 1
-	// createBackground(gameContext, '#000000', true);
-	// darkBackgroundImage = gameContext.add.image(resolution[0]/2, resolution[1]/2, 'background-black');
-	// darkBackgroundImage.setAlpha(0);
-	// darkBackgroundImage.setDepth(-1);
-	// darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: 500, delay: 0, alpha: { getStart: () => 0, getEnd: () => 0.3 } });
-	// darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: 500, delay: 500, alpha: { getStart: () => 0.3, getEnd: () => 0 } });
-	// var q = 0;
-	// blink = setInterval(()=>{
-	// 	console.log("started interval");
-	// 	darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: 500, delay: 0, alpha: { getStart: () => 0, getEnd: () => 0.3 } });
-	// 	darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: 500, delay: 500, alpha: { getStart: () => 0.3, getEnd: () => 0 } });
-	// 	q++;
-	// 	if(q==3) {
-	// 		clearInterval(blink);
-	// 		console.log("ended interval");
-	// 	}
-	// }, 1000);
-
-	//Alternativa 2
+	//Darker Background
 	createBackground(gameContext, '#000000', true);
 	darkBackgroundImage = gameContext.add.image(resolution[0]/2, resolution[1]/2, 'background-black');
 	darkBackgroundImage.setAlpha(0);
@@ -1152,10 +1140,20 @@ function changeLevelAndBackground() {
 	darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: changelevelDuration*4/5, delay: 0, alpha: { getStart: () => 0, getEnd: () => 0.2 } });
 	darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: changelevelDuration*4/10, delay: changelevelDuration*3.6*changeLevelStatusDuration, alpha: { getStart: () => 0.2, getEnd: () => 0 } });
 
+	statusTextSmall.setAlpha(0);
+	statusTextSmall.setText("Mode: "+gameLevelToScaleArray[gameLevel].charAt(0).toUpperCase() + gameLevelToScaleArray[gameLevel].slice(1));
+	statusText.setY(playerHeight*1.1);
+	gameContext.add.tween({ targets: statusTextSmall, ease: 'Sine.easeInOut', duration: changelevelDuration*4/5, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+	gameContext.add.tween({ targets: statusTextSmall, ease: 'Sine.easeInOut', duration: changelevelDuration*4/10, delay: changelevelDuration*3.6*changeLevelStatusDuration, alpha: { getStart: () => 1, getEnd: () => 0 } });
+
 	statusText.setAlpha(0);
-	statusText.setText("Level "+gameLevelProgressive+"\nMode: "+gameLevelToScaleArray[gameLevel].charAt(0).toUpperCase() + gameLevelToScaleArray[gameLevel].slice(1));
+	statusText.setText("Level "+gameLevelProgressive);
 	gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: changelevelDuration*4/5, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
-	gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: changelevelDuration*4/10, delay: changelevelDuration*3.6*changeLevelStatusDuration, alpha: { getStart: () => 1, getEnd: () => 0 } });
+	statustextLevelTween = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: changelevelDuration*4/10, delay: changelevelDuration*3.6*changeLevelStatusDuration, alpha: { getStart: () => 1, getEnd: () => 0 } });
+
+	statustextLevelTween.setCallback("onComplete", function(){
+		statusText.setY(playerHeight*3/2);
+	}, statusText);
 
 	darkTween.setCallback("onUpdate", function(){
 		changeLevelTextShown = false;
@@ -1163,7 +1161,6 @@ function changeLevelAndBackground() {
 
 	changeLevelTextShown = true;
 }
-
 
 document.onkeydown = function(event) {
 	if(!event.repeat){
@@ -1241,8 +1238,13 @@ document.onkeydown = function(event) {
 						game.scene.stop("pauseScene");
 						statusText.setText();
 						if(changeLevelTextShown) {
+							statusTextSmall.setAlpha(0);
+							statusTextSmall.setText("Mode: "+gameLevelToScaleArray[gameLevel].charAt(0).toUpperCase() + gameLevelToScaleArray[gameLevel].slice(1));
+							statusText.setY(playerHeight*1.1);
+							gameContext.add.tween({ targets: statusTextSmall, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+
 							statusText.setAlpha(0);
-							statusText.setText("Level "+gameLevelProgressive+"\nMode: "+gameLevelToScaleArray[gameLevel].charAt(0).toUpperCase() + gameLevelToScaleArray[gameLevel].slice(1));
+							statusText.setText("Level "+gameLevelProgressive);
 							gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 						}
 
@@ -1258,7 +1260,7 @@ document.onkeydown = function(event) {
 						 });
 
 						if(!pitchDetector.isEnable()){
-							if(levelsQueue[0]==0 && jumpArea){
+							if(levelsQueue[0]==0 && endedPauseAnimation){
 								pitchDetector.toggleEnable();
 							}
 							else if(levelsQueue[0]!=0) {
