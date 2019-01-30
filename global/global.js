@@ -95,7 +95,8 @@ function playNote(note, duration){
   octave = note.substring(note.length-1, note.length)
   d = Math.abs(duration)
   
-  if(game.scene.isActive("playScene") || gameStatus=="Gameover"){
+  //if(game.scene.isActive("playScene") || gameStatus=="Gameover"){
+  if(!game.scene.isActive("pauseScene")){
     pianoInstrument.play(name, octave, d)
 
     if(scaleOnPlay){ //check if i was playing a scale and to manage the pause
