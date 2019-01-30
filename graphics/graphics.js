@@ -269,7 +269,7 @@ var syncScene = {
 
 			firstNoteText.setText(firstNote);
 			changeNoteReference(firstNote);
-			playNote(firstNote, 1.5); //Non suona
+			playNote(firstNote, 1.5);
 		});
 
 		nextNote = this.add.text(resolution[0]/2+50-100,resolution[1]/1.5, ">",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
@@ -294,6 +294,7 @@ var syncScene = {
 
 			firstNoteText.setText(firstNote);
 			changeNoteReference(firstNote);
+			playNote(firstNote, 1.5);
 		});
 
 		playScaleButton = this.add.text(resolution[0]/2+100,resolution[1]/1.5, "Play Scale!",  { font: "bold 22px Arial", fill: "#F00"}).setOrigin(0.5);
