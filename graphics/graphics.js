@@ -84,6 +84,7 @@ var playerPauseY;
 var gameLevel;
 var lastLevel;
 var currentScaleText;
+var gameLevelProgressive; //Always increase
 
 //PAUSE
 var pauseEvent;
@@ -123,6 +124,7 @@ var referenceNoteButton;
 function initVariables() {
 	//Game Level
 	gameLevel = 0;
+	gameLevelProgressive = 1;
 	lastLevel = false;
 
 	//Game score
@@ -1085,6 +1087,7 @@ function platformsColliderCallback () {
 
 function changeLevelAndBackground() {
 	//console.log("Change Level And Background!");
+	gameLevelProgressive++; //Increase progressive level
 
 	//Change Level
 	if(gameLevel<gameLevelToScaleArray.length-1 && !lastLevel) {
@@ -1149,7 +1152,7 @@ function changeLevelAndBackground() {
 	darkTween = gameContext.add.tween({ targets: darkBackgroundImage, ease: 'Sine.easeInOut', duration: changelevelDuration*4/10, delay: changelevelDuration*3.6*changeLevelStatusDuration, alpha: { getStart: () => 0.2, getEnd: () => 0 } });
 
 	statusText.setAlpha(0);
-	statusText.setText("Changed Mode! ("+gameLevelToScaleArray[gameLevel].charAt(0).toUpperCase() + gameLevelToScaleArray[gameLevel].slice(1)+")");
+	statusText.setText("Level "+gameLevelProgressive+"\nMode: "+gameLevelToScaleArray[gameLevel].charAt(0).toUpperCase() + gameLevelToScaleArray[gameLevel].slice(1));
 	gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: changelevelDuration*4/5, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 	gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: changelevelDuration*4/10, delay: changelevelDuration*3.6*changeLevelStatusDuration, alpha: { getStart: () => 1, getEnd: () => 0 } });
 
@@ -1238,7 +1241,7 @@ document.onkeydown = function(event) {
 						statusText.setText();
 						if(changeLevelTextShown) {
 							statusText.setAlpha(0);
-							statusText.setText("Changed Mode! ("+gameLevelToScaleArray[gameLevel].charAt(0).toUpperCase() + gameLevelToScaleArray[gameLevel].slice(1)+")");
+							statusText.setText("Level "+gameLevelProgressive+"\nMode: "+gameLevelToScaleArray[gameLevel].charAt(0).toUpperCase() + gameLevelToScaleArray[gameLevel].slice(1));
 							gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 						}
 
