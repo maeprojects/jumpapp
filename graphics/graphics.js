@@ -11,13 +11,16 @@ var gridColor = "186, 181, 180, "
 var gridOpacity = 0.4;
 var fontSize = 20;
 var fontColor = '#F00';
-var pointsToChangeLevel = 3;
+var pointsToChangeLevel = 5;
 
 //Default Settings
 //var noteReference -> Not here
-var gameModality = GAME_MODE.STATIC;
-var startGameLevel = 0;
-var modalScaleName = "ionian";
+var gameModality = GAME_MODE.STATIC; //Identify the default modality set when the game is loaded in the page
+var startGameLevel = 0; //Identify the position of the default starting scale (from the relation scales[gameLevel])
+//Then there's the noteReference variable that is not declared and set default here
+
+
+var modalScaleName = scales[startGameLevel]; //Identify the name of the default scale taken from the startGameLevel position
 changeScaleReference(modalScaleName);
 
 
