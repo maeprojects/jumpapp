@@ -215,21 +215,23 @@ playScene: manage the starting state (with variable gameStatus) and the differen
 */
 
 var splashScene = {
+	preload: function() {
+		//this.load.image('splash', 'assets/splash.png');
+	},
 	create: function() {
-		text = this.add.text(0,0, "Splash Screen: Work in progress...",  { font: "bold 32px Arial", fill: "#000", boundsAlignH: "center", boundsAlignV: "middle" });
-
-		this.input.on('pointerdown', function() {
-			game.scene.start("settingsScene");
-			game.scene.stop("splashScene");
-		});
-
-		this.input.keyboard.on('keydown', function() {
-			game.scene.start("settingsScene");
-			game.scene.stop("splashScene");
-		});
+		//Splash logo
+		// splashLogo = this.add.image(resolution[0]/2, resolution[1]/2, 'splash');
+		// splashLogo.setDisplaySize(resolution[0], resolution[1]);
+		// splashLogo.setDepth(10);
+		// splashTween = this.add.tween({ targets: splashLogo, ease: 'Sine.easeInOut', duration: 1000, delay: 800, alpha: { getStart: () => 1, getEnd: () => 0 } });
+		// splashTween.setCallback("onStart", function(){
+		// 		splashScene.scene.start("settingsScene"); //Not Working
+		// }, splashLogo);
 	}
 }
 game.scene.add("splashScene", splashScene);
+
+var askForStartGame;
 
 var settingsScene = {
 	preload: function() {
@@ -237,12 +239,15 @@ var settingsScene = {
 	},
 	create: function() {
 
+		askForStartGame = false;
+
 		playerWidth = 19;
 		playerHeight = 48;
 
 		initVariables();
 
 		this.cameras.main.setBackgroundColor('#ffc2bf');
+		this.cameras.main.fadeIn(500, 255,255,255);
 
 		settingsOffset = 0;
 
@@ -447,15 +452,16 @@ var settingsScene = {
 
 		//Start Game button
 		//------------------------------------------------------------------------------------------------------
-		startGame = this.add.text(resolution[0]/2+settingsOffset,resolution[1]/1.1, "Start Game",  { font: "bold 50px Arial", fill: "#F00"}).setOrigin(0.5);
+		startGame = this.add.text(resolution[0]/2+settingsOffset,resolution[1]/1.2, "Start Game",  { font: "bold 80px Arial", fill: "#F00"}).setOrigin(0.5);
 		startGame.setPadding(15, 15, 15, 15);
 		startGame.setShadow(2, 2, 'rgba(0,0,0,0.5)', 2);
 		startGame.setInteractive();
 		startGame.on('pointerdown', function() {
-			game.anims.anims.clear() //Remove player animations before restarting the game
-			game.textures.remove("grid-texture"); //Remove canvas texture before restarting the game
-			game.scene.start("playScene");
-			game.scene.stop("settingsScene");
+			// game.anims.anims.clear() //Remove player animations before restarting the game
+			// game.textures.remove("grid-texture"); //Remove canvas texture before restarting the game
+			// game.scene.start("playScene");
+			// game.scene.stop("settingsScene");
+			askForStartGame = true;
 		});
 
 		this.input.keyboard.on('keydown', function(event) {
@@ -466,6 +472,26 @@ var settingsScene = {
 				game.scene.stop("settingsScene");
 			}
 		});
+	},
+	update: function() {
+		if(askForStartGame == true && settingsPlayer.body.touching.down) {
+			settingsPlayer.setVelocityX(-600);
+		}
+		else if(askForStartGame == true && settingsPlayer2.body.touching.down){
+			settingsPlayer2.setVelocityX(600);
+		}
+
+		if(settingsPlayer.x <= 0) {
+			game.anims.anims.clear() //Remove player animations before restarting the game
+			game.textures.remove("grid-texture"); //Remove canvas texture before restarting the game
+			game.scene.start("playScene");
+			game.scene.stop("settingsScene");
+		} else if(settingsPlayer2.x >= resolution[0]){
+			game.anims.anims.clear() //Remove player animations before restarting the game
+			game.textures.remove("grid-texture"); //Remove canvas texture before restarting the game
+			game.scene.start("playScene");
+			game.scene.stop("settingsScene");
+		}
 	}
 }
 game.scene.add("settingsScene", settingsScene);
@@ -491,6 +517,8 @@ var playScene = {
 
 		initVariables();
 		gameContext = this;
+
+		this.cameras.main.fadeIn(500, 255,255,255);
 
 		//WORLD
 		//------------------------------------------------------------------------------------------------------
@@ -626,8 +654,8 @@ var playScene = {
 		 });
 
 		//Current Mode visualization
-		currentScaleText = this.add.text(resolution[0]-((resolution[0]-referenceNoteButton.x)-referenceNoteButton.width), playerHeight*0.8, '', { fontSize: fontSize+2+'px', fill: fontColor, fontFamily: "Arial"}).setOrigin(1);
-		currentScaleTextDesc = this.add.text((resolution[0]-((resolution[0]-referenceNoteButton.x)-referenceNoteButton.width)), playerHeight*0.8, 'Current Scale: ', { fontSize: (fontSize-4)+'px', fill: fontColor, fontFamily: "Arial"}).setOrigin(1);
+		currentScaleText = this.add.text(resolution[0]-((resolution[0]-referenceNoteButton.x)-referenceNoteButton.width), playerHeight*1.8, '', { fontSize: fontSize+2+'px', fill: fontColor, fontFamily: "Arial"}).setOrigin(1);
+		currentScaleTextDesc = this.add.text((resolution[0]-((resolution[0]-referenceNoteButton.x)-referenceNoteButton.width)), playerHeight*1.8, 'Current Scale: ', { fontSize: (fontSize-4)+'px', fill: fontColor, fontFamily: "Arial"}).setOrigin(1);
 		currentScaleTextDesc.setX(currentScaleText.x-currentScaleText.width);
 
 		if(noteReference.substring(1,2) == '#')
@@ -643,7 +671,7 @@ var playScene = {
 
 		//INTRO MANAGER
 		//------------------------------------------------------------------------------------------------------
-		statusText = this.add.text(resolution[0]/2, playerHeight*3/2, 'Click/Space/Enter To Play!', {font: "bold 40px Arial", fill: fontColor}).setOrigin(0.5);
+		statusText = this.add.text(resolution[0]/2, playerHeight*3/2, 'Space/Enter To Play!', {font: "bold 40px Arial", fill: fontColor}).setOrigin(0.5);
 		statusText.setShadow(2, 2, 'rgba(0,0,0,0.5)', 2);
 		statusText.setAlign('center');
 		tween = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
@@ -657,14 +685,14 @@ var playScene = {
 		centeredText.setAlign('center');
 
 		// PLAY - SETTINGS BUTTONS
-		playPauseButton = this.add.image(resolution[0]-100, resolution[1]-(playerHeight*resolution[1]/636)/2, 'play').setScale(resolution[1]/636);
+		playPauseButton = this.add.image(resolution[0]-100, (playerHeight*0.6), 'play').setScale(0.8);
 		playPauseButton.setInteractive();
 		playPauseButton.on('pointerdown', function(){
 			manageStatus();
     });
 
 		//Settings button
-		settingsButton = this.add.image(resolution[0]-(playerHeight*resolution[1]/636)/2-10, resolution[1]-(playerHeight*resolution[1]/636)/2, 'settings').setScale(resolution[1]/936);
+		settingsButton = this.add.image(resolution[0]-(playerHeight*resolution[1]/636)/2-10, (playerHeight*0.6), 'settings').setScale(0.6);
 		settingsButton.setInteractive();
 		settingsButton.on('pointerdown', function() {
 			game.scene.stop("playScene");
@@ -1011,19 +1039,19 @@ var pauseScene = {
 		statusTextSmall.setText("");
 		statusText.setAlpha(0);
 		statusText.setY(playerHeight*3/2);
-		statusText.setText('Game Paused, Enter/Space to resume...');
+		statusText.setText('Game Paused\nEnter/Space to resume...');
 		tween = this.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
 
 		//Play Pause Button
 		playPauseButton.destroy();
-		playPauseButton = this.add.image(resolution[0]-100, resolution[1]-(playerHeight*resolution[1]/636)/2, 'play').setScale(resolution[1]/636);
+		playPauseButton = this.add.image(resolution[0]-100, (playerHeight*0.6), 'play').setScale(0.8);
 	 	playPauseButton.setInteractive();
 	 	playPauseButton.on('pointerdown', function(){
 	 	 manageStatus();
 	  });
 
 		//Settings button
-		settingsButton = this.add.image(resolution[0]-(playerHeight*resolution[1]/636)/2-10, resolution[1]-(playerHeight*resolution[1]/636)/2, 'settings').setScale(resolution[1]/936);
+		settingsButton = this.add.image(resolution[0]-(playerHeight*resolution[1]/636)/2-10, (playerHeight*0.6), 'settings').setScale(0.6);
 		settingsButton.setInteractive();
 		settingsButton.on('pointerdown', function() {
 			game.scene.stop("playScene");
@@ -1098,7 +1126,7 @@ var gameoverScene = {
 
 		//Restart button
 		playPauseButton.destroy();
-		playPauseButton = gameoverContext.add.image(resolution[0]-100, resolution[1]-(playerHeight*resolution[1]/636)/2, 'restart').setScale(resolution[1]/936);
+		playPauseButton = gameoverContext.add.image(resolution[0]-100, (playerHeight*0.6), 'restart').setScale(0.6);
 		playPauseButton.setInteractive();
 		playPauseButton.on('pointerdown', function(){
 			 game.anims.anims.clear() //Remove player animations before restarting the game
@@ -1108,7 +1136,7 @@ var gameoverScene = {
 		});
 
 		//Settings button
-		settingsButton = gameoverContext.add.image(resolution[0]-(playerHeight*resolution[1]/636)/2-10, resolution[1]-(playerHeight*resolution[1]/636)/2, 'settings').setScale(resolution[1]/936);
+		settingsButton = gameoverContext.add.image(resolution[0]-(playerHeight*resolution[1]/636)/2-10, (playerHeight*0.6), 'settings').setScale(0.6);
 		settingsButton.setInteractive();
 		settingsButton.on('pointerdown', function() {
 			game.scene.stop("playScene");
@@ -1120,8 +1148,6 @@ var gameoverScene = {
 }
 game.scene.add("gameoverScene", gameoverScene);
 
-
-game.scene.start("settingsScene");
 
 
 
@@ -1374,7 +1400,7 @@ function manageStatus() {
 				game.scene.stop("pauseScene");
 
 				playPauseButton.destroy();
-				playPauseButton = gameContext.add.image(resolution[0]-100, resolution[1]-(playerHeight*resolution[1]/636)/2, 'pause').setScale(resolution[1]/636);
+				playPauseButton = gameContext.add.image(resolution[0]-100, (playerHeight*0.6), 'pause').setScale(0.8);
 			 	playPauseButton.setInteractive();
 			 	playPauseButton.on('pointerdown', function(){
 			 	 manageStatus();
@@ -1432,7 +1458,7 @@ function manageStatus() {
 				}
 
 				playPauseButton.destroy();
-				playPauseButton = gameContext.add.image(resolution[0]-100, resolution[1]-(playerHeight*resolution[1]/636)/2, 'pause').setScale(resolution[1]/636);
+				playPauseButton = gameContext.add.image(resolution[0]-100, (playerHeight*0.6), 'pause').setScale(0.8);
 			 	playPauseButton.setInteractive();
 			 	playPauseButton.on('pointerdown', function(){
 			 	 manageStatus();
@@ -1557,3 +1583,5 @@ function jumpAtLevel(level) {
 					player.body.setGravityY(playerGravity);
 				}
 }
+
+game.scene.start("settingsScene");
