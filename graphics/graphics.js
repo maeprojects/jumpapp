@@ -679,313 +679,315 @@ var playScene = {
 	},
 
 	update: function() {
-		//GRID MANAGER
-		//------------------------------------------------------------------------------------------------------
-		measureGrids.getChildren().forEach(function(p){
-			if(p.x < -p.width/2)
-				p.destroy(); //Remove grids that are no more visible
-		})
-
-		measureGrids.getChildren().forEach(function(p){
-			//Move grids (body and texture)
-			p.x = p.x - platformVelocity;
-			p.body.x = p.body.x - platformVelocity;
-		});
-
-		//Creation of new grid measures
-		if(lastGrid.x <= resolution[0]-measurePlatformWidth/2){ //When the platform is completely on the screen, generate a new platform
-			prevGridNumber = lastGrid.progressiveNumber;
-
-			if(lastGrid.progressiveNumber == 0) { //The first to be created with update function
-				lastGrid = measureGrids.create(resolution[0]+(measurePlatformWidth/2)-1, (resolution[1]/2)+playerHeight, 'grid-texture');
-				lastGrid.setDepth(-1);
-			}
-			else {
-				lastGrid = measureGrids.create(resolution[0]+(measurePlatformWidth/2), (resolution[1]/2)+playerHeight, 'grid-texture');
-				lastGrid.setDepth(-1);
-			}
-			lastGrid.progressiveNumber = prevGridNumber+1;
-		}
-
-
-		// PLATFORMS MANAGER: MOVEMENT, REMOVAL, CONDITIONS
-		//------------------------------------------------------------------------------------------------------
-		//Creation of new platforms
-		if(lastCreatedPlatform.x <= resolution[0]-lastCreatedPlatform.width/2){ //When the platform is completely on the screen, generate a new platform
-			newLevel = generateLevel();
-			levelValue = newLevel[0];
-			levelHeight = newLevel[1];
-			levelDuration = newLevel[2];
-			createPlatformTexture(this, measurePlatformWidth*levelDuration, platformHeight, levelDuration);
-			lastCreatedPlatform = platforms.create(resolution[0]+(measurePlatformWidth*levelDuration)/2, levelHeight, 'platform'+levelDuration+platformHeight);
-			lastCreatedPlatform.level = levelValue;
-			lastCreatedPlatform.duration = levelDuration;
-			lastCreatedPlatform.changeLevel = false;
-			if(changeLevelEvent) {
-				lastCreatedPlatform.changeLevel = true;
-				changeLevelEvent = false;
-			}
-
-			if(levelValue == 0) {
-				lastCreatedPlatform.setVisible(false); //Hide texture
-				lastCreatedPlatform.disableBody(); //Disable the body
-			}
-
-			levelsQueue.push(levelValue);
-			//console.log("levelsQueue: ",levelsQueue);
-		}
-
-		playerLeftBorder = (gameInitialX-player.width/2);
-
-		platforms.getChildren().forEach(function(p){
-			if(p.x < -p.width/2)
-				p.destroy(); //Remove platforms that are no more visible
-		})
-
-		platforms.getChildren().forEach(function(p){
-
-			//PLATFORM MOVEMENT-REMOVAL MANAGEMENT
+		if(game.scene.isActive("playScene")){
+			//GRID MANAGER
 			//------------------------------------------------------------------------------------------------------
-			//Move platforms (body and texture)
-			p.x = p.x - platformVelocity;
-			p.body.x = p.body.x - platformVelocity;
+			measureGrids.getChildren().forEach(function(p){
+				if(p.x < -p.width/2)
+					p.destroy(); //Remove grids that are no more visible
+			})
 
-			//PLATFORMS CONDITIONAL EVENTS
-			//------------------------------------------------------------------------------------------------------
-			platformLeftBorder = (p.x-(p.width/2));
-			currentPlatformWidth = currentPlatform.width;
+			measureGrids.getChildren().forEach(function(p){
+				//Move grids (body and texture)
+				p.x = p.x - platformVelocity;
+				p.body.x = p.body.x - platformVelocity;
+			});
 
-			//Set jumpArea when the player enter the jumpArea
-			playerEnterJumpArea = (playerLeftBorder > platformLeftBorder+currentPlatformWidth-jumpAreaWidth) && ((playerLeftBorder-gameVelocity) <= (platformLeftBorder+currentPlatformWidth-jumpAreaWidth));
-			if(playerEnterJumpArea) {
-				//console.log("Entered jump area");
-				jumpArea = true;
-				noAnswer = true; //Answer again ungiven
-				fallBeforePause = false;
+			//Creation of new grid measures
+			if(lastGrid.x <= resolution[0]-measurePlatformWidth/2){ //When the platform is completely on the screen, generate a new platform
+				prevGridNumber = lastGrid.progressiveNumber;
 
-				if(levelsQueue[1] == 0) {
-					pauseEvent = true;
-					playerPauseY = player.y;
-					//console.log("playerPauseY", playerPauseY);
-				}
-			}
-
-			currentPlatformChanged =  (playerLeftBorder > platformLeftBorder) &&  (playerLeftBorder-gameVelocity <= platformLeftBorder); //Condition to summarize when the player enter on another platform
-
-			//Current Platform Changed Event: if no events are triggered before the platform changes, the player was wrong and it has to die, otherwise it jumps to another platform
-			if(currentPlatformChanged) {
-
-				//If the player is exiting a pause
-				if(levelsQueue[0] == 0) { //The step in which the player enter is levelsQueue[1] because it's before the shift of the removal
-					pauseEvent = false;
-					player.setGravityY(playerGravity);
-				}
-
-				levelsQueue.shift(); //Remove the first element of the list
-				//console.log('remove item!: ', levelsQueue);
-
-				//If the player is entering a pause
-				if(levelsQueue[0] == 0)  {
-					playerEnterPause = true;
-					if(pitchDetector.isEnable()){
-						 pitchDetector.toggleEnable();
-						 //console.log("Pitch detector OFF");
-					 }
+				if(lastGrid.progressiveNumber == 0) { //The first to be created with update function
+					lastGrid = measureGrids.create(resolution[0]+(measurePlatformWidth/2)-1, (resolution[1]/2)+playerHeight, 'grid-texture');
+					lastGrid.setDepth(-1);
 				}
 				else {
-					playerEnterPause = false;
+					lastGrid = measureGrids.create(resolution[0]+(measurePlatformWidth/2), (resolution[1]/2)+playerHeight, 'grid-texture');
+					lastGrid.setDepth(-1);
+				}
+				lastGrid.progressiveNumber = prevGridNumber+1;
+			}
+
+
+			// PLATFORMS MANAGER: MOVEMENT, REMOVAL, CONDITIONS
+			//------------------------------------------------------------------------------------------------------
+			//Creation of new platforms
+			if(lastCreatedPlatform.x <= resolution[0]-lastCreatedPlatform.width/2){ //When the platform is completely on the screen, generate a new platform
+				newLevel = generateLevel();
+				levelValue = newLevel[0];
+				levelHeight = newLevel[1];
+				levelDuration = newLevel[2];
+				createPlatformTexture(this, measurePlatformWidth*levelDuration, platformHeight, levelDuration);
+				lastCreatedPlatform = platforms.create(resolution[0]+(measurePlatformWidth*levelDuration)/2, levelHeight, 'platform'+levelDuration+platformHeight);
+				lastCreatedPlatform.level = levelValue;
+				lastCreatedPlatform.duration = levelDuration;
+				lastCreatedPlatform.changeLevel = false;
+				if(changeLevelEvent) {
+					lastCreatedPlatform.changeLevel = true;
+					changeLevelEvent = false;
 				}
 
-				currentPlatform = p;
+				if(levelValue == 0) {
+					lastCreatedPlatform.setVisible(false); //Hide texture
+					lastCreatedPlatform.disableBody(); //Disable the body
+				}
 
-				if(noAnswer) //Answer ungiven: the player should die
-					goAhead = false;
-
-				jumpArea = false;//Not anymore in the jump area
-
+				levelsQueue.push(levelValue);
+				//console.log("levelsQueue: ",levelsQueue);
 			}
-		})
+
+			playerLeftBorder = (gameInitialX-player.width/2);
+
+			platforms.getChildren().forEach(function(p){
+				if(p.x < -p.width/2)
+					p.destroy(); //Remove platforms that are no more visible
+			})
+
+			platforms.getChildren().forEach(function(p){
+
+				//PLATFORM MOVEMENT-REMOVAL MANAGEMENT
+				//------------------------------------------------------------------------------------------------------
+				//Move platforms (body and texture)
+				p.x = p.x - platformVelocity;
+				p.body.x = p.body.x - platformVelocity;
+
+				//PLATFORMS CONDITIONAL EVENTS
+				//------------------------------------------------------------------------------------------------------
+				platformLeftBorder = (p.x-(p.width/2));
+				currentPlatformWidth = currentPlatform.width;
+
+				//Set jumpArea when the player enter the jumpArea
+				playerEnterJumpArea = (playerLeftBorder > platformLeftBorder+currentPlatformWidth-jumpAreaWidth) && ((playerLeftBorder-gameVelocity) <= (platformLeftBorder+currentPlatformWidth-jumpAreaWidth));
+				if(playerEnterJumpArea) {
+					//console.log("Entered jump area");
+					jumpArea = true;
+					noAnswer = true; //Answer again ungiven
+					fallBeforePause = false;
+
+					if(levelsQueue[1] == 0) {
+						pauseEvent = true;
+						playerPauseY = player.y;
+						//console.log("playerPauseY", playerPauseY);
+					}
+				}
+
+				currentPlatformChanged =  (playerLeftBorder > platformLeftBorder) &&  (playerLeftBorder-gameVelocity <= platformLeftBorder); //Condition to summarize when the player enter on another platform
+
+				//Current Platform Changed Event: if no events are triggered before the platform changes, the player was wrong and it has to die, otherwise it jumps to another platform
+				if(currentPlatformChanged) {
+
+					//If the player is exiting a pause
+					if(levelsQueue[0] == 0) { //The step in which the player enter is levelsQueue[1] because it's before the shift of the removal
+						pauseEvent = false;
+						player.setGravityY(playerGravity);
+					}
+
+					levelsQueue.shift(); //Remove the first element of the list
+					//console.log('remove item!: ', levelsQueue);
+
+					//If the player is entering a pause
+					if(levelsQueue[0] == 0)  {
+						playerEnterPause = true;
+						if(pitchDetector.isEnable()){
+							 pitchDetector.toggleEnable();
+							 //console.log("Pitch detector OFF");
+						 }
+					}
+					else {
+						playerEnterPause = false;
+					}
+
+					currentPlatform = p;
+
+					if(noAnswer) //Answer ungiven: the player should die
+						goAhead = false;
+
+					jumpArea = false;//Not anymore in the jump area
+
+				}
+			})
 
 
-		//PLAYER ANIMATION MANAGER
-		//------------------------------------------------------------------------------------------------------
-		if(player.body.touching.down && playerFixedX == 200) {
-			player.anims.play('playerRun', true);
-			player.body.setGravityY(playerGravity);
-			gameStatus = "Running"; //The first time change the game status from Started to Running
+			//PLAYER ANIMATION MANAGER
+			//------------------------------------------------------------------------------------------------------
+			if(player.body.touching.down && playerFixedX == 200) {
+				player.anims.play('playerRun', true);
+				player.body.setGravityY(playerGravity);
+				gameStatus = "Running"; //The first time change the game status from Started to Running
 
-			//Reset Pause variables when the player touch a platform
-			jumpFromPause = false;
-			playerEndY = 0;
-			endedPauseAnimation = false;
+				//Reset Pause variables when the player touch a platform
+				jumpFromPause = false;
+				playerEndY = 0;
+				endedPauseAnimation = false;
 
-			//Enter only the first time (at the first collide with a step)
-			if(score==0) {
-				score++;
-				scoreText.setText('score: ' + score);
-				statusText.setText("Sing!");
+				//Enter only the first time (at the first collide with a step)
+				if(score==0) {
+					score++;
+					scoreText.setText('score: ' + score);
+					statusText.setText("Sing!");
 
-				//Hide intro and centered text
-				tween = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
-				tween2 = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
-				tween.setCallback(function() {
-					statusText.setText();
-					centeredText.setText();
-				});
+					//Hide intro and centered text
+					tween = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
+					tween2 = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
+					tween.setCallback(function() {
+						statusText.setText();
+						centeredText.setText();
+					});
 
-				//Check if the first note is played correctly
-				if(noAnswer) {
-					goAhead = false;
+					//Check if the first note is played correctly
+					if(noAnswer) {
+						goAhead = false;
+					}
 				}
 			}
-		}
-		else {
-			if(levelsQueue[0] != 0 || jumpFromPause) {
-				player.anims.play('playerStop', true);
+			else {
+				if(levelsQueue[0] != 0 || jumpFromPause) {
+					player.anims.play('playerStop', true);
+				}
+				platformTouched = false;
 			}
-			platformTouched = false;
-		}
 
-		//Make it possible to pass through the platform if the player comes from below
-		if(!player.body.touching.down){
-			if(player.y > playerPreviousY+1 && collider.overlapOnly==true) {
-				collider.overlapOnly = false;
+			//Make it possible to pass through the platform if the player comes from below
+			if(!player.body.touching.down){
+				if(player.y > playerPreviousY+1 && collider.overlapOnly==true) {
+					collider.overlapOnly = false;
+				}
+				playerPreviousY = player.y;
 			}
-			playerPreviousY = player.y;
-		}
 
-		// PAUSE MANAGER
-		//------------------------------------------------------------------------------------------------------
+			// PAUSE MANAGER
+			//------------------------------------------------------------------------------------------------------
 
-		//Avoid little initial falling of the player
-		if(levelsQueue[1] == 0 && player.x>currentPlatform.x+currentPlatform.width/2+initialPauseStability && !fallBeforePause) {
-			player.y = playerPauseY;
-			player.body.y = playerPauseY;
-			player.setGravityY(-gravity);
-		}
-		//Pause Event Handler
-		if(levelsQueue[0] == 0 && !jumpFromPause && pauseEvent) {
-			player.body.setGravityY(-gravity); //In order to make the player FLOW
-			goAhead = true; //The player can keep going even if there was no answer (pause: you stay silent)
+			//Avoid little initial falling of the player
+			if(levelsQueue[1] == 0 && player.x>currentPlatform.x+currentPlatform.width/2+initialPauseStability && !fallBeforePause) {
+				player.y = playerPauseY;
+				player.body.y = playerPauseY;
+				player.setGravityY(-gravity);
+			}
+			//Pause Event Handler
+			if(levelsQueue[0] == 0 && !jumpFromPause && pauseEvent) {
+				player.body.setGravityY(-gravity); //In order to make the player FLOW
+				goAhead = true; //The player can keep going even if there was no answer (pause: you stay silent)
 
-			//This condition is entered only once when the pause starts
-			if(playerEnterPause) {
-				playerEndY = ((player.height*3)+((numberOfLevels-levelsQueue[1])*stepHeight)+(stepHeight/2))-5; //Save the player y position (need to create the animation)
+				//This condition is entered only once when the pause starts
+				if(playerEnterPause) {
+					playerEndY = ((player.height*3)+((numberOfLevels-levelsQueue[1])*stepHeight)+(stepHeight/2))-5; //Save the player y position (need to create the animation)
 
-				//Player translation animation
-				pauseStepTween = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: (currentPlatform.duration*10000), delay: 0, y: { getStart: () => playerPauseY, getEnd: () =>  playerEndY} });
-				//console.log("Start animation");
-				pauseStepTween.setCallback("onComplete", function(){
-					endedPauseAnimation = true;
-					if(!pitchDetector.isEnable()){
-						 pitchDetector.toggleEnable();
-						 //console.log("End Animation");
-					 }
-				}, player);
+					//Player translation animation
+					pauseStepTween = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: (currentPlatform.duration*10000), delay: 0, y: { getStart: () => playerPauseY, getEnd: () =>  playerEndY} });
+					//console.log("Start animation");
+					pauseStepTween.setCallback("onComplete", function(){
+						endedPauseAnimation = true;
+						if(!pitchDetector.isEnable()){
+							 pitchDetector.toggleEnable();
+							 //console.log("End Animation");
+						 }
+					}, player);
 
-				playerEnterPause = false; //condition should not enter anymore
+					playerEnterPause = false; //condition should not enter anymore
 
-				//Detect of "change level" type of pause and call of change level and background
-				if(currentPlatform.changeLevel && gameModality == GAME_MODE.PROGRESSIVE) {
-					changeLevelAndBackground();
-					currentScaleTextTween = gameContext.add.tween({ targets: currentScaleText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
-					currentScaleTextDescTween = gameContext.add.tween({ targets: currentScaleTextDesc, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
-					currentScaleTextTween.setCallback("onComplete", function(){
-						if(noteReference.substring(1,2) == '#')
-							currentNoteReference = noteReference.substring(0,2);
-						else
-							currentNoteReference = noteReference.substring(0,1);
-						currentScaleText.setText(''+currentNoteReference+' '+gameLevelToScaleArray[gameLevel].charAt(0).toUpperCase() + gameLevelToScaleArray[gameLevel].slice(1));
-						currentScaleTextDesc.setX(currentScaleText.x-currentScaleText.width);
-					}, currentScaleText);
-					gameContext.add.tween({ targets: currentScaleText, ease: 'Sine.easeInOut', duration: 300, delay: 300, alpha: { getStart: () => 0, getEnd: () => 1 } });
-					gameContext.add.tween({ targets: currentScaleTextDesc, ease: 'Sine.easeInOut', duration: 300, delay: 300, alpha: { getStart: () => 0, getEnd: () => 1 } });
+					//Detect of "change level" type of pause and call of change level and background
+					if(currentPlatform.changeLevel && gameModality == GAME_MODE.PROGRESSIVE) {
+						changeLevelAndBackground();
+						currentScaleTextTween = gameContext.add.tween({ targets: currentScaleText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
+						currentScaleTextDescTween = gameContext.add.tween({ targets: currentScaleTextDesc, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 1, getEnd: () => 0 } });
+						currentScaleTextTween.setCallback("onComplete", function(){
+							if(noteReference.substring(1,2) == '#')
+								currentNoteReference = noteReference.substring(0,2);
+							else
+								currentNoteReference = noteReference.substring(0,1);
+							currentScaleText.setText(''+currentNoteReference+' '+gameLevelToScaleArray[gameLevel].charAt(0).toUpperCase() + gameLevelToScaleArray[gameLevel].slice(1));
+							currentScaleTextDesc.setX(currentScaleText.x-currentScaleText.width);
+						}, currentScaleText);
+						gameContext.add.tween({ targets: currentScaleText, ease: 'Sine.easeInOut', duration: 300, delay: 300, alpha: { getStart: () => 0, getEnd: () => 1 } });
+						gameContext.add.tween({ targets: currentScaleTextDesc, ease: 'Sine.easeInOut', duration: 300, delay: 300, alpha: { getStart: () => 0, getEnd: () => 1 } });
+					}
+				}
+
+				if(endedPauseAnimation) {
+					player.y = playerEndY;
+					player.body.y = playerEndY;
+				}
+
+				//Condition needed because the playerWidth with the wings is greater than the normal player
+				if(player.x-playerWidth/2-5>currentPlatform.x-currentPlatform.width/2 && player.x+playerWidth/2<currentPlatform.x+currentPlatform.width/2) {
+						player.anims.play('playerFly', true);
 				}
 			}
 
-			if(endedPauseAnimation) {
-				player.y = playerEndY;
-				player.body.y = playerEndY;
-			}
-
-			//Condition needed because the playerWidth with the wings is greater than the normal player
-			if(player.x-playerWidth/2-5>currentPlatform.x-currentPlatform.width/2 && player.x+playerWidth/2<currentPlatform.x+currentPlatform.width/2) {
-					player.anims.play('playerFly', true);
-			}
-		}
-
-		//INITIAL SCALE ANIMATION MANAGER
-		//------------------------------------------------------------------------------------------------------
-		if(gameStatus == "Intro") {
-			if(player.body.touching.down && initialScaleNote+1<8){
-				initialScaleNote++;
-				playLevel(initialScaleNote);
-				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.5,1/2));
-				collider.overlapOnly = true;
-
-				//INITIAL SCALE, HIDDEN PLATFORMS GENERATION
-				levelValue = initialScaleNote+1;
-				levelHeight = (player.height*3)+((numberOfLevels-levelValue)*stepHeight)+(stepHeight/2);
-				levelDuration = 1/8;
-
-				createPlatformTexture(this, measurePlatformWidth*levelDuration, 1, levelDuration);
-
-				scalePlatform = platforms.create(playerFixedX, levelHeight, 'platform'+levelDuration+1);
-				scalePlatform.setVisible(false); //Hide texture
-			}
-			else if(player.body.touching.down && countdown>1) {
-				countdown--;
-				if(countdown==3) {
+			//INITIAL SCALE ANIMATION MANAGER
+			//------------------------------------------------------------------------------------------------------
+			if(gameStatus == "Intro") {
+				if(player.body.touching.down && initialScaleNote+1<8){
 					initialScaleNote++;
 					playLevel(initialScaleNote);
-					statusText.setAlpha(0);
-					statusText.setText("Ready?!");
-					statusTextTween = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+					player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*1.5,1/2));
+					collider.overlapOnly = true;
+
+					//INITIAL SCALE, HIDDEN PLATFORMS GENERATION
+					levelValue = initialScaleNote+1;
+					levelHeight = (player.height*3)+((numberOfLevels-levelValue)*stepHeight)+(stepHeight/2);
+					levelDuration = 1/8;
+
+					createPlatformTexture(this, measurePlatformWidth*levelDuration, 1, levelDuration);
+
+					scalePlatform = platforms.create(playerFixedX, levelHeight, 'platform'+levelDuration+1);
+					scalePlatform.setVisible(false); //Hide texture
 				}
-				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*2*(636/resolution[1]),1/2));
-				centeredText.setAlpha(0);
-				centeredText.setText(countdown);
-				centeredTextTween = gameContext.add.tween({ targets: centeredText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+				else if(player.body.touching.down && countdown>1) {
+					countdown--;
+					if(countdown==3) {
+						initialScaleNote++;
+						playLevel(initialScaleNote);
+						statusText.setAlpha(0);
+						statusText.setText("Ready?!");
+						statusTextTween = gameContext.add.tween({ targets: statusText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+					}
+					player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*2*(636/resolution[1]),1/2));
+					centeredText.setAlpha(0);
+					centeredText.setText(countdown);
+					centeredTextTween = gameContext.add.tween({ targets: centeredText, ease: 'Sine.easeInOut', duration: 300, delay: 0, alpha: { getStart: () => 0, getEnd: () => 1 } });
+				}
+				else if(player.body.touching.down) { //If you are at the last step, the game should start
+					countdown--; //Bring countdown to 0
+					centeredText.setText();
+					statusText.setText("Sing!");
+					noAnswer = true;
+					player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*2.3*(636/resolution[1]),1/2));
+
+					//Starting Pitch Detector (the condition is not mandatory)
+					if(!pitchDetector.isEnable())
+						pitchDetector.toggleEnable();
+
+					t = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: (800/Math.sqrt(introVelocity*1.5))*Math.sqrt(resolution[1]/636)*1.1, delay: 0, x: { getStart: () => playerFixedX, getEnd: () =>  gameInitialX} });
+					t.setCallback("onComplete", function(){
+						playerFixedX = gameInitialX;
+						player.setGravityY(playerGravity);
+					}, player);
+				}
 			}
-			else if(player.body.touching.down) { //If you are at the last step, the game should start
-				countdown--; //Bring countdown to 0
-				centeredText.setText();
-				statusText.setText("Sing!");
-				noAnswer = true;
-				player.setVelocityY(-1*Math.pow(2*(gravity+playerGravity*(introVelocity/10))*stepHeight*2.3*(636/resolution[1]),1/2));
 
-				//Starting Pitch Detector (the condition is not mandatory)
-				if(!pitchDetector.isEnable())
-					pitchDetector.toggleEnable();
+			//GAME VELOCITY MANAGER
+			//------------------------------------------------------------------------------------------------------
+			if(gameStatus == "Running")
+				platformVelocity = gameVelocity; //Keeps the platforms velocity updated since when the game is Running
 
-				t = gameContext.add.tween({ targets: player, ease: 'Sine.easeInOut', duration: (800/Math.sqrt(introVelocity*1.5))*Math.sqrt(resolution[1]/636)*1.1, delay: 0, x: { getStart: () => playerFixedX, getEnd: () =>  gameInitialX} });
-				t.setCallback("onComplete", function(){
-					playerFixedX = gameInitialX;
-					player.setGravityY(playerGravity);
-				}, player);
+			//GAME OVER HANDLER
+			//------------------------------------------------------------------------------------------------------
+			if(player.y > resolution[1]+player.height/2) { //When the player is below the screen resolution (no more visible), go to gameoverScene
+				game.scene.pause("playScene");
+				game.scene.start("gameoverScene");
 			}
-		}
 
-		//GAME VELOCITY MANAGER
-		//------------------------------------------------------------------------------------------------------
-		if(gameStatus == "Running")
-			platformVelocity = gameVelocity; //Keeps the platforms velocity updated since when the game is Running
-
-		//GAME OVER HANDLER
-		//------------------------------------------------------------------------------------------------------
-		if(player.y > resolution[1]+player.height/2) { //When the player is below the screen resolution (no more visible), go to gameoverScene
-			game.scene.pause("playScene");
-			game.scene.start("gameoverScene");
-		}
-
-		//GO TO DEATH MANAGER
-		//------------------------------------------------------------------------------------------------------
-		if(!goAhead) { //If the player can't go ahead, the colliders with the world are destroyed
-			if(gameStatus == "Running"){
-				player.body.setGravityY(playerGravity); //Needed to fall when in a pause step
-				player.angle += 5; //Death Animation
+			//GO TO DEATH MANAGER
+			//------------------------------------------------------------------------------------------------------
+			if(!goAhead) { //If the player can't go ahead, the colliders with the world are destroyed
+				if(gameStatus == "Running"){
+					player.body.setGravityY(playerGravity); //Needed to fall when in a pause step
+					player.angle += 5; //Death Animation
+				}
+				this.physics.world.colliders.destroy();
 			}
-			this.physics.world.colliders.destroy();
 		}
 	}
 }
