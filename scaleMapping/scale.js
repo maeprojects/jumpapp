@@ -199,10 +199,12 @@ function convertLevelToNote(level){
   	level = 0
     level = convertNoteToLevel(musicalNote)
 
+    /*
     if(level!=0)
       console.log(musicalNote)
-    //console.log(level)
-
+      console.log(level)
+    */
+    
   	//CALL graphicsModule
   	jumpAtLevel(level)
 }

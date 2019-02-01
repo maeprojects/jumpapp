@@ -167,6 +167,6 @@ function stop(){
   if(this.oscillator!=null){
     this.oscillator.stop()
     this.oscillator = null
-    console.log("STOP")
+    //console.log("STOP")
   }
 }
