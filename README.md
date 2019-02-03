@@ -2,21 +2,21 @@
 Combined project between:  
 Advanced Coding Tools and Methodologies & Computer Music - Representations and Models
 
-##Why?
+## Why?
 (perchè del progetto)
 
-##Game instructions
+## Game instructions
 (come giocare)
 
-##How does it work?
+## How does it work?
 (un pò del codice)
 
-##External libraries
+## External libraries
 (librerie utilizzate)
 
-##Demo
+## Demo
 (link al video di presentazione e al sito per giocare)
 
-###Enjoy it!
+### Enjoy it!
 
 
