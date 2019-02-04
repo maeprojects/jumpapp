@@ -252,6 +252,14 @@ var settingsScene = {
 		this.cameras.main.setBackgroundColor('#ffc2bf');
 		this.cameras.main.fadeIn(500, 255,255,255);
 
+		watchDemo = this.add.text(resolution[0]/2,resolution[1]-20, "Watch a demo video",  { font: "15px Arial", fill: "#F00"}).setOrigin(0.5);
+		watchDemo.setInteractive();
+		watchDemo.on('pointerdown', function() {
+			window.location.href = "./demo_JumpApp.mp4";
+		});
+
+
+
 		settingsOffset = 0;
 
 		//Animation to the left
