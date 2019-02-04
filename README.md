@@ -40,7 +40,7 @@ For the JumpApp function, the following external libraries are used:
 
 ## Demo
 (add reference link)
-You can see a small [video demonstration of the game]() or the [complete version](https://jumpapp.surge.sh) where you can play.
+You can see a small [video demonstration of the game](https://github.com/maeprojects/jumpapp/blob/release3/demo_JumpApp.mp4) or the [complete version](https://jumpapp.surge.sh) where you can play.
 #### Enjoy your time!
 
 Copyright © 2019 - Olivieri · Simeon - all rights reserved.
