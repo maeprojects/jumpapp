@@ -252,6 +252,14 @@ var settingsScene = {
 		this.cameras.main.setBackgroundColor('#ffc2bf');
 		this.cameras.main.fadeIn(500, 255,255,255);
 
+		watchDemo = this.add.text(resolution[0]/2,resolution[1]-20, "Watch a demo video",  { font: "15px Arial", fill: "#F00"}).setOrigin(0.5);
+		watchDemo.setInteractive();
+		watchDemo.on('pointerdown', function() {
+			window.location.href = "./demo_JumpApp.mp4";
+		});
+
+
+
 		settingsOffset = 0;
 
 		//Animation to the left
@@ -1499,13 +1507,17 @@ function manageStatus() {
 	}
 }
 
+var enableKeyDebug = false
+var buttonD = false
+var buttonB = false
+
 document.onkeydown = function(event) {
 	if(!event.repeat){
 		if(event.key == "Enter" || event.key == " "){
 			manageStatus();
 		}
-		else if((gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea)|| (score == 0 && initialScaleNote == 8)) {
-
+		else if(buttonD && buttonB && ((gameStatus=="Running" && ( player.body.touching.down || (levelsQueue[0] == 0) ) && jumpArea) || (score == 0 && initialScaleNote == 8))) {
+					console.log("KEYS")
 					//Play a note directly into the pitchDetector module for the pitch detecting step (Debug code)
 					noteKeys = "12345678" //Keys To use
 					noteFreqKeys = [];
@@ -1522,7 +1534,21 @@ document.onkeydown = function(event) {
 
 					}
 				}
+		
+
 	}
+	
+}
+
+// function to debug the game with the number keys [1 - 8]
+document.onkeypress = function(event) {
+	if(!event.repeat){
+		if(event.key == "d")
+			buttonD = !buttonD
+		if(event.key == "b")
+			buttonB = !buttonB
+	}
+
 }
 
 //stop the play of the oscillator from the keyboard

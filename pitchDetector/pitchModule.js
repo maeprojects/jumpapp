@@ -26,7 +26,7 @@ PitchDetector.prototype.start = function() {
         // -> qui posso rilevare i centesimi di divverenza
 
         musicalNote = note.name + note.octave
-        console.log("SAME NOTE:" + musicalNote)
+        //console.log("SAME NOTE:" + musicalNote)
 
 
       } else {

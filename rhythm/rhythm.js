@@ -79,7 +79,7 @@ function newPattern(){
 
   // choose the rigth first note to execute at least one period of the pattern
   maxInterval = Math.max.apply(null, patChoice.map(Math.abs)); // get the max interval in abs
-  console.log("maxInterval: "+ maxInterval)
+  //console.log("maxInterval: "+ maxInterval)
   if (directionOfPatter > 0)  // ascending direction
     if(currentScale.length - firstLevel < maxInterval){ // nonabbastanza note per fare un periodo di pattern
       // cambio il punto iniziale per avere almento un periodo
@@ -91,8 +91,8 @@ function newPattern(){
       firstLevel = maxInterval
     }
   }
-console.log("pattern: "+ patChoice)
-  console.log("firstLevel: "+ firstLevel)
+//console.log("pattern: "+ patChoice)
+  //console.log("firstLevel: "+ firstLevel)
   // inserisco i livelli del pattern
   level = firstLevel
   index = 0
@@ -106,7 +106,6 @@ console.log("pattern: "+ patChoice)
   }
 
   
-console.log("result:")
   return queue
 }
 
