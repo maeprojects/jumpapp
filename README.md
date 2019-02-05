@@ -39,7 +39,7 @@ For JumpApp development, the following external libraries have been used:
   * [Audiosynth](https://github.com/keithwhor/audiosynth): a dynamic waveform audio synthesizer used for the sound reproduction
 
 ## Demo
-You can see a small [video demonstration of the game](https://github.com/maeprojects/jumpapp/blob/master/demo_JumpApp.mp4) or the [complete version](https://jumpapp.surge.sh) where you can play.
+You can see a small [video demonstration of the game](https://jumpapp.surge.sh/demo_JumpApp.mp4) or the [complete version](https://jumpapp.surge.sh) where you can play.
 #### Enjoy your time!
 
 Copyright © 2019 - Olivieri · Simeon - all rights reserved.
